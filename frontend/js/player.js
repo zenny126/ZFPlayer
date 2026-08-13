@@ -431,7 +431,7 @@ class PlayerController {
           this.ticker.sync(pos, state.duration, state.is_playing);
         }
       }
-    }, 2000);
+    }, 500);
   }
 }
 

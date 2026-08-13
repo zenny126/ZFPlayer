@@ -100,8 +100,8 @@ class PlayerService:
             else:
                 self.current_playlist_index = 0
 
-    def play(self, path: str, playlist_id: Any = None) -> Dict[str, Any]:
-        logger.info(f"Playing track (debounced): {path} (playlist_id={playlist_id})")
+    def play(self, path: str, playlist_id: Any = None, immediate: bool = False) -> Dict[str, Any]:
+        logger.info(f"Playing track: {path} (playlist_id={playlist_id}, immediate={immediate})")
         if playlist_id is not None:
             self.current_playlist_id = playlist_id
         
@@ -122,7 +122,7 @@ class PlayerService:
         # Stop current playback immediately
         self.audio_engine.stop()
 
-        def delayed_load(target_path: str):
+        def do_load(target_path: str):
             try:
                 # Abort if the user skipped again while waiting
                 if self.current_path != target_path:
@@ -137,11 +137,15 @@ class PlayerService:
                 # Asynchronously preload the next 5 tracks' lyrics
                 threading.Thread(target=self._preload_next_tracks_lyrics, args=(target_path,), daemon=True).start()
             except Exception as e:
-                logger.error(f"Delayed RAM load failed for {target_path}: {e}")
+                logger.error(f"RAM load failed for {target_path}: {e}")
 
-        # Start 0.3s debounce timer
-        self._load_timer = threading.Timer(0.3, delayed_load, args=(path,))
-        self._load_timer.start()
+        if immediate:
+            # Auto-advance: load directly, no debounce needed
+            do_load(path)
+        else:
+            # User-initiated: 0.3s debounce for rapid clicking
+            self._load_timer = threading.Timer(0.3, do_load, args=(path,))
+            self._load_timer.start()
         
         return self.get_state()
 
@@ -229,18 +233,19 @@ class PlayerService:
 
     def next_track(self, user_initiated: bool = True) -> Optional[Dict[str, Any]]:
         logger.info(f"Skipping to next track (active playlist_id={self.current_playlist_id})")
+        immediate = not user_initiated  # Auto-advance skips debounce
         if not self.current_path:
             # If no track is loaded, start from the first track of active playlist
             self._sync_playlists_and_index('', self.current_playlist_id)
             shuffle_mode = self.config.get('shuffle', False)
             active_list = self.shuffled_playlist if shuffle_mode else self.normal_playlist
             if active_list:
-                return self.play(active_list[0], self.current_playlist_id)
+                return self.play(active_list[0], self.current_playlist_id, immediate=immediate)
             return None
             
         repeat_mode = self.config.get('repeat', 'off')
         if not user_initiated and repeat_mode == 'one':
-            return self.play(self.current_path, self.current_playlist_id)
+            return self.play(self.current_path, self.current_playlist_id, immediate=True)
             
         self._sync_playlists_and_index(self.current_path, self.current_playlist_id)
         
@@ -264,7 +269,7 @@ class PlayerService:
                 return self.get_state()
                 
         self.current_playlist_index = next_index
-        return self.play(active_list[next_index], self.current_playlist_id)
+        return self.play(active_list[next_index], self.current_playlist_id, immediate=immediate)
 
     def prev_track(self) -> Optional[Dict[str, Any]]:
         logger.info(f"Skipping to previous track (active playlist_id={self.current_playlist_id})")

@@ -85,7 +85,7 @@ class AudioEngine:
         return mode
 
     def load(self, file_path: str):
-        self.stop_immediate(close_hardware=False)
+        self.stop_immediate()
         self.state = AudioState.LOADING
         
         try:
@@ -97,29 +97,14 @@ class AudioEngine:
             raw_data = sf_file.read(dtype='float32', always_2d=True)
             sf_file.close()
 
-            stream_to_close = None
             with self._lock:
                 self.audio_data = raw_data
                 self.play_pos = 0
                 self.total_frames = raw_data.shape[0]
                 self.duration = self.total_frames / sr if sr else 0.0
-                
-                samplerate_changed = (self._current_samplerate != sr or self._current_channels != ch)
                 self._current_samplerate = sr
                 self._current_channels = ch
                 self._sd_dtype = 'float32'
-
-                # Close stream ONLY if audio format/channels changed
-                if samplerate_changed and self.stream is not None:
-                    stream_to_close = self.stream
-                    self.stream = None
-
-            if stream_to_close is not None:
-                try:
-                    stream_to_close.stop()
-                    stream_to_close.close()
-                except Exception:
-                    pass
 
             ram_mb = raw_data.nbytes / (1024 * 1024)
             logger.info(
@@ -181,14 +166,9 @@ class AudioEngine:
             return
 
         with self._lock:
-            if not self.stream:
-                self._create_stream()
-            else:
-                try:
-                    if not self.stream.active:
-                        self.stream.start()
-                except Exception:
-                    self._create_stream()
+            # Always create a fresh stream — WASAPI Exclusive Push
+            # cannot reliably restart a stopped stream.
+            self._create_stream()
 
             # Trigger 20ms micro fade-in ramp to eliminate start pops/clicks
             fade_samples = int(self._current_samplerate * 0.020)
@@ -228,22 +208,26 @@ class AudioEngine:
             # Short wait for callback to render smooth fade-out
             threading.Event().wait(0.020)
             
-        self.stop_immediate(close_hardware=False)
+        self.stop_immediate()
 
-    def stop_immediate(self, close_hardware: bool = False):
+    def stop_immediate(self):
+        """Stop playback and close the hardware stream.
+        Stream close is done OUTSIDE self._lock to prevent deadlock
+        with PortAudio callback thread."""
         stream_to_close = None
         with self._lock:
             self.state = AudioState.STOPPED
             self._fade_in_remaining = 0
             self._fade_out_remaining = 0
             self.play_pos = 0
-            if close_hardware and self.stream is not None:
+            if self.stream is not None:
                 stream_to_close = self.stream
                 self.stream = None
 
         if stream_to_close is not None:
             try:
-                stream_to_close.stop()
+                if stream_to_close.active:
+                    stream_to_close.stop()
                 stream_to_close.close()
             except Exception:
                 pass
@@ -313,9 +297,10 @@ class AudioEngine:
             remaining = self.total_frames - self.play_pos
             if remaining <= 0:
                 outdata.fill(0)
+                self.state = AudioState.STOPPED
                 if self.on_track_end:
                     threading.Thread(target=self.on_track_end, daemon=True).start()
-                raise sd.CallbackStop()
+                return
 
             frames_to_copy = min(frames, remaining)
             outdata[:frames_to_copy] = self.audio_data[self.play_pos : self.play_pos + frames_to_copy]

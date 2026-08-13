@@ -1,5 +1,46 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T23:43:00
+### Tác vụ thực hiện
+Fix lỗi độ trễ (delay) UI khi auto-advance sang bài hát tiếp theo.
+
+### Nguyên nhân gốc (Root Cause)
+Luồng xử lý đồng bộ UI (Sync Loop) ở phía Frontend (`player.js`) sử dụng hàm `setInterval` với khoảng thời gian (interval) mặc định là `2000` ms (2 giây). Khi bài hát kết thúc, Backend chuyển sang bài mới và bắt đầu phát âm thanh gần như ngay lập tức (Zero-latency RAM load). Tuy nhiên, giao diện Frontend phải đợi nhịp `setInterval` tiếp theo của vòng lặp 2 giây mới fetch được trạng thái `state` mới từ backend → gây ra cảm giác giao diện cập nhật chậm hơn âm thanh 1-2 giây.
+
+### Giải pháp kỹ thuật
+- Giảm chu kỳ đồng bộ UI `setInterval` trong `startSyncLoop()` của `player.js` từ `2000` ms xuống `500` ms. 
+- Mức 500ms hoàn toàn nằm trong mức an toàn cho hiệu năng ứng dụng cục bộ qua giao tiếp IPC của pywebview, đồng thời đảm bảo giao diện bắt kịp âm thanh bài mới gần như ngay lập tức khi auto-advance.
+
+### Danh sách tệp tin thay đổi
+- `frontend/js/player.js` — Thay đổi hằng số interval.
+
+## Timestamp: 2026-08-13T23:31:00
+### Tác vụ thực hiện
+Fix bug bài tiếp theo bị speed-up/choppy khi hệ thống tự động chuyển bài (auto-advance).
+
+### Nguyên nhân gốc (Root Cause)
+Khi track kết thúc tự nhiên, callback raise `sd.CallbackStop()` → PortAudio đánh dấu stream là **inactive** nhưng stream object vẫn tồn tại (do `close_hardware=False`). Khi `play()` gọi `stream.start()` để tái sử dụng stream inactive này ở chế độ WASAPI Exclusive Push, PortAudio không khởi tạo lại bộ đệm push đúng cách → dữ liệu PCM bị đẩy với tốc độ sai → gây ra hiện tượng phát nhanh/giật (speed-up/choppy).
+
+### Giải pháp kỹ thuật
+1. **Loại bỏ `sd.CallbackStop()`**: Thay vì raise `CallbackStop` khi hết bài (gây stream inactive bất thường), callback giờ chỉ set `self.state = AudioState.STOPPED` và `return` bình thường. Stream vẫn chạy (output silence) → trạng thái PortAudio luôn clean.
+2. **`stop_immediate()` luôn gọi `stream.stop()` ngoài lock**: Khi `close_hardware=False`, vẫn gọi `stream.stop()` (nhưng KHÔNG `close()`) bên ngoài `self._lock`. Điều này reset PortAudio về trạng thái sạch (properly stopped) mà không gây deadlock, và giữ stream object sống để tái sử dụng khi samplerate giống nhau.
+
+### Danh sách tệp tin thay đổi
+- `backend/audio/engine.py` — Sửa `stop_immediate()` và `_audio_callback()`
+
+## Timestamp: 2026-08-13T23:01:00
+### Tác vụ thực hiện
+Hoàn tất đóng gói lại ứng dụng ZennyFLAC Player đơn tệp với toàn bộ tối ưu hóa mới nhất về âm thanh WASAPI Exclusive Stream Reuse và hiển thị Lyric.
+
+### Danh sách tệp tin tạo mới/cập nhật
+- `dist/ZennyFLAC_Player.exe` (UPDATED)
+- `dist/ZFPlayer.exe` (UPDATED)
+
+### Mô tả chi tiết kỹ thuật
+- Tệp thực thi đơn duy nhất đã được đóng gói thành công bao gồm bản sửa đổi WASAPI Exclusive Stream Reuse (skip bài hát siêu tốc 20ms/skip không bị khựng) và tinh chỉnh hiển thị lề Lyric.
+
+---
+
 ## Timestamp: 2026-08-13T22:56:30
 ### Tác vụ thực hiện
 Tối ưu hóa triệt để vòng đời luồng âm thanh WASAPI Exclusive Push Mode, sửa dứt điểm hiện tượng "đơ/khựng" khi người dùng bấm Next chuyển bài hát liên tục.

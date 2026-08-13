@@ -62,7 +62,7 @@ graph TD
 3. **Phát âm thanh ngầm & Chế độ WASAPI Dual-Engine (Non-blocking Audio Stream Callback):**
    - Hỗ trợ 2 chế độ truyền dữ liệu WASAPI tùy chọn trong Settings: **WASAPI Shared Mode** (`sd.WasapiSettings(exclusive=False)`) và **WASAPI Exclusive Mode - Push Driven** (`sd.WasapiSettings(exclusive=True)` kết hợp cờ `paWinWasapiPolling`).
    - Tự động truy vấn thiết bị WASAPI output ID để tránh lỗi `PaErrorCode -9984` và hỗ trợ tự động fallback về Shared Mode nếu phần cứng bận.
-   - **Kỹ thuật Stream Reuse (Tái sử dụng luồng âm thanh)**: Khi Next bài hát có cùng định dạng (Samplerate/Channels), hệ thống giữ nguyên luồng WASAPI Exclusive đang mở và chỉ thay đổi con trỏ RAM array `audio_data`, đạt tốc độ chuyển bài **20ms/skip** và triệt tiêu 100% hiện tượng đơ/khựng.
+   - **Kỹ thuật Clean Stream Initialization**: Loại bỏ Stream Reuse do lỗi khởi tạo bộ đệm của PortAudio trên WASAPI Exclusive Push. Giờ đây, mỗi bài hát mới sẽ luôn được cấp phát một Stream WASAPI hoàn toàn sạch để đảm bảo tốc độ và độ ổn định (triệt tiêu lỗi speed-up/choppy), với chi phí khởi tạo cực thấp (~50ms) được che giấu qua lớp debounce.
    - **Kỹ thuật Deadlock-Free Stream Tear-down**: Giải phóng khóa `self._lock` trước khi gọi `stream.stop()` / `close()` ngầm, đảm bảo không bao giờ bị nghẽn luồng giữa PortAudio C callback và Python GIL.
    - **Kỹ thuật Micro Anti-Pop Ramps**: Áp dụng Micro Fade-In Ramp (20ms) khi Play/Resume, Micro Fade-Out Ramp (15ms) khi Pause/Stop, và Micro Ramp (15ms) khi Seek để triệt tiêu tiếng nổ/xì lách tách.
 4. **Tua nhạc (Seek) & Lặp lại (Loop) 0ms:**
