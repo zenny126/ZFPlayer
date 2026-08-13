@@ -58,6 +58,7 @@ class ApiWrapper {
   selectCoverImage() { return this.call('select_cover_image'); }
   addAlbum(folderPath, albumName, coverImagePath) { return this.call('add_album', folderPath, albumName, coverImagePath); }
   toggleLike(path) { return this.call('toggle_like', path); }
+  toggleFavorite(path) { return this.toggleLike(path); }
   toggleFullscreen() { return this.call('toggle_fullscreen'); }
 
   // Playlist Methods

@@ -479,3 +479,45 @@ gba(0,0,0,0.3) + ackdrop-filter: blur(20px)) so that absolutely positioned trac
 ## [2026-08-13] Documentation & Architecture Guide
 - **Files created:** \README.md\, \docs/ARCHITECTURE.md\\
 - **Details:** Created comprehensive project documentation including feature highlights, tech stack, directory structure, install/usage guide, and in-depth technical architecture (Audio WASAPI signal pipeline, SQLite FTS indexing, VirtualList math & offset calculations, CSS Glass token system). Pushed to GitHub repo zenny126/ZFPlayer.
+
+## [2026-08-13] Optimize Lyrics Source Priority Hierarchy
+- **Files modified:** `backend/workers/lyrics_worker.py`, `task.md`
+- **Details:** Optimized the lyrics discovery pipeline specifically for tracks downloaded via Deez Bot Telegram (Spotify album links). Added zero-latency local `.lrc` sidecar file reader and embedded audio tag metadata reader (`FLAC` Vorbis comments / `MP3` ID3 tags). Re-ordered online search fallback chain to query LRCLIB direct exact match, Musixmatch (Spotify official provider via `syncedlyrics`), LRCLIB search, and fallback providers.
+
+## [2026-08-13] Fix Uncaught TypeError: window.api.toggleFavorite is Not a Function
+- **Files modified:** `frontend/js/home.js`, `frontend/js/api.js`, `frontend/index.html`, `task.md`
+- **Details:** Fixed JS runtime error when clicking the Like heart button on the Recently Played tracks list in Home view. Changed `window.api.toggleFavorite(track.path)` to `window.api.toggleLike(track.path)` in `home.js`. Added `toggleFavorite` alias method in `api.js` for backwards compatibility. Bumped cache buster version to `?v=21`.
+
+## [2026-08-13] Multi-Threaded Auto Lyrics Prefetch on Track Import & Lock-Wait Fix
+- **Files modified:** `backend/workers/lyrics_worker.py`, `backend/workers/scanner.py`, `backend/services/library_service.py`, `task.md`
+- **Details:** Re-architected lyrics prefetching to execute immediately upon track import/scanning. Added `threading.Condition` wait mechanism in `LyricsWorker.fetch_lyrics()` so UI requests wait up to 3.5s for ongoing background fetches to populate `lyrics_cache` instead of returning `None`. Upgraded `LibraryScanner._prefetch_lyrics_for_batch()` and `LibraryService._prefetch_all_lyrics()` to run concurrently across 4 parallel threads using `ThreadPoolExecutor(max_workers=4)`. Filtered out `Unknown` artist/title queries to prevent API rate limits.
+
+## [2026-08-13] Wipe Database Library Data
+- **Files modified:** `data/library.db`, `task.md`
+- **Details:** Wiped all records from `tracks`, `playlists`, `playlist_tracks`, `lyrics_cache` tables in `d:\ZFPlayer\data\library.db` and executed `VACUUM` to return database to clean initial state. Verified 0 records across all tables.
+
+## [2026-08-13] Enforce Strict Timestamped Synced Lyrics DB Storage & Purge Plain Text Cache
+- **Files modified:** `backend/workers/lyrics_worker.py`, `data/library.db`, `task.md`
+- **Details:** Upgraded `_read_embedded_lyrics()` to strictly require timestamp brackets `[mm:ss]` before treating audio tag content as synced lyrics. Embedded plain text (unsynced) lyrics are ignored so the system automatically proceeds to fetch online synced LRC lyrics from LRCLIB/Musixmatch. Purged invalid plain-text cache entries and re-fetched full synced lyrics for all tracks including "Cheating on You" (`source: lrclib_get`).
+
+## [2026-08-13] Purge Database for User Re-testing
+- **Files modified:** `data/library.db`, `task.md`
+- **Details:** Wiped all records from `tracks`, `playlists`, `playlist_tracks`, `lyrics_cache` in `d:\ZFPlayer\data\library.db` and executed `VACUUM` to leave DB completely empty for user re-testing of the new synced lyrics import pipeline.
+
+## [2026-08-13] Move Local Lyrics & Audio Tag Fallbacks to Bottom of Priority Hierarchy
+- **Files modified:** `backend/workers/lyrics_worker.py`, `task.md`
+- **Details:** Re-ordered `LyricsWorker.fetch_lyrics()` discovery sequence. Placed all online APIs (`LRCLIB /api/get` -> `Musixmatch` -> `LRCLIB /api/search` -> `Syncedlyrics Fallbacks`) at top priorities (1 to 4). Moved local `.lrc` sidecar files and embedded audio tags (`_read_local_lrc`, `_read_embedded_lyrics`) down to the very end (priorities 5 and 6) to serve purely as offline fallbacks.
+
+## [2026-08-13] Purge Database for User Re-testing Online Lyrics Pipeline
+- **Files modified:** `data/library.db`, `task.md`
+- **Details:** Wiped all records from `tracks`, `playlists`, `playlist_tracks`, `lyrics_cache` in `d:\ZFPlayer\data\library.db` and executed `VACUUM` to leave DB completely empty for user re-testing of the new online-first lyrics hierarchy.
+
+
+
+
+
+
+
+
+
+

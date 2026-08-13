@@ -148,7 +148,7 @@ class HomeManager {
         
         row.addEventListener('click', (e) => {
           if (e.target.closest('.track-like')) {
-            window.api.toggleFavorite(track.path).then(res => {
+            window.api.toggleLike(track.path).then(res => {
               track.is_liked = res.is_liked ? 1 : 0;
               const likeBtn = row.querySelector('.track-like');
               likeBtn.className = `track-like ${track.is_liked ? 'liked' : ''}`;

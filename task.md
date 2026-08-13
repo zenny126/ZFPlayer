@@ -1,8 +1,12 @@
-# Danh sách Nhiệm vụ: Cập nhật Thông tin Audio Engine trong Settings Modal
+# Danh Sách Nhiệm Vụ: Dọn Sạch Cơ Sở Dữ Liệu (`library.db`) Để Thử Lại
 
-- [x] **1. Cập nhật Frontend Markup (`index.html`)** <!-- id: 0 -->
-  - [x] Sửa lại mô tả Audio Engine trong `#settings-modal` thành "WASAPI Shared Mode + Zero-Latency RAM Playback" trong [index.html](file:///d:/ZFPlayer/frontend/index.html) <!-- id: 1 -->
+- [x] **1. Kế Hoạch & Phê Duyệt (Planning)** <!-- id: 0 -->
+    - [x] Kiểm tra hiện trạng các bảng trong `library.db` <!-- id: 1 -->
+    - [x] Tạo `implementation_plan.md` & `task.md` <!-- id: 2 -->
+    - [x] Chờ User phê duyệt kế hoạch xóa dữ liệu DB <!-- id: 3 -->
 
-- [x] **2. Kiểm thử & Ghi Nhật ký Phát triển** <!-- id: 2 -->
-  - [x] Kiểm tra giao diện bảng Settings Modal. <!-- id: 3 -->
-  - [x] Cập nhật [DEV_LOG.md](file:///d:/ZFPlayer/DEV_LOG.md) và [walkthrough.md](file:///C:/Users/Zenny/.gemini/antigravity/brain/a2f974c8-3fee-41b5-b1a4-61faeb6bbd6e/walkthrough.md). <!-- id: 4 -->
+- [x] **2. Thực Thi & Kiểm Thu (Execution & QA)** <!-- id: 4 -->
+    - [x] Xóa toàn bộ bản ghi các bảng `tracks`, `playlists`, `playlist_tracks`, `lyrics_cache` <!-- id: 5 -->
+    - [x] Chạy lệnh `VACUUM` tối ưu dung lượng tệp DB <!-- id: 6 -->
+    - [x] Xác minh số lượng bản ghi = 0 <!-- id: 7 -->
+    - [x] Cập nhật `DEV_LOG.md` & `walkthrough.md` <!-- id: 8 -->

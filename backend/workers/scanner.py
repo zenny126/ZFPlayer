@@ -82,9 +82,20 @@ class LibraryScanner:
 
         def _prefetch_lyrics_for_batch(track_batch):
             if not self.lyrics_worker: return
-            for t in track_batch:
+            def _fetch_single(t):
                 if t.get('title') and t.get('artist') and t['artist'] != 'Unknown Artist':
-                    self.lyrics_worker.fetch_lyrics(t['artist'], t['title'], t.get('album', ''), t.get('duration', 0.0))
+                    try:
+                        self.lyrics_worker.fetch_lyrics(
+                            t.get('artist', ''),
+                            t.get('title', ''),
+                            t.get('album', ''),
+                            t.get('duration', 0.0),
+                            t.get('path', '')
+                        )
+                    except Exception as e:
+                        pass
+            with ThreadPoolExecutor(max_workers=4) as batch_exec:
+                list(batch_exec.map(_fetch_single, track_batch))
 
         with ThreadPoolExecutor(max_workers=4) as executor:
             for track_dict in executor.map(_process_file, to_process):

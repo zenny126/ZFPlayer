@@ -95,8 +95,12 @@ class LibraryService:
         if not self.lyrics_worker:
             return
         tracks = self.db.get_all_tracks()
+        if not tracks:
+            return
         logger.info(f"Starting auto lyrics prefetch for {len(tracks)} tracks...")
-        for track in tracks:
+        from concurrent.futures import ThreadPoolExecutor
+
+        def _fetch_track_lyrics(track):
             artist = track.get('artist', '')
             title = track.get('title', '')
             album = track.get('album', '')
@@ -107,6 +111,10 @@ class LibraryService:
                     self.lyrics_worker.fetch_lyrics(artist, title, album, duration, path)
                 except Exception as e:
                     logger.debug(f"Error prefetching lyrics for {title}: {e}")
+
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            list(executor.map(_fetch_track_lyrics, tracks))
+            
         logger.info("Auto lyrics prefetch completed.")
 
     def get_scan_progress(self) -> Dict[str, Any]:

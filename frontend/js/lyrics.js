@@ -45,10 +45,20 @@ class LyricsRenderer {
          document.getElementById('lyrics-cover').src = defaultCover;
          this.overlay.style.setProperty('--cover-url', 'none');
       }
+
+      this.setLyrics([{ time: 0, text: "Loading lyrics..." }]);
       
       const lrcData = await window.api.getLyrics(track.artist, track.title, track.album, track.duration, track.path);
       if (lrcData && lrcData.synced_lyrics) {
-        this.setLyrics(this.parseLRC(lrcData.synced_lyrics));
+        const parsed = this.parseLRC(lrcData.synced_lyrics);
+        if (parsed && parsed.length > 0) {
+          this.setLyrics(parsed);
+          if (window.playerController) {
+            this.update(window.playerController.currentTime || 0);
+          }
+        } else {
+          this.setLyrics([{ time: 0, text: "No synced lyrics available." }]);
+        }
       } else {
         this.setLyrics([{ time: 0, text: "No synced lyrics available." }]);
       }
@@ -66,17 +76,18 @@ class LyricsRenderer {
   }
 
   parseLRC(lrcText) {
+    if (!lrcText) return [];
     const lines = lrcText.split('\n');
     const result = [];
-    const timeRegex = /\[(\d{2}):(\d{2})\.(\d{2,3})\]/;
+    const timeRegex = /\[(\d{1,2}):(\d{2})(?:\.(\d{2,3}))?\]/;
     
     for (const line of lines) {
       const match = timeRegex.exec(line);
       if (match) {
         const m = parseInt(match[1]);
         const s = parseInt(match[2]);
-        const ms = parseInt(match[3]);
-        const time = m * 60 + s + (ms / (match[3].length === 2 ? 100 : 1000));
+        const ms = match[3] ? parseInt(match[3]) : 0;
+        const time = m * 60 + s + (ms / (match[3] && match[3].length === 2 ? 100 : 1000));
         const text = line.replace(timeRegex, '').trim();
         if (text) {
           result.push({ time, text });
@@ -89,6 +100,9 @@ class LyricsRenderer {
   setLyrics(lyricsArr) {
     this.lyrics = lyricsArr;
     this.activeIndex = -1;
+    if (this.container) {
+      this.container.style.transform = 'translateY(0)';
+    }
     this.render();
   }
 
