@@ -1427,3 +1427,15 @@ gba(255,255,255,0.15)). Replaced hardcoded occurrences in library.css and main.c
   2. **Race Condition Rapid Skip**: B? sung co ch? self._load_token v�o h�m play(). M?i khi b?m Next/Prev/Play, token du?c sinh m?i. Trong lu?ng do_load background, th?c hi?n validate token 2 l?n (tru?c khi load v� sau khi load). N?u token d� cu (do user b?m n�t qu� nhanh g?i lu?ng kh�c), lu?ng s? t? h?y v� gi?i ph�ng engine thay v� ti?p t?c play v� d� l�n lu?ng m?i.
   3. **Polling Request Pile-up**: S?a h�m startSyncLoop trong player.js. Thay th? setInterval 500ms b?ng m� h�nh setTimeout d? quy k?t h?p v?i flag 	his._isPolling = false. �i?u n�y d?m b?o m?i tick polling (bao g?m fetch API) ph?i ho�n t?t to�n b? (ho?c throw error) th� m?i du?c h?n gi? 500ms sau g?i l?i, ch?ng k?t ngh?n h�ng d?i HTTP request l�m lag UI.
 
+
+## [2026-08-14T00:41:00+07:00] Thêm Giấy phép Apache 2.0
+- **Tác vụ thực hiện**: Thêm tệp giấy phép Apache License 2.0.
+- **Danh sách tệp tin thay đổi**:
+  - LICENSE (Tạo mới)
+- **Mô tả chi tiết kỹ thuật**: Đã tạo tệp LICENSE với nội dung chuẩn của Apache License 2.0 tại thư mục gốc của dự án.
+
+## [2026-08-14T00:42:15+07:00] Cập nhật tên chủ sở hữu bản quyền trong Giấy phép
+- **Tác vụ thực hiện**: Cập nhật thông tin bản quyền trong giấy phép.
+- **Danh sách tệp tin thay đổi**:
+  - LICENSE (Sửa đổi)
+- **Mô tả chi tiết kỹ thuật**: Thay thế thông tin bản quyền chung bằng năm 2026 và tên chủ sở hữu Zenny126 ở cuối tệp LICENSE.

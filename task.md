@@ -12,3 +12,7 @@
 - [x] **3. Kiểm thử & Cập nhật Nhật ký** <!-- id: 9 -->
   - [x] Mở ứng dụng kiểm tra tiêu đề cửa sổ ZennyFLAC Player <!-- id: 10 -->
   - [x] Cập nhật `DEV_LOG.md` và `walkthrough.md` <!-- id: 11 -->
+
+- [x] **4. Thêm giấy phép mã nguồn**
+  - [x] Thêm tệp `LICENSE` (Apache License 2.0)
+  - [x] Cập nhật `DEV_LOG.md` và `walkthrough.md`

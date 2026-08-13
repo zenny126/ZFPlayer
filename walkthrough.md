@@ -38,3 +38,7 @@
 
 - Đã xác minh tính đồng bộ 100% giữa tài liệu kiến trúc và mã nguồn triển khai thực tế trong `backend/` và `frontend/`.
 - Tất cả tệp tài liệu đều sử dụng định dạng Markdown chuẩn, không có lỗi biểu thức và không thêm emoji rác.
+
+## Thêm Giấy phép Apache 2.0
+- **Thay đổi**: Đã tạo tệp LICENSE mới ở thư mục gốc của dự án chứa nội dung Apache License 2.0.
+- **Kiểm tra**: Nội dung giấy phép đã được kiểm tra tính chính xác và đầy đủ.
