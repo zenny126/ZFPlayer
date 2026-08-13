@@ -1,5 +1,24 @@
 ﻿# DEV LOG
 
+## Timestamp: 2026-08-14T02:00:00
+### Tác vụ thực hiện
+Tái cơ cấu vị trí mục Release trong README.
+
+### Danh sách tệp tin thay đổi
+- README.md – Đưa phần "Tải Về & Chạy Ngay" lên trước phần "Hướng Dẫn Cài Đặt".
+
+### Mô tả chi tiết kỹ thuật
+- Nhấn mạnh việc tải bản cài đặt sẵn để chạy trực tiếp không cần cài đặt rườm rà.
+- Đổi tên phần cài đặt mã nguồn thành "Dành cho Nhà Phát Triển" để tránh gây nhầm lẫn cho người dùng phổ thông.
+## Timestamp: 2026-08-14T01:58:00
+### Tác vụ thực hiện
+Bổ sung liên kết tải ứng dụng (Release link).
+
+### Danh sách tệp tin thay đổi
+- README.md – Chèn phần "Bản Phát Hành (Release)" trước mục Hướng Dẫn Sử Dụng Nhanh.
+
+### Mô tả chi tiết kỹ thuật
+- Thêm đường dẫn tới bản phát hành GitHub Release (ZFPv1.0) giúp người dùng dễ dàng truy cập và tải file cài đặt thay vì chỉ hướng dẫn cài đặt từ mã nguồn.
 ## Timestamp: 2026-08-14T01:56:00
 ### Tác vụ thực hiện
 Làm rõ ý nghĩa và cách sử dụng tính năng cấu hình Bit-Perfect.
@@ -1497,6 +1516,8 @@ gba(255,255,255,0.15)). Replaced hardcoded occurrences in library.css and main.c
   - ackend/audio/engine.py
 - **M� t? chi ti?t k? thu?t**:
   S?a l?i h�m play() g?i _create_stream() t?o ra m?t stream WASAPI ho�n to�n m?i d� l�n stream cu chua du?c gi?i ph�ng sau khi pause(). Khi c� 2 stream c�ng k�o d? li?u t? m?t AudioRingBuffer duy nh?t, t?c d? tr�ch xu?t d? li?u tang g?p d�i, l�m gi?m 1 n?a frame v� g�y ra hi?n tu?ng tua nhanh. �� b? sung c? ki?m tra if self.stream is None: tru?c khi t?o stream m?i.
+
+
 
 
 

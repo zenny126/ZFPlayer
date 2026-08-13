@@ -45,7 +45,14 @@ ZFPlayer áp dụng mô hình **Hybrid Desktop Architecture**, tách biệt hoà
 
 ---
 
-## Hướng Dẫn Cài Đặt
+## Tải Về & Chạy Ngay (Dành cho Người Dùng)
+Bạn có thể tải bản đóng gói sẵn và chạy ứng dụng trực tiếp trên Windows mà **không cần cài đặt môi trường rườm rà** tại đây:
+👉 **[Release ZFP · zenny126/ZFPlayer](https://github.com/zenny126/ZFPlayer/releases/tag/ZFPv1.0)**
+
+---
+
+## Hướng Dẫn Cài Đặt & Biên Dịch (Dành cho Nhà Phát Triển)
+*(Nếu bạn chỉ muốn nghe nhạc, hãy tải bản Release ở trên. Phần này dành cho những ai muốn chạy ứng dụng từ mã nguồn)*
 
 ### 1. Yêu Cầu Hệ Thống
 * Hệ điều hành: **Windows 10 / 11 (64-bit)**
