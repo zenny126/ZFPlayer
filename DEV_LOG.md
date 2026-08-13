@@ -1,5 +1,29 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T20:11:00
+### Tác vụ thực hiện
+Tăng độ lệch nhịp phân tầng (Staggered Cascading Animation) và ép cố định 100% các thuộc tính sử dụng đường cong Bezier Apple Music (`cubic-bezier(0.25, 1, 0.35, 1)`).
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/main.css` (MODIFIED)
+- `frontend/css/lyrics.css` (MODIFIED)
+- `frontend/js/lyrics.js` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+- `task.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Bổ Sung & Cập Nhật Token Thời Lượng Phân Tầng (`main.css`)**:
+   - `--transition-lyrics-scroll: 880ms var(--ease-apple-lyrics)` (khung trôi cuộn êm ái).
+   - `--transition-lyrics-focus: 780ms var(--ease-apple-lyrics)` (câu active nở sáng phóng to mượt).
+   - `--transition-lyrics-passed: 800ms var(--ease-apple-lyrics)` (câu đã qua mờ dần thư thái).
+   - `--transition-lyrics-next: 480ms var(--ease-apple-lyrics)` (câu kế tiếp phản hồi trước 300ms).
+2. **Ép 100% Transition Dùng Bezier Curve (`lyrics.css`)**:
+   - Áp dụng triệt để đường cong `--ease-apple-lyrics` cho tất cả các trạng thái: `#lyrics-content`, `.lyrics-line` base, `.lyrics-line:hover`, `.lyrics-line.active`, `.lyrics-line.next`, và `.lyrics-line.passed`.
+3. **Đồng Bộ JS Scroll Logic (`lyrics.js`)**:
+   - Cập nhật hàm `scrollToLine()` trường hợp `isFarJump` dùng nhịp 580ms cùng đường cong `cubic-bezier(0.25, 1, 0.35, 1)`.
+
+---
+
 ## Timestamp: 2026-08-13T20:04:30
 ### Tác vụ thực hiện
 Tăng tốc chuyển động (420ms) và nạp trước điểm focus nhẹ cho câu lyric tiếp theo (`.lyrics-line.next`).

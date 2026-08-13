@@ -171,7 +171,7 @@ class LyricsRenderer {
     if (!lineEl) return;
 
     if (isFarJump) {
-      this.container.style.transition = 'transform 450ms cubic-bezier(0.25, 1, 0.35, 1)';
+      this.container.style.transition = 'transform 580ms cubic-bezier(0.25, 1, 0.35, 1)';
     } else {
       this.container.style.transition = '';
     }

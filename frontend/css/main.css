@@ -32,8 +32,10 @@
   --transition-slow: 400ms var(--ease-out-expo);
   --transition-spring: 220ms var(--ease-spring);
   --transition-spring-soft: 200ms var(--ease-spring-soft);
-  --transition-lyrics-scroll: 650ms var(--ease-apple-lyrics);
-  --transition-lyrics-focus: 600ms var(--ease-apple-lyrics);
+  --transition-lyrics-scroll: 880ms var(--ease-apple-lyrics);
+  --transition-lyrics-focus: 780ms var(--ease-apple-lyrics);
+  --transition-lyrics-next: 480ms var(--ease-apple-lyrics);
+  --transition-lyrics-passed: 800ms var(--ease-apple-lyrics);
 }
 
 * {
