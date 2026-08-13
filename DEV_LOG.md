@@ -1,5 +1,20 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T22:49:00
+### Tác vụ thực hiện
+Mở rộng giới hạn phía bên phải của vùng Lời bài hát để đạt sự đối xứng và cân bằng hoàn hảo.
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/lyrics.css` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- Điều chỉnh `padding-right` của `.lyrics-container` từ `100px` xuống `32px` (bằng đúng `padding-left: 32px`).
+- Tăng `max-width` của dòng câu hát `.lyrics-line` từ `calc(100% - 60px)` lên `100%` để câu hát tận dụng tối đa bề ngang không gian hiển thị.
+- Kết quả: Khối Lời bài hát từ nay được căn lề hai bên trái/phải cực kỳ cân đối (32px / 32px), giúp câu hát dài hiển thị được nhiều từ hơn trước khi xuống dòng.
+
+---
+
 ## Timestamp: 2026-08-13T22:46:00
 ### Tác vụ thực hiện
 Thêm khoảng lề an toàn phía bên trái (`padding-left: 32px`) cho vùng hiển thị Lời bài hát.
