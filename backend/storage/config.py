@@ -3,6 +3,8 @@ import os
 import threading
 from typing import Any
 
+from backend.utils.path_utils import get_config_path
+
 class Config:
     _instance = None
     _lock = threading.Lock()
@@ -13,9 +15,9 @@ class Config:
                 cls._instance = super(Config, cls).__new__(cls)
             return cls._instance
 
-    def __init__(self, config_path: str = r"d:\ZFPlayer\config\config.json"):
+    def __init__(self, config_path: str = None):
         if not hasattr(self, 'initialized'):
-            self.config_path = config_path
+            self.config_path = config_path or get_config_path()
             self._data = {}
             self._save_timer = None
             self.load()

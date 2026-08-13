@@ -159,23 +159,24 @@ class UIController {
           id: 'all',
           name: 'All Songs',
           subtitle: 'All your local tracks',
-          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 24px; height: 24px; color: #ffffff;"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>`
+          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 24px; height: 24px; color: #ffffff;"><path d="M9 18V5l12-2v13 M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M18 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path></svg>`
         },
         {
           id: 'favorites',
           name: 'Favorite Songs',
           subtitle: 'Your favorite tracks',
-          icon: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width: 24px; height: 24px; color: #ffffff;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`
+          icon: `<svg viewBox="0 0 24 24" fill="#ffffff" stroke="none" style="width: 24px; height: 24px; color: #ffffff;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`
         }
       ];
 
       systemPlaylists.forEach(pl => {
         const li = document.createElement('li');
+        li.dataset.id = pl.id;
         if (state.view === 'playlist' && state.playlistId === pl.id) {
           li.classList.add('active');
         }
         li.innerHTML = `
-          <div class="icon-placeholder">${pl.icon}</div>
+          <div class="icon-placeholder system-icon">${pl.icon}</div>
           <div class="library-list-text">
             <div class="library-list-title">${pl.name}</div>
             <div class="library-list-subtitle">${pl.subtitle}</div>
@@ -230,6 +231,31 @@ class UIController {
             btnRemove.classList.add('hidden');
         }
     }
+  }
+
+  showToast(message, duration = 3000) {
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+      toastContainer = document.createElement('div');
+      toastContainer.id = 'toast-container';
+      toastContainer.style.cssText = 'position: fixed; bottom: 84px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none;';
+      document.body.appendChild(toastContainer);
+    }
+    const toast = document.createElement('div');
+    toast.style.cssText = 'background: rgba(24, 24, 27, 0.95); color: #fff; border: 1px solid rgba(255, 255, 255, 0.15); backdrop-filter: blur(12px); border-radius: 8px; padding: 12px 20px; font-size: 0.9rem; font-weight: 500; box-shadow: 0 8px 24px rgba(0,0,0,0.4); opacity: 0; transform: translateY(10px); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto;';
+    toast.textContent = message;
+    toastContainer.appendChild(toast);
+
+    requestAnimationFrame(() => {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+    });
+
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(10px)';
+      setTimeout(() => toast.remove(), 300);
+    }, duration);
   }
 }
 

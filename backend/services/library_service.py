@@ -214,43 +214,67 @@ class LibraryService:
         if not folder_path:
             return {'status': 'error', 'message': 'Folder path is required'}
             
+        self._scan_state['is_scanning'] = True
+        self._scan_state['scanned'] = 0
+        self._scan_state['total'] = 0
+        self._scan_state['current_file'] = ''
+
+        def progress_cb(scanned, total, current_file):
+            self._internal_progress_callback(scanned, total, current_file)
+
         try:
             # 1. Scan folder to ensure tracks are in DB
-            self.scanner.scan([folder_path], handle_deletions=False)
+            self.scanner.scan([folder_path], progress_callback=progress_cb, handle_deletions=False)
             
             # 2. Add all tracks in folder to playlist
             paths = self.db.get_tracks_in_folder(folder_path)
+            added_count = 0
             for path in paths:
                 self.db.add_track_to_playlist(playlist_id, path)
+                added_count += 1
                 
             # 3. Trigger async lyrics prefetch
             threading.Thread(target=self._prefetch_all_lyrics, daemon=True).start()
             
-            return {'status': 'success', 'message': 'Import completed'}
+            return {'status': 'success', 'message': f'Đã nhập thành công {added_count} bài hát', 'added_count': added_count}
         except Exception as e:
             logger.error(f"Error importing folder to playlist: {e}")
             return {'status': 'error', 'message': str(e)}
+        finally:
+            self._scan_state['is_scanning'] = False
 
     def import_files_to_playlist(self, playlist_id: int, file_paths: List[str]) -> Dict[str, Any]:
         if not file_paths:
             return {'status': 'error', 'message': 'No files provided'}
             
+        self._scan_state['is_scanning'] = True
+        self._scan_state['scanned'] = 0
+        self._scan_state['total'] = len(file_paths)
+        self._scan_state['current_file'] = ''
+
+        def progress_cb(scanned, total, current_file):
+            self._internal_progress_callback(scanned, total, current_file)
+
         try:
             # Group files by directory to scan efficiently
             dirs_to_scan = set(os.path.dirname(p) for p in file_paths)
-            self.scanner.scan(list(dirs_to_scan), handle_deletions=False)
+            self.scanner.scan(list(dirs_to_scan), progress_callback=progress_cb, handle_deletions=False)
             
             # Add tracks
+            added_count = 0
             for path in file_paths:
                 self.db.add_track_to_playlist(playlist_id, path)
+                added_count += 1
                 
             # Trigger async lyrics prefetch
             threading.Thread(target=self._prefetch_all_lyrics, daemon=True).start()
             
-            return {'status': 'success', 'message': 'Import completed'}
+            return {'status': 'success', 'message': f'Đã nhập thành công {added_count} bài hát', 'added_count': added_count}
         except Exception as e:
             logger.error(f"Error importing files to playlist: {e}")
             return {'status': 'error', 'message': str(e)}
+        finally:
+            self._scan_state['is_scanning'] = False
 
     def update_track(self, path: str, updates: Dict[str, Any]):
         self.db.update_track(path, updates)

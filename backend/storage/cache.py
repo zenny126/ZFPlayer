@@ -5,9 +5,11 @@ from PIL import Image
 from typing import Optional, Dict, Any, Tuple
 from functools import lru_cache
 
+from backend.utils.path_utils import get_cache_dir
+
 class CacheManager:
-    def __init__(self, cache_dir: str = r"d:\ZFPlayer\cache"):
-        self.cache_dir = cache_dir
+    def __init__(self, cache_dir: str = None):
+        self.cache_dir = cache_dir or get_cache_dir()
         self.covers_dir = os.path.join(self.cache_dir, "covers")
         self.lyrics_dir = os.path.join(self.cache_dir, "lyrics")
         self._cover_path_cache = {}

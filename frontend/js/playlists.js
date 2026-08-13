@@ -75,9 +75,9 @@ class PlaylistManager {
           
           const coverEl = document.getElementById('playlist-detail-cover');
           if (state.playlistId === 'all') {
-             coverEl.src = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%23181818'/><path d='M9 18V5l12-2v13 M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M18 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>";
+             coverEl.src = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><path d='M9 18V5l12-2v13 M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M18 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>";
           } else if (state.playlistId === 'favorites') {
-             coverEl.src = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%23181818'/><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' fill='%23ffffff'/></svg>";
+             coverEl.src = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' fill='%23ffffff'/></svg>";
           } else if (p.cover_url) {
              coverEl.src = p.cover_url;
           } else {
@@ -172,9 +172,9 @@ class PlaylistManager {
         const previewImg = document.getElementById('edit-playlist-cover-preview');
         if (previewImg) {
           if (this.targetPlaylistId === 'all') {
-            previewImg.src = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%23181818'/><path d='M9 18V5l12-2v13 M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M18 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>";
+            previewImg.src = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><path d='M9 18V5l12-2v13 M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M18 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>";
           } else if (this.targetPlaylistId === 'favorites') {
-            previewImg.src = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%23181818'/><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' fill='%23ffffff'/></svg>";
+            previewImg.src = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' fill='%23ffffff'/></svg>";
           } else {
             let p = this.playlists.find(x => String(x.id) === String(this.targetPlaylistId));
             if (p && p.cover_url) previewImg.src = p.cover_url;
@@ -265,12 +265,38 @@ class PlaylistManager {
         this.btnImportFolder.textContent = 'Scanning...';
         this.btnImportFolder.disabled = true;
         
-        await window.api.importFolderToPlaylist(this.currentPlaylistId, folderPath);
-        
-        this.btnImportFolder.textContent = originalText;
-        this.btnImportFolder.disabled = false;
-        if (window.libraryManager) window.libraryManager.reload();
-        this.loadPlaylists();
+        this.showImportProgressModal('Đang nhập thư mục bài hát...');
+        this.startProgressPolling();
+
+        try {
+          const res = await window.api.importFolderToPlaylist(this.currentPlaylistId, folderPath);
+          this.stopProgressPolling();
+          
+          const fill = document.getElementById('import-progress-fill');
+          if (fill) fill.style.width = '100%';
+          const percentEl = document.getElementById('import-progress-percent');
+          if (percentEl) percentEl.textContent = '100%';
+          await new Promise(r => setTimeout(r, 250));
+          
+          this.hideImportProgressModal();
+
+          if (res && res.status === 'success') {
+            if (window.uiController && window.uiController.showToast) {
+              window.uiController.showToast(res.message || 'Đã nhập bài hát thành công!');
+            }
+          }
+        } catch (err) {
+          console.error("Error importing folder:", err);
+          this.stopProgressPolling();
+          this.hideImportProgressModal();
+        } finally {
+          this.btnImportFolder.textContent = originalText;
+          this.btnImportFolder.disabled = false;
+          if (window.libraryManager) {
+            await window.libraryManager.reload();
+          }
+          await this.loadPlaylists();
+        }
       }
     });
 
@@ -282,12 +308,38 @@ class PlaylistManager {
         this.btnImportFiles.textContent = 'Processing...';
         this.btnImportFiles.disabled = true;
         
-        await window.api.importFilesToPlaylist(this.currentPlaylistId, filePaths);
-        
-        this.btnImportFiles.textContent = originalText;
-        this.btnImportFiles.disabled = false;
-        if (window.libraryManager) window.libraryManager.reload();
-        this.loadPlaylists();
+        this.showImportProgressModal('Đang nhập tệp bài hát...');
+        this.startProgressPolling();
+
+        try {
+          const res = await window.api.importFilesToPlaylist(this.currentPlaylistId, filePaths);
+          this.stopProgressPolling();
+          
+          const fill = document.getElementById('import-progress-fill');
+          if (fill) fill.style.width = '100%';
+          const percentEl = document.getElementById('import-progress-percent');
+          if (percentEl) percentEl.textContent = '100%';
+          await new Promise(r => setTimeout(r, 250));
+          
+          this.hideImportProgressModal();
+
+          if (res && res.status === 'success') {
+            if (window.uiController && window.uiController.showToast) {
+              window.uiController.showToast(res.message || 'Đã nhập bài hát thành công!');
+            }
+          }
+        } catch (err) {
+          console.error("Error importing files:", err);
+          this.stopProgressPolling();
+          this.hideImportProgressModal();
+        } finally {
+          this.btnImportFiles.textContent = originalText;
+          this.btnImportFiles.disabled = false;
+          if (window.libraryManager) {
+            await window.libraryManager.reload();
+          }
+          await this.loadPlaylists();
+        }
       }
     });
 
@@ -382,9 +434,9 @@ class PlaylistManager {
       
       if (previewImg) {
         if (playlistId === 'all') {
-          previewImg.src = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%23181818'/><path d='M9 18V5l12-2v13 M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M18 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>";
+          previewImg.src = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><path d='M9 18V5l12-2v13 M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M18 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>";
         } else if (playlistId === 'favorites') {
-          previewImg.src = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%23181818'/><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' fill='%23ffffff'/></svg>";
+          previewImg.src = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' fill='%23ffffff'/></svg>";
         } else if (p.cover_url) {
           previewImg.src = p.cover_url;
         } else {
@@ -543,8 +595,8 @@ class PlaylistManager {
     
     // Add All Songs
     const allItem = document.createElement('li');
-    const allCover = this.systemCovers.all;
-    allItem.innerHTML = `<div class="icon-placeholder system-icon">${allCover ? `<img src="${allCover}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">` : `<svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 24px; height: 24px; color: #ffffff;"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>`}</div>
+    allItem.dataset.id = 'all';
+    allItem.innerHTML = `<div class="icon-placeholder system-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 24px; height: 24px; color: #ffffff;"><path d="M9 18V5l12-2v13 M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M18 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path></svg></div>
           <div class="library-list-text">
             <div class="library-list-title">All Songs</div>
             <div class="library-list-subtitle">All your local tracks</div>
@@ -561,8 +613,8 @@ class PlaylistManager {
 
     // Add Favorites
     const favItem = document.createElement('li');
-    const favCover = this.systemCovers.favorites;
-    favItem.innerHTML = `<div class="icon-placeholder system-icon">${favCover ? `<img src="${favCover}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">` : `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width: 24px; height: 24px; color: #ffffff;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`}</div>
+    favItem.dataset.id = 'favorites';
+    favItem.innerHTML = `<div class="icon-placeholder system-icon"><svg viewBox="0 0 24 24" fill="#ffffff" stroke="none" style="width: 24px; height: 24px; color: #ffffff;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div>
           <div class="library-list-text">
             <div class="library-list-title">Favorite Songs</div>
             <div class="library-list-subtitle">Your favorite tracks</div>
@@ -642,6 +694,62 @@ class PlaylistManager {
   async openPlaylist(id) {
     this.currentPlaylistId = id;
     window.store.setState({ view: 'playlist', playlistId: id });
+  }
+
+  showImportProgressModal(title) {
+    const modal = document.getElementById('import-progress-modal');
+    if (!modal) return;
+    document.getElementById('import-progress-title').textContent = title || 'Đang nhập bài hát...';
+    document.getElementById('import-progress-file').textContent = 'Đang chuẩn bị...';
+    document.getElementById('import-progress-fill').style.width = '0%';
+    document.getElementById('import-progress-status').textContent = '0 / 0';
+    document.getElementById('import-progress-percent').textContent = '0%';
+    modal.classList.remove('hidden');
+  }
+
+  hideImportProgressModal() {
+    const modal = document.getElementById('import-progress-modal');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  startProgressPolling() {
+    this.stopProgressPolling();
+    this.progressInterval = setInterval(async () => {
+      try {
+        const progress = await window.api.getScanProgress();
+        if (progress) {
+          const fill = document.getElementById('import-progress-fill');
+          const fileEl = document.getElementById('import-progress-file');
+          const statusEl = document.getElementById('import-progress-status');
+          const percentEl = document.getElementById('import-progress-percent');
+          
+          if (fileEl && progress.current_file) {
+            const fileName = progress.current_file.split(/[/\\]/).pop();
+            fileEl.textContent = fileName ? `Đang xử lý: ${fileName}` : progress.current_file;
+          }
+
+          if (progress.total > 0) {
+            const percent = Math.min(100, Math.round((progress.scanned / progress.total) * 100));
+            if (fill) fill.style.width = `${percent}%`;
+            if (statusEl) statusEl.textContent = `${progress.scanned} / ${progress.total}`;
+            if (percentEl) percentEl.textContent = `${percent}%`;
+          } else if (progress.scanned > 0) {
+            if (fill) fill.style.width = `50%`;
+            if (statusEl) statusEl.textContent = `Đã quét ${progress.scanned} tệp`;
+            if (percentEl) percentEl.textContent = `...`;
+          }
+        }
+      } catch (e) {
+        console.error("Error fetching progress:", e);
+      }
+    }, 150);
+  }
+
+  stopProgressPolling() {
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
+      this.progressInterval = null;
+    }
   }
 }
 

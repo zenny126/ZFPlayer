@@ -8,9 +8,12 @@ from socketserver import ThreadingMixIn
 from wsgiref.simple_server import make_server, WSGIServer
 from bottle import Bottle, static_file, request, response
 
+from backend.utils.path_utils import get_bundle_dir
+
 # Ensure project root is in sys.path when run directly
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
+PROJECT_ROOT = get_bundle_dir()
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from backend.storage.database import Database
 from backend.storage.config import Config
@@ -151,8 +154,9 @@ def main():
     window.events.loaded += on_loaded
     window.events.closed += on_closed
 
-    # Start PyWebView
-    webview.start(debug=True)
+    # Start PyWebView (Debug enabled only when --debug flag or ZFPLAYER_DEBUG=1 is set)
+    debug_mode = "--debug" in sys.argv or os.environ.get("ZFPLAYER_DEBUG") == "1"
+    webview.start(debug=debug_mode)
 
 if __name__ == '__main__':
     main()

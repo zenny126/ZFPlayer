@@ -25,8 +25,8 @@ class HomeManager {
       this.playlistsContainer.innerHTML = '';
       
       const playlists = [
-        { id: 'all', name: 'All Songs', subtitle: 'All your local tracks', icon: 'M9 18V5l12-2v13 M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M18 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z', bg: 'rgba(255,255,255,0.05)', color: '#ffffff', fill: 'none' },
-        { id: 'favorites', name: 'Favorite Songs', subtitle: 'Your favorite tracks', icon: 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z', bg: 'rgba(255,255,255,0.05)', color: '#ffffff', fill: 'currentColor' }
+        { id: 'all', name: 'All Songs', subtitle: 'All your local tracks', icon: 'M9 18V5l12-2v13 M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M18 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z', bg: 'transparent', color: '#ffffff', fill: 'none' },
+        { id: 'favorites', name: 'Favorite Songs', subtitle: 'Your favorite tracks', icon: 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z', bg: 'transparent', color: '#ffffff', fill: 'currentColor' }
       ];
 
       // Fetch custom playlists
@@ -38,7 +38,7 @@ class HomeManager {
           subtitle: `${p.track_count || 0} tracks`,
           cover_url: p.cover_url,
           icon: 'M9 18V5l12-2v13 M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M18 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
-          bg: 'rgba(255,255,255,0.05)',
+          bg: 'transparent',
           color: '#ffffff'
         });
       });

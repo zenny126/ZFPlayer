@@ -205,9 +205,12 @@ h1, h2, h3, h4, h5, h6 {
   background-color: var(--bg-elevated); display: flex; align-items: center; justify-content: center;
 }
 .library-list li .icon-placeholder.system-icon {
-  background-color: transparent;
-  border: none;
-  box-shadow: none;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+.library-list li .icon-placeholder.system-icon svg {
+  color: #ffffff !important;
 }
 .library-list li.artist img { border-radius: 50%; }
 .library-list-text { flex: 1; min-width: 0; }

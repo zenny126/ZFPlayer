@@ -107,6 +107,23 @@ class PlayerController {
       });
     }
     if (volBar) updateVolUI(volBar.value);
+
+    // Setup Windows SMTC / Browser MediaSession Action Handlers
+    if ('mediaSession' in navigator) {
+      try {
+        navigator.mediaSession.setActionHandler('play', () => this.togglePlay());
+        navigator.mediaSession.setActionHandler('pause', () => this.togglePlay());
+        navigator.mediaSession.setActionHandler('previoustrack', () => this.prev());
+        navigator.mediaSession.setActionHandler('nexttrack', () => this.next());
+        navigator.mediaSession.setActionHandler('seekto', (details) => {
+          if (details.seekTime !== undefined) {
+            this.seek(details.seekTime);
+          }
+        });
+      } catch (e) {
+        console.warn('MediaSession action handler error:', e);
+      }
+    }
     
     // Real-time responsive seeking (sync both seekbars, time labels, lyrics visually while dragging, seek audio on release)
     const updateAllSeekUI = (val) => {
@@ -251,6 +268,26 @@ class PlayerController {
         if (lyricsLikeBtnSync) {
           lyricsLikeBtnSync.innerHTML = state.currentTrack.is_liked ? likeIconFilled : likeIconEmpty;
           lyricsLikeBtnSync.classList.toggle('liked', !!state.currentTrack.is_liked);
+        }
+      }
+
+      // Sync Windows SMTC / MediaSession Metadata & Playback state
+      if ('mediaSession' in navigator) {
+        try {
+          if (state.currentTrack) {
+            const coverUrl = state.currentTrack.cover_hash
+              ? `${window.location.origin}/api/covers/${state.currentTrack.cover_hash}.jpg`
+              : '';
+            navigator.mediaSession.metadata = new MediaMetadata({
+              title: state.currentTrack.title || 'Unknown Title',
+              artist: state.currentTrack.artist || 'Unknown Artist',
+              album: state.currentTrack.album || 'ZeroFLAC Player',
+              artwork: coverUrl ? [{ src: coverUrl, sizes: '512x512', type: 'image/jpeg' }] : []
+            });
+          }
+          navigator.mediaSession.playbackState = state.isPlaying ? 'playing' : 'paused';
+        } catch (e) {
+          console.warn('MediaSession sync error:', e);
         }
       }
     };

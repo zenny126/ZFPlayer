@@ -98,18 +98,6 @@ class LibraryManager {
     
     this.vList = new VirtualList(this.container, 56, (index, node) => this.renderTrack(index, node));
     
-    document.getElementById('btn-playlist-import-files').addEventListener('click', () => {
-      window.api.selectMusicFiles().then(files => {
-        if (files && files.length > 0) window.api.importFilesToPlaylist(this.currentPlaylistId, files).then(() => this.reloadCurrent());
-      });
-    });
-
-    document.getElementById('btn-playlist-import-folder').addEventListener('click', () => {
-      window.api.selectMusicDir().then(folder => {
-        if (folder) window.api.importFolderToPlaylist(this.currentPlaylistId, folder).then(() => this.reloadCurrent());
-      });
-    });
-
     const btnPlay = document.getElementById('btn-playlist-play');
     if (btnPlay) {
       btnPlay.addEventListener('click', () => {

@@ -1,5 +1,134 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T17:53:30
+### Tác vụ thực hiện
+Cập nhật `.gitignore` để loại bỏ các tệp build tạm (`build/`, `dist/`) và tiến hành đồng bộ / push mã nguồn lên kho lưu trữ từ xa (GitHub).
+
+### Danh sách tệp tin tạo mới & thay đổi
+- `.gitignore` (MODIFIED)
+- `DEV_LOG.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Cập nhật `.gitignore`**:
+   - Thêm `build/` và `dist/` vào `.gitignore` để tránh commit các file ứng dụng thực thi binary dung lượng lớn (.exe) và thư mục tạm do PyInstaller tạo ra.
+2. **Chuẩn bị Push Git**:
+   - Stage toàn bộ mã nguồn hợp lệ và thực hiện `git commit` / `git push` theo yêu cầu từ phía người dùng.
+
+---
+
+## Timestamp: 2026-08-13T17:28:00
+### Tác vụ thực hiện
+Tối ưu UX quá trình Import bài hát vào Playlist: hiển thị tiến độ quét thực tế (Progress Modal) và tự động cập nhật danh sách bài hát ngay sau khi nhập hoàn tất.
+
+### Danh sách tệp tin tạo mới & thay đổi
+- `build_exe.py` (MODIFIED)
+- `dist/ZFPlayer_v1.1.exe` (NEW)
+
+### Mô tả chi tiết kỹ thuật
+1. **Khắc phục Bộ nhớ đệm Icon của Windows Explorer (`IconCache.db`)**:
+   - Icon `app_icon.ico` được nhúng chuẩn 100% vào file thực thi trong quá trình PyInstaller build.
+   - Do Windows Explorer lưu cache Icon theo đường dẫn file cũ `ZFPlayer.exe`, tạo bản sao [`dist/ZFPlayer_v1.1.exe`](file:///d:/ZFPlayer/dist/ZFPlayer_v1.1.exe) giúp Windows Explorer nhận diện đường dẫn mới và hiển thị icon `ZFP` chuẩn ngay lập tức mà không bị ảnh hưởng bởi IconCache cũ.
+1. **Sửa lỗi hỏng Tự động Reload (`library.js`)**:
+   - Xóa bỏ listener click bị trùng lặp và chứa lệnh gọi phương thức không tồn tại `this.reloadCurrent()`.
+2. **Theo dõi Tiến độ Scan Real-time ở Backend (`library_service.py`)**:
+   - Khởi tạo và cập nhật trạng thái `_scan_state` (`is_scanning`, `scanned`, `total`, `current_file`) khi chạy `import_folder_to_playlist` và `import_files_to_playlist`.
+   - Trả về thông báo thành công cùng số bài hát đã thêm.
+3. **Hiển thị Import Progress Modal & Toast Notification (`index.html`, `playlists.js`, `ui.js`)**:
+   - Thêm HTML `#import-progress-modal` hiển thị tên bài hát đang xử lý, thanh tiến trình % và chỉ số `scanned/total`.
+   - Tạo cơ chế Polling `startProgressPolling` trong `playlists.js` gọi `window.api.getScanProgress()` liên tục để cập nhật UI mượt mà.
+   - Thêm phương thức `showToast` vào `UIController` thông báo kết quả khi nhập thành công.
+   - Tự động gọi `window.libraryManager.reload()` và `loadPlaylists()` ngay sau khi import kết thúc để bài hát xuất hiện lập tức không cần F5.
+
+---
+
+## Timestamp: 2026-08-13T17:21:00
+### Tác vụ thực hiện
+Hoàn tất nhúng Icon `app_icon.ico` tuyệt đối vào header của tệp thực thi `dist/ZFPlayer.exe` và tạo bản sao `dist/ZFPlayer_v1.0.exe` để bỏ qua bộ nhớ đệm IconCache của Windows Explorer.
+
+### Danh sách tệp tin tạo mới & thay đổi
+- `zfplayer.spec` (MODIFIED)
+- `build_exe.py` (MODIFIED)
+- `dist/ZFPlayer_v1.0.exe` (NEW)
+
+### Mô tả chi tiết kỹ thuật
+1. **Xử lý Windows Explorer Icon Cache (`IconCache.db`)**:
+   - Icon đã được nhúng thành công 100% vào tệp binary của Windows qua PyInstaller.
+   - Tạo file `dist/ZFPlayer_v1.0.exe` để Windows Explorer đọc lại icon mới thay vì dùng ảnh đệm cũ của `dist/ZFPlayer.exe`.
+
+---
+
+## Timestamp: 2026-08-13T17:17:20
+### Tác vụ thực hiện
+Tạo tệp Icon ứng dụng `app_icon.ico` với chữ "ZFP" chuẩn đa độ phân giải và đóng gói lại tệp thực thi duy nhất `dist/ZFPlayer.exe`.
+
+### Danh sách tệp tin tạo mới & thay đổi
+- `generate_icon.py` (NEW)
+- `app_icon.ico` (NEW)
+- `zfplayer.spec` (MODIFIED)
+- `build_exe.py` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Tạo Icon Đa Độ Phân Giải (`generate_icon.py`, `app_icon.ico`)**:
+   - Sử dụng Pillow vẽ icon chất lượng cao 512x512 thiết kế chuẩn Apple Glassmorphism với chữ "ZFP" màu trắng sáng trên nền tối `#121318`, có hiệu ứng viền phát sáng (Glow border) và 3 nốt chấm âm thanh bên dưới.
+   - Đóng gói file `app_icon.ico` chứa đầy đủ 6 độ phân giải chuẩn của Windows: `16x16`, `32x32`, `48x48`, `64x64`, `128x128`, `256x256`.
+2. **Cấu hình Icon & Rebuild PyInstaller (`zfplayer.spec`, `build_exe.py`)**:
+   - Bổ sung `icon='app_icon.ico'` vào khối `EXE()` trong `zfplayer.spec`.
+   - Bổ sung logic tự dọn dẹp file `.exe` cũ trước khi build trong `build_exe.py`.
+   - Biên dịch thành công tệp đơn duy nhất [`dist/ZFPlayer.exe`](file:///d:/ZFPlayer/dist/ZFPlayer.exe).
+
+---
+
+## Timestamp: 2026-08-13T17:14:30
+### Tác vụ thực hiện
+Tắt chế độ DevTools window tự nảy khi khởi chạy ứng dụng PyWebView và chuyển cấu hình PyInstaller sang đóng gói Đơn Tệp (--onefile).
+
+### Danh sách tệp tin thay đổi
+- `backend/app.py` (MODIFIED)
+- `zfplayer.spec` (MODIFIED)
+- `build_exe.py` (MODIFIED)
+- `task.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Tắt chế độ DevTools (`backend/app.py`)**:
+   - Chuyển `webview.start(debug=True)` thành `debug_mode = "--debug" in sys.argv or os.environ.get("ZFPLAYER_DEBUG") == "1"`.
+   - Giúp ứng dụng khi mở chỉ hiển thị cửa sổ giao diện chính của ZeroFLAC Player, không bị nảy cửa sổ Edge DevTools (`DevTools - 127.0.0.1:...`).
+2. **Cấu hình Đóng gói Đơn Tệp `--onefile` (`zfplayer.spec`, `build_exe.py`)**:
+   - Cập nhật khối `EXE()` trong `zfplayer.spec` gom trực tiếp `a.binaries`, `a.zipfiles`, và `a.datas` vào 1 file thực thi duy nhất.
+   - Loại bỏ khối `COLLECT()`.
+   - Cập nhật `build_exe.py` trỏ và kiểm tra đầu ra tại `dist/ZFPlayer.exe`.
+
+---
+
+## Timestamp: 2026-08-13T17:10:00
+### Tác vụ thực hiện
+Đóng gói ZFPlayer thành ứng dụng EXE tự chạy bằng PyInstaller & Tích hợp Windows System Media Transport Controls (SMTC).
+
+### Danh sách tệp tin thay đổi/tạo mới
+- `backend/utils/path_utils.py` (NEW)
+- `zfplayer.spec` (NEW)
+- `build_exe.py` (NEW)
+- `backend/app.py` (MODIFIED)
+- `backend/storage/config.py` (MODIFIED)
+- `backend/storage/database.py` (MODIFIED)
+- `backend/storage/cache.py` (MODIFIED)
+- `frontend/js/player.js` (MODIFIED)
+- `task.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Hệ thống Quản lý Đường dẫn Linh hoạt (`path_utils.py`)**:
+   - Tự động nhận diện môi trường ứng dụng: khi chạy dưới dạng gói PyInstaller (`sys.frozen`), `PROJECT_ROOT` chuyển sang `sys._MEIPASS` để phục vụ các tệp giao diện web `frontend/`.
+   - Chuyển hướng lưu trữ dữ liệu người dùng (`library.db`, `config.json`, `cache/`) sang `%APPDATA%\ZFPlayer` nhằm tránh lỗi phân quyền ghi đĩa cứng khi cài ứng dụng vào `C:\Program Files\`.
+2. **Windows System Media Transport Controls (SMTC) & Media Keys (`player.js`)**:
+   - Khởi tạo đồng bộ `navigator.mediaSession` trong WebView2 Chromium.
+   - Cập nhật thông tin `MediaMetadata` (Tên bài, Ca sĩ, Album, Cover Art) và `playbackState` (`playing`/`paused`) khi chuyển bài/phát/dừng.
+   - Đăng ký `setActionHandler` cho các sự kiện phím Multimedia phần cứng Windows (`play`, `pause`, `previoustrack`, `nexttrack`, `seekto`).
+3. **Cấu hình Đóng gói & Kịch bản Build (`zfplayer.spec`, `build_exe.py`)**:
+   - Thiết lập PyInstaller spec bao gồm đầy đủ folder `frontend/`, C-DLLs của `soundfile` (`libsndfile`) và `sounddevice`.
+   - Cấu hình `console=False` để ẩn hoàn toàn cửa sổ CMD khi người dùng mở ứng dụng.
+   - Script `build_exe.py` thực thi đóng gói thành công tệp thực thi `dist/ZFPlayer/ZFPlayer.exe`.
+
+---
+
 ## Timestamp: 2026-08-13T16:55:50
 ### Tác vụ thực hiện
 Khắc phục triệt để lỗi câu lyric dài bị lẹm / cắt chữ và quầng sáng glow mép phải trên giao diện Lyrics Overlay.

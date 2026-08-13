@@ -323,6 +323,22 @@
     </div>
   </div>
 
+  <div id="import-progress-modal" class="modal hidden">
+    <div class="modal-content" style="max-width: 440px; text-align: center; padding: 32px 24px;">
+      <h2 id="import-progress-title" style="margin-bottom: 12px; font-size: 1.25rem;">Đang nhập bài hát...</h2>
+      <p id="import-progress-file" style="font-size: 0.85rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 20px;">Đang chuẩn bị...</p>
+      
+      <div class="progress-bar-container" style="background: rgba(255, 255, 255, 0.1); height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 12px; position: relative;">
+        <div id="import-progress-fill" style="background: #e22134; width: 0%; height: 100%; transition: width 0.2s ease;"></div>
+      </div>
+      
+      <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-secondary);">
+        <span id="import-progress-status">0 / 0</span>
+        <span id="import-progress-percent">0%</span>
+      </div>
+    </div>
+  </div>
+
   <div id="context-menu" class="context-menu hidden">
     <div class="context-menu-item" id="ctx-play-next">Play Next</div>
     <div class="context-menu-item" id="ctx-add-to-playlist">Add to Playlist 
