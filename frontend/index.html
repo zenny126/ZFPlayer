@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="css/main.css?v=33">
   <link rel="stylesheet" href="css/library.css?v=20">
   <link rel="stylesheet" href="css/player.css?v=20">
-  <link rel="stylesheet" href="css/lyrics.css?v=38">
+  <link rel="stylesheet" href="css/lyrics.css?v=39">
   <link rel="stylesheet" href="css/albums.css?v=20">
   <script>
     window.onerror = function(message, source, lineno, colno, error) {
@@ -38,14 +38,9 @@
   </script>
 </head>
 <body>
+  <canvas id="webgl-fluid-bg"></canvas>
+  
   <div id="app" class="spotify-layout">
-    
-    <div class="fluid-background" id="fluid-bg">
-      <div class="blob blob-1"></div>
-      <div class="blob blob-2"></div>
-      <div class="blob blob-3"></div>
-      <div class="blob blob-4"></div>
-    </div>
     
     <!-- Top Navigation Bar -->
     <nav id="top-bar">
@@ -169,12 +164,6 @@
 
   <!-- Full-screen Lyrics Overlay (Apple Music style) -->
   <div id="lyrics-overlay" class="hidden">
-    <div class="fluid-background" id="lyrics-fluid-bg">
-      <div class="blob blob-1"></div>
-      <div class="blob blob-2"></div>
-      <div class="blob blob-3"></div>
-      <div class="blob blob-4"></div>
-    </div>
     <button id="btn-close-lyrics" class="lyrics-close-btn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
     </button>
@@ -393,5 +382,6 @@
   <script src="js/home.js?v=26"></script>
   <script src="js/ui.js?v=26"></script>
   <script src="js/main.js?v=26"></script>
+  <script src="js/fluid-shader.js?v=1"></script>
 </body>
 </html>

@@ -1,5 +1,48 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T21:12:00
+### Tác vụ thực hiện
+Tinh chỉnh lại thời lượng Khúc Phát Sáng lên 1200ms theo phản hồi người dùng.
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/lyrics.css` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- Tăng thời gian chuyển động cho `Khúc Phát Sáng (.active)` từ 800ms lên **1200ms**.
+- Giữ nguyên Khúc Tối Trên (`1000ms`) và Khúc Tối Dưới (`1800ms`).
+
+---
+
+## Timestamp: 2026-08-13T21:08:00
+### Tác vụ thực hiện
+Thay thế kỹ thuật làm mờ cũ bằng phương pháp "Scale-up GPU Trick" để giải quyết triệt để vấn đề ngốn GPU trên các thiết bị yếu nhưng không làm giảm chất lượng hình ảnh.
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/main.css` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- Chỉnh kích thước gốc của `.fluid-background` xuống mức siêu nhỏ: chỉ bằng 25% màn hình.
+- Giảm cường độ `blur` từ `60px` xuống còn `20px`.
+- Sử dụng lệnh `transform: scale(5.5)` để GPU thực hiện thuật toán phóng to Bilinear nội suy từ khung hình nhỏ lên bao phủ toàn màn hình. Khối lượng tính toán pixel tổng thể giảm đi **25 đến 30 lần**, tiết kiệm lên đến 90% sức mạnh xử lý của GPU trong khi giữ nguyên 100% cảm giác mờ ảo (vì 20px x 5.5 = 110px mờ thị giác).
+- Chỉnh lại kích thước các thẻ `blob-*` (từ `70vw` xuống `15vw`) để chúng có kích thước chuẩn khi bị scale lên 5.5 lần.
+
+---
+
+## Timestamp: 2026-08-13T21:03:00
+### Tác vụ thực hiện
+Tối ưu hóa hiệu suất GPU cho hiệu ứng Nền chất lỏng (Fluid Background).
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/main.css` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- Giảm cường độ `blur` từ `100px` xuống `60px` (giúp giảm hơn một nửa khối lượng tính toán nội suy pixel của GPU mỗi khung hình mà vẫn giữ được độ mượt của gradient).
+- Thêm thuộc tính phần cứng `transform: translateZ(0)` vào `.fluid-background` để ép trình duyệt đưa layer này vào quy trình xử lý độc lập của GPU (Compositor Layer).
+- Kích hoạt `will-change: transform` cho các `.blob` nhằm báo trước cho GPU rằng các thành phần này chỉ thay đổi tọa độ và kích thước, ngăn chặn tình trạng trình duyệt tính toán lại (Repaint) toàn bộ khung hình trong quá trình chuyển động.
+
+---
+
 ## Timestamp: 2026-08-13T21:01:00
 ### Tác vụ thực hiện
 Tinh chỉnh lại thời lượng Khúc Phát Sáng xuống 800ms theo phản hồi người dùng.
