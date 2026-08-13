@@ -1,5 +1,22 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T20:34:00
+### Tác vụ thực hiện
+Nhân đôi thời lượng Animation để đẩy hiệu ứng Spring Physics Brake Tail (hãm phanh đuôi) lên mức lướt bơ mượt nhất.
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/lyrics.css` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Nhân đôi thời lượng Animation (`lyrics.css`)**:
+   - `Khúc Phát Sáng (.active)`: 600ms -> **1200ms**.
+   - `Khúc Tối Trên (.passed)`: 700ms -> **1400ms**.
+   - `Khúc Tối Dưới (.lyrics-line base)`: 900ms -> **1800ms**.
+   - Mục đích: Đường cong `cubic-bezier(0.15, 1, 0.2, 1)` đẩy tốc độ quá nhanh ở 15% thời gian đầu, việc nhân đôi tổng thời lượng (lên tới gần 2 giây) mang lại không gian tĩnh lặng dài và êm ái hơn để hãm phanh ở đoạn cuối hành trình.
+
+---
+
 ## Timestamp: 2026-08-13T20:31:00
 ### Tác vụ thực hiện
 Tích hợp thuật toán vật lý lò xo (Critically Damped Spring Physics) cho hiệu ứng trượt có trọng lượng: gia tốc gắt ở đầu và hãm cực mượt ở đuôi.
