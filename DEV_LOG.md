@@ -1,5 +1,27 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T20:31:00
+### Tác vụ thực hiện
+Tích hợp thuật toán vật lý lò xo (Critically Damped Spring Physics) cho hiệu ứng trượt có trọng lượng: gia tốc gắt ở đầu và hãm cực mượt ở đuôi.
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/main.css` (MODIFIED)
+- `frontend/css/lyrics.css` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+- `task.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Tinh chỉnh Bezier Apple Music (`main.css`)**:
+   - Chuyển `--ease-apple-lyrics` sang `cubic-bezier(0.15, 1, 0.2, 1)`. 
+   - Mô phỏng chính xác thuộc tính Damped Spring: Cột X(0.15) nén gia tốc bứt tốc cực mạnh ở giai đoạn đầu (chiếm đa số khoảng trượt trong 15% thời gian đầu tiên), sau đó dành 85% thời gian còn lại lướt tới đích để hãm phanh êm ái tuyệt đối.
+2. **Kéo giãn thời lượng phô diễn phanh (Braking Tail) (`lyrics.css`)**:
+   - Do 85% thời gian là hãm phanh trượt mượt, tăng thêm thời lượng để người dùng cảm nhận rõ độ mượt của đuôi phanh (Brake tail).
+   - `Khúc Tối Trên (.passed)`: **700ms**.
+   - `Khúc Phát Sáng (.active)`: **600ms**.
+   - `Khúc Tối Dưới (.lyrics-line base)`: **900ms**.
+
+---
+
 ## Timestamp: 2026-08-13T20:28:00
 ### Tác vụ thực hiện
 Tái cấu trúc và chuẩn hóa hoàn toàn chuyển động Lyric về chuẩn 3 khúc rành mạch (Tối Trên - Phát Sáng - Tối Dưới) với đường cong mượt siêu cấp.
