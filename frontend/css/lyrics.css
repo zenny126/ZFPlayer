@@ -11,6 +11,9 @@
   transition: opacity 300ms var(--ease-out-expo), transform 300ms var(--ease-out-expo), visibility 300ms var(--ease-out-expo);
   transform: translateY(0);
   will-change: opacity, transform;
+  
+  /* Dynamic sizing for left column to prevent height-based shrinking mismatch */
+  --max-cover-size: min(400px, calc(85vh - 250px));
 }
 
 #lyrics-overlay.hidden {
@@ -58,17 +61,18 @@
 }
 
 .lyrics-track-info {
-  flex: 0 0 400px; /* Chuyển từ % sang kích thước cố định để bìa album không bị phình/teo khi resize */
+  flex: 0 0 35%; /* Giảm từ 45% xuống 35% để phần lời bài hát có nhiều không gian hơn */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 20px;
   width: 100%;
+  max-width: var(--max-cover-size); /* Shrink entire column if window height is too short */
 }
 
 #lyrics-cover {
   width: 100%;
-  max-width: 400px; /* Giảm từ 440px xuống 400px */
+  max-width: var(--max-cover-size); /* Giảm từ 440px xuống 400px, điều chỉnh theo chiều cao */
   aspect-ratio: 1;
   border-radius: 12px;
   object-fit: cover;
@@ -85,7 +89,7 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  max-width: 400px;
+  max-width: var(--max-cover-size);
 }
 
 .lyrics-track-info .track-details {
@@ -130,7 +134,7 @@
 /* Apple Music style Seekbar in Lyrics */
 .lyrics-seek-container {
   width: 100%;
-  max-width: 400px;
+  max-width: var(--max-cover-size);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -153,7 +157,7 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  max-width: 400px;
+  max-width: var(--max-cover-size);
   padding: 0 8px;
 }
 .lyrics-controls .btn-icon {
@@ -213,7 +217,7 @@
   align-items: center;
   gap: 12px;
   width: 100%;
-  max-width: 400px;
+  max-width: var(--max-cover-size);
   color: rgba(255, 255, 255, 0.5);
 }
 .lyrics-volume-container .volume-bar {
@@ -302,6 +306,10 @@
 
 /* Optimizations for Maximized and Fullscreen (F11) */
 @media (min-width: 1400px) {
+  #lyrics-overlay {
+    --max-cover-size: min(480px, calc(85vh - 280px));
+  }
+
   .lyrics-overlay-container {
     max-width: 1600px;
     gap: 6%;
@@ -309,17 +317,6 @@
 
   .lyrics-track-info {
     flex: 0 0 35%; /* Giữ tỷ lệ 35% trên màn hình lớn */
-  }
-
-  #lyrics-cover {
-    max-width: 480px; /* Giảm từ 540px xuống 480px */
-  }
-
-  .lyrics-metadata-row,
-  .lyrics-seek-container,
-  .lyrics-controls,
-  .lyrics-volume-container {
-    max-width: 480px;
   }
 
   .lyrics-track-info .player-track-name {
@@ -360,16 +357,12 @@
 }
 
 @media (min-width: 1800px) {
+  #lyrics-overlay {
+    --max-cover-size: min(640px, calc(85vh - 320px));
+  }
+
   .lyrics-overlay-container {
     max-width: 1900px;
-  }
-  
-  #lyrics-cover,
-  .lyrics-metadata-row,
-  .lyrics-seek-container,
-  .lyrics-controls,
-  .lyrics-volume-container {
-    max-width: 640px;
   }
   
   .lyrics-line {

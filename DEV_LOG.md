@@ -1,17 +1,20 @@
 # DEV LOG
 
-## Timestamp: 2026-08-13T21:48:00
+## Timestamp: 2026-08-13T21:55:00
 ### Tác vụ thực hiện
-Cố định kích thước cột trái (Album Cover & Controls) trong giao diện Lời bài hát để không bị thay đổi theo tỷ lệ cửa sổ.
+Sửa lỗi cột giao diện thông tin bài hát (bên trái) bị lệch kích thước, tràn chiều rộng hoặc co rút sai lệch trên các màn hình và thiết bị có độ phân giải khác nhau.
 
 ### Danh sách tệp tin thay đổi
 - `frontend/css/lyrics.css` (MODIFIED)
 - `frontend/index.html` (MODIFIED)
 
 ### Mô tả chi tiết kỹ thuật
-- Thay đổi thuộc tính flex của `.lyrics-track-info` từ `flex: 0 0 35%` thành `flex: 0 0 400px`.
-- Việc sử dụng tỷ lệ phần trăm (35%) trước đó khiến cho kích thước thật của cột bên trái (và do đó là bìa album bên trong) phình to hoặc teo nhỏ liên tục khi người dùng thay đổi kích thước chiều ngang của cửa sổ ứng dụng. 
-- Việc chốt cứng `400px` đảm bảo bìa album và cụm điều khiển luôn giữ nguyên một kích thước chuẩn xác và ổn định ở mọi độ phân giải màn hình Desktop.
+- **Nguyên nhân cốt lõi**: Trước đây, kích thước của toàn bộ cụm điều khiển và bìa album bị giới hạn cứng bởi `max-width: 400px` (hoặc 480px, 640px). Tuy nhiên, trên những màn hình có chiều cao thấp (như laptop), tính năng `flex-shrink` tự động thu nhỏ chiều cao (và dẫn tới thu nhỏ chiều rộng) của ảnh bìa để vừa vặn với màn hình. Trong khi đó, các cụm nút điều khiển bên dưới lại không thu nhỏ bề ngang, tạo ra hiện tượng lệch kích thước lởm chởm.
+- **Cách khắc phục**:
+  - Áp dụng thuật toán tính toán chiều cao thông minh bằng biến CSS `--max-cover-size`.
+  - Giá trị này được gán động thông qua `min(400px, calc(85vh - 250px))` (250px là phần bù hao không gian cho các nút bấm).
+  - Biến `--max-cover-size` được áp đặt làm `max-width` cho toàn bộ cột `lyrics-track-info` và các tập con của nó.
+  - Kết quả: Từ nay Ảnh bìa, thanh trượt, nút bấm và âm lượng sẽ **luôn luôn** ép vào cùng một giới hạn chiều ngang hoàn hảo tuyệt đối, bất kể người dùng mở trên cửa sổ siêu rộng, siêu hẹp hay siêu lùn. Các bài hát khác nhau sẽ không còn bị hiện tượng lệch khung nữa.
 
 ---
 
