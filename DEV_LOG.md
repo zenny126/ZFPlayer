@@ -1,5 +1,18 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T13:37:34.202788
+### Tác vụ thực hiện
+Ẩn 2 nút 'IMPORT FOLDER' và 'SELECT FILES' trên Playlist Header đối với riêng playlist Favorite Songs.
+
+### Danh sách tệp tin thay đổi
+- rontend/js/playlists.js (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. Trong PlaylistManager.init() (lắng nghe sự kiện đổi view playlist), kiểm tra nếu state.playlistId === 'favorites', thiết lập display: none cho #btn-playlist-import-folder và #btn-playlist-import-files.
+2. Với các playlist khác (ll và custom playlists), duy trì hiển thị inline-flex như bình thường.
+
+---
+
 ## Timestamp: 2026-08-13T13:34:20.100571
 ### Tác vụ thực hiện
 Tối ưu giao diện Playlist Header: Thay thế 3 nút chức năng riêng lẻ bằng 1 Nút Bánh Răng duy nhất mở Modal Popup 'Chỉnh sửa Playlist' hợp nhất.
