@@ -1,0 +1,122 @@
+#player-bar {
+  /* relative to #app */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background: transparent;
+  height: 100%;
+}
+
+.player-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 30%;
+  min-width: 180px;
+}
+
+.player-cover-small {
+  width: 56px; height: 56px;
+  border-radius: var(--border-radius-sm);
+  object-fit: cover;
+  box-shadow: var(--shadow-sm);
+}
+
+.player-track-text {
+  display: flex; flex-direction: column; overflow: hidden; justify-content: center;
+}
+
+.player-track-name {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 14px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+.player-track-artist {
+  color: var(--text-secondary);
+  font-size: 12px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.player-like-btn {
+  margin-left: 8px;
+}
+.player-like-btn.liked { color: var(--accent); }
+.player-like-btn.liked:hover { color: var(--accent-hover); }
+
+.player-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 40%;
+  max-width: 722px;
+}
+
+.control-buttons {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.btn-play-pause-circle {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background-color: var(--text-primary);
+  color: black;
+  display: flex; align-items: center; justify-content: center;
+  border: none; cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+.btn-play-pause-circle:hover {
+  transform: scale(1.06);
+}
+.btn-play-pause-circle:active {
+  transform: scale(0.95);
+}
+.icon-play {
+  width: 16px; height: 16px;
+  margin-left: 2px; /* optical alignment */
+}
+
+.seek-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.seek-time {
+  font-size: 11px;
+  color: var(--text-subdued);
+  font-variant-numeric: tabular-nums;
+  min-width: 40px;
+  text-align: center;
+}
+
+.player-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  width: 30%;
+  min-width: 180px;
+}
+
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 93px;
+  margin-left: 8px;
+}
+.volume-bar {
+  width: 100%;
+}
+
+.btn-shuffle.active, .btn-repeat.active { color: var(--accent); position: relative; }
+.btn-shuffle.active::after, .btn-repeat.active::after {
+  content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+  width: 4px; height: 4px; border-radius: 50%; background-color: var(--accent);
+}

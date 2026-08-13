@@ -1,0 +1,87 @@
+document.addEventListener('DOMContentLoaded', async () => {
+  // Wait for API
+  await window.api.readyPromise;
+  console.log("API Ready. Initializing app...");
+
+  // Init components
+  window.uiController = new UIController();
+  window.playerController = new PlayerController();
+  window.lyricsRenderer = new LyricsRenderer();
+  window.libraryManager = new LibraryManager();
+  window.albumsManager = new AlbumsManager();
+  
+  await window.libraryManager.init();
+  // window.uiController.loadPlaylists() is now handled by playlists.js
+  if (window.homeManager) window.homeManager.loadHome();
+
+  // Load config & sync player state on startup
+  const config = await window.api.getConfig();
+  const playerState = await window.api.getPlayerState();
+  
+  if (config) {
+    if (config.volume !== undefined) {
+      window.store.setState({ volume: config.volume });
+      document.getElementById('volume-bar').value = config.volume * 100;
+    }
+    
+    if (config.shuffle !== undefined) {
+      window.store.setState({ shuffle: config.shuffle });
+    }
+    
+    if (config.repeat !== undefined) {
+      window.store.setState({ repeat: config.repeat });
+    }
+  }
+
+  // Restore player state from backend if active, else fall back to last track / first track
+  if (playerState && playerState.track) {
+    window.store.setState({ 
+      currentTrack: playerState.track,
+      isPlaying: playerState.is_playing 
+    });
+    const pos = playerState.position_seconds !== undefined ? playerState.position_seconds : playerState.position;
+    window.playerController.ticker.sync(pos, playerState.duration, playerState.is_playing);
+  } else if (config && config.last_track) {
+    try {
+      const trackInfo = await window.api.getTrackInfo(config.last_track);
+      if (trackInfo && trackInfo.path) {
+        window.store.setState({ currentTrack: trackInfo, isPlaying: false });
+        window.playerController.ticker.sync(0, trackInfo.duration, false);
+      } else {
+        const firstPage = await window.api.getTracks(0, 1, '', 'title', 'ASC');
+        if (firstPage && firstPage.length > 0) {
+          window.store.setState({ currentTrack: firstPage[0], isPlaying: false });
+          window.playerController.ticker.sync(0, firstPage[0].duration, false);
+        }
+      }
+    } catch(e) {
+      console.error("Error loading last track:", e);
+    }
+  } else {
+    try {
+      const firstPage = await window.api.getTracks(0, 1, '', 'title', 'ASC');
+      if (firstPage && firstPage.length > 0) {
+        window.store.setState({ currentTrack: firstPage[0], isPlaying: false });
+        window.playerController.ticker.sync(0, firstPage[0].duration, false);
+      }
+    } catch(e) {
+      console.error("Error loading fallback track:", e);
+    }
+  }
+  
+  // F11 Fullscreen listener
+  document.addEventListener('keydown', async (e) => {
+    if (e.key === 'F11') {
+      e.preventDefault();
+      try {
+        if (window.api && window.api.toggleFullscreen) {
+          await window.api.toggleFullscreen();
+        }
+      } catch (err) {
+        console.error("PyWebView toggleFullscreen error:", err);
+      }
+    }
+  });
+
+  console.log("App initialized.");
+});

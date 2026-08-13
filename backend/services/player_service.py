@@ -1,0 +1,273 @@
+import logging
+import random
+import threading
+import time
+from typing import Dict, Optional, Any
+
+logger = logging.getLogger(__name__)
+
+class PlayerService:
+    def __init__(self, audio_engine, library_service, config, lyrics_worker=None):
+        self.audio_engine = audio_engine
+        self.library_service = library_service
+        self.config = config
+        self.lyrics_worker = lyrics_worker
+        self.current_path = self.config.get('last_track')
+        self.normal_playlist = []
+        self.shuffled_playlist = []
+        self.current_playlist_id = self.config.get('last_playlist_id', 'all')
+        
+        # Set up auto-next on track end
+        self.audio_engine.on_track_end = lambda: self.next_track(user_initiated=False)
+
+    def _preload_next_tracks_lyrics(self, current_path: str):
+        if not self.lyrics_worker:
+            return
+        time.sleep(2.0)
+        try:
+            shuffle_mode = self.config.get('shuffle', False)
+            active_list = self.shuffled_playlist if shuffle_mode else self.normal_playlist
+            if not active_list:
+                active_list = self.library_service.get_all_track_paths()
+            if not active_list:
+                return
+                
+            try:
+                current_idx = active_list.index(current_path)
+            except ValueError:
+                current_idx = 0
+                
+            for offset in range(1, 6):
+                next_idx = (current_idx + offset) % len(active_list)
+                next_path = active_list[next_idx]
+                
+                track_info = self.library_service.get_track_info(next_path)
+                if track_info:
+                    # Check if already cached to avoid hitting online API or logging unnecessarily
+                    cache_key = self.lyrics_worker._get_cache_key(
+                        track_info.get('artist', ''),
+                        track_info.get('title', ''),
+                        track_info.get('album', ''),
+                        track_info.get('duration', 0.0)
+                    )
+                    db_cache = self.lyrics_worker.database.get_lyrics(cache_key)
+                    if db_cache:
+                        continue
+                        
+                    logger.info(f"Preloading lyrics [{offset}/5] for: {track_info.get('title')} - {track_info.get('artist')}")
+                    self.lyrics_worker.fetch_lyrics(
+                        track_info.get('artist', ''),
+                        track_info.get('title', ''),
+                        track_info.get('album', ''),
+                        track_info.get('duration', 0.0),
+                        track_info.get('path', '')
+                    )
+                    time.sleep(0.3) # rate-limiting prevention
+        except Exception as e:
+            logger.debug(f"Failed to preload next 5 tracks lyrics: {e}")
+
+    def _sync_playlists_and_index(self, path: str, playlist_id: Any = None):
+        if playlist_id is not None:
+            self.current_playlist_id = playlist_id
+            self.config.set('last_playlist_id', playlist_id)
+        else:
+            if not getattr(self, 'current_playlist_id', None):
+                self.current_playlist_id = self.config.get('last_playlist_id', 'all')
+            playlist_id = self.current_playlist_id
+
+        is_favorites = str(playlist_id) in ['favorites', '-1']
+        real_playlist_id = int(playlist_id) if playlist_id is not None and str(playlist_id).isdigit() else None
+        
+        paths = self.library_service.get_all_track_paths(is_favorites=is_favorites, playlist_id=real_playlist_id)
+        if not paths:
+            paths = self.library_service.get_all_track_paths()
+            
+        if not paths:
+            return
+            
+        shuffle_mode = self.config.get('shuffle', False)
+        
+        if self.normal_playlist != list(paths):
+            self.normal_playlist = list(paths)
+            self.shuffled_playlist = []
+            
+        if not self.shuffled_playlist or len(self.shuffled_playlist) != len(paths) or set(self.shuffled_playlist) - set(paths):
+            remaining = [p for p in paths if p != path]
+            random.shuffle(remaining)
+            self.shuffled_playlist = [path] + remaining if path in paths else remaining
+            
+        if shuffle_mode:
+            if path in self.shuffled_playlist:
+                self.current_playlist_index = self.shuffled_playlist.index(path)
+            else:
+                self.current_playlist_index = 0
+        else:
+            if path in self.normal_playlist:
+                self.current_playlist_index = self.normal_playlist.index(path)
+            else:
+                self.current_playlist_index = 0
+
+    def play(self, path: str, playlist_id: Any = None) -> Dict[str, Any]:
+        logger.info(f"Playing track (debounced): {path} (playlist_id={playlist_id})")
+        if playlist_id is not None:
+            self.current_playlist_id = playlist_id
+        
+        self.current_path = path
+        self.config.set('last_track', path)
+        
+        # Record play history
+        if hasattr(self.library_service, 'db'):
+            self.library_service.db.update_last_played(path)
+        
+        # Keep playlist indices in sync for the scoped playlist
+        self._sync_playlists_and_index(path, playlist_id)
+
+        # Cancel any existing load timer
+        if hasattr(self, '_load_timer') and self._load_timer:
+            self._load_timer.cancel()
+            
+        # Stop current playback immediately
+        self.audio_engine.stop()
+
+        def delayed_load(target_path: str):
+            try:
+                # Abort if the user skipped again while waiting
+                if self.current_path != target_path:
+                    return
+                self.audio_engine.load(target_path)
+                # Double check after loading (which can take 200ms)
+                if self.current_path != target_path:
+                    self.audio_engine.stop()
+                    return
+                self.audio_engine.play()
+                
+                # Asynchronously preload the next 5 tracks' lyrics
+                threading.Thread(target=self._preload_next_tracks_lyrics, args=(target_path,), daemon=True).start()
+            except Exception as e:
+                logger.error(f"Delayed RAM load failed for {target_path}: {e}")
+
+        # Start 0.3s debounce timer
+        self._load_timer = threading.Timer(0.3, delayed_load, args=(path,))
+        self._load_timer.start()
+        
+        return self.get_state()
+
+    def pause(self) -> Dict[str, Any]:
+        logger.info("Pausing playback")
+        self.audio_engine.pause()
+        return self.get_state()
+
+    def resume(self) -> Dict[str, Any]:
+        logger.info("Resuming playback")
+        if self.audio_engine.state.name in ('IDLE', 'STOPPED'):
+            if self.current_path:
+                return self.play(self.current_path, self.current_playlist_id)
+        self.audio_engine.resume()
+        return self.get_state()
+
+    def stop(self) -> Dict[str, Any]:
+        logger.info("Stopping playback")
+        self.audio_engine.stop()
+        return self.get_state()
+
+    def seek(self, seconds: float) -> Dict[str, Any]:
+        logger.info(f"Seeking to {seconds}s")
+        self.audio_engine.seek(seconds)
+        return self.get_state()
+
+    def set_volume(self, level: float) -> None:
+        logger.debug(f"Setting volume to {level}")
+        self.audio_engine.set_volume(level)
+        self.config.set('volume', level)
+
+    def set_active_playlist(self, playlist_id: Any) -> Dict[str, Any]:
+        logger.info(f"Setting active playlist scope to: {playlist_id}")
+        self.current_playlist_id = playlist_id
+        self.config.set('last_playlist_id', playlist_id)
+        if self.current_path:
+            self._sync_playlists_and_index(self.current_path, playlist_id)
+        return self.get_state()
+
+    def get_state(self) -> Dict[str, Any]:
+        state = self.audio_engine.get_state()
+        
+        # If we are currently debouncing a track load, pretend we are playing
+        # so the UI Play/Pause button doesn't flicker to 'Paused'
+        if hasattr(self, '_load_timer') and self._load_timer and self._load_timer.is_alive():
+            state['is_playing'] = True
+            
+        if self.current_path:
+            # Augment state with current track info
+            track_info = self.library_service.get_track_info(self.current_path)
+            state['track'] = track_info
+        else:
+            state['track'] = None
+        return state
+
+    def next_track(self, user_initiated: bool = True) -> Optional[Dict[str, Any]]:
+        logger.info(f"Skipping to next track (active playlist_id={self.current_playlist_id})")
+        if not self.current_path:
+            # If no track is loaded, start from the first track of active playlist
+            self._sync_playlists_and_index('', self.current_playlist_id)
+            shuffle_mode = self.config.get('shuffle', False)
+            active_list = self.shuffled_playlist if shuffle_mode else self.normal_playlist
+            if active_list:
+                return self.play(active_list[0], self.current_playlist_id)
+            return None
+            
+        repeat_mode = self.config.get('repeat', 'off')
+        if not user_initiated and repeat_mode == 'one':
+            return self.play(self.current_path, self.current_playlist_id)
+            
+        self._sync_playlists_and_index(self.current_path, self.current_playlist_id)
+        
+        shuffle_mode = self.config.get('shuffle', False)
+        active_list = self.shuffled_playlist if shuffle_mode else self.normal_playlist
+        if not active_list:
+            return None
+        
+        # Calculate current index dynamically inside active_list
+        if self.current_path in active_list:
+            cur_idx = active_list.index(self.current_path)
+            next_index = cur_idx + 1
+        else:
+            next_index = 0
+            
+        if next_index >= len(active_list):
+            if repeat_mode == 'all' or user_initiated:
+                next_index = 0
+            else:
+                self.stop()
+                return self.get_state()
+                
+        self.current_playlist_index = next_index
+        return self.play(active_list[next_index], self.current_playlist_id)
+
+    def prev_track(self) -> Optional[Dict[str, Any]]:
+        logger.info(f"Skipping to previous track (active playlist_id={self.current_playlist_id})")
+        if not self.current_path:
+            self._sync_playlists_and_index('', self.current_playlist_id)
+            shuffle_mode = self.config.get('shuffle', False)
+            active_list = self.shuffled_playlist if shuffle_mode else self.normal_playlist
+            if active_list:
+                return self.play(active_list[-1], self.current_playlist_id)
+            return None
+            
+        self._sync_playlists_and_index(self.current_path, self.current_playlist_id)
+        
+        shuffle_mode = self.config.get('shuffle', False)
+        active_list = self.shuffled_playlist if shuffle_mode else self.normal_playlist
+        if not active_list:
+            return None
+            
+        if self.current_path in active_list:
+            cur_idx = active_list.index(self.current_path)
+            prev_index = cur_idx - 1
+        else:
+            prev_index = len(active_list) - 1
+            
+        if prev_index < 0:
+            prev_index = len(active_list) - 1
+            
+        self.current_playlist_index = prev_index
+        return self.play(active_list[prev_index], self.current_playlist_id)

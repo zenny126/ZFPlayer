@@ -1,0 +1,346 @@
+#lyrics-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background-color: #000000; /* 100% solid opaque background to block main app */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8vw;
+  overflow: hidden;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+#lyrics-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+#lyrics-overlay::before {
+  content: '';
+  position: absolute;
+  inset: -150px;
+  background-image: var(--cover-url, none);
+  background-size: cover;
+  background-position: center;
+  filter: blur(120px) brightness(0.45);
+  z-index: -1;
+  opacity: 0.65; /* Colorful glow on top of solid black */
+}
+
+.lyrics-overlay-container {
+  display: flex;
+  width: 100%;
+  max-width: 1200px;
+  height: 85vh;
+  align-items: center;
+  gap: 10%;
+}
+
+.lyrics-close-btn {
+  position: absolute;
+  top: 32px;
+  left: 32px; /* Apple Music close button is on the top-left */
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  width: 44px;
+  height: 44px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, transform 0.2s;
+  z-index: 205;
+}
+.lyrics-close-btn:hover {
+  color: white;
+  transform: scale(1.1);
+}
+.lyrics-close-btn .icon {
+  width: 28px;
+  height: 28px;
+}
+
+.lyrics-track-info {
+  flex: 0 0 35%; /* Giảm từ 45% xuống 35% để phần lời bài hát có nhiều không gian hơn */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  width: 100%;
+}
+
+#lyrics-cover {
+  width: 100%;
+  max-width: 400px; /* Giảm từ 440px xuống 400px */
+  aspect-ratio: 1;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
+}
+
+.lyrics-metadata-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 400px;
+}
+
+.lyrics-track-info .track-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.lyrics-track-info .player-track-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lyrics-track-info .player-track-artist {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lyrics-meta-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.lyrics-meta-actions .btn-icon {
+  color: rgba(255, 255, 255, 0.6);
+}
+.lyrics-meta-actions .btn-icon:hover {
+  color: white;
+}
+
+/* Apple Music style Seekbar in Lyrics */
+.lyrics-seek-container {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lyrics-seek-container .seek-bar {
+  width: 100%;
+  height: 4px;
+}
+.lyrics-seek-time-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Controls */
+.lyrics-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 400px;
+  padding: 0 8px;
+}
+.lyrics-controls .btn-icon {
+  color: rgba(255, 255, 255, 0.6);
+  width: 40px;
+  height: 40px;
+  position: relative;
+}
+.lyrics-controls .btn-icon:hover {
+  color: white;
+  transform: scale(1.1);
+}
+.lyrics-controls .btn-icon.active {
+  color: var(--accent);
+}
+.lyrics-controls .btn-icon.active::after {
+  content: ''; 
+  position: absolute; 
+  bottom: -4px; 
+  left: 50%; 
+  transform: translateX(-50%);
+  width: 4px; 
+  height: 4px; 
+  border-radius: 50%; 
+  background-color: var(--accent);
+}
+.lyrics-controls .btn-play-pause {
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  transition: transform 0.2s;
+}
+.lyrics-controls .btn-play-pause:hover {
+  transform: scale(1.1);
+}
+.lyrics-controls .btn-play-pause .icon {
+  width: 36px;
+  height: 36px;
+}
+
+/* Volume */
+.lyrics-volume-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 400px;
+  color: rgba(255, 255, 255, 0.5);
+}
+.lyrics-volume-container .volume-bar {
+  flex: 1;
+  height: 4px;
+}
+
+/* Lyrics Column */
+.lyrics-container {
+  flex: 1;
+  height: 100%;
+  overflow-y: hidden;
+  position: relative;
+  padding-right: 80px; /* Safe padding for scaled active text to avoid edge clipping */
+  mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+}
+
+#lyrics-content {
+  display: flex;
+  flex-direction: column;
+  padding: 35vh 0;
+  transition: transform 0.5s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.lyrics-line {
+  font-family: 'Outfit', sans-serif;
+  font-size: 36px; /* Identical font-size for all states to prevent layout shifts and text re-wrapping */
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.28);
+  filter: blur(1.5px); /* Soft focus / dreamy blur for upcoming lines */
+  transition: color 0.5s cubic-bezier(0.2, 0, 0.1, 1), 
+              transform 0.5s cubic-bezier(0.2, 0, 0.1, 1), 
+              filter 0.5s cubic-bezier(0.2, 0, 0.1, 1);
+  padding: 16px 0;
+  text-align: left;
+  cursor: pointer;
+  transform-origin: left center;
+  line-height: 1.3;
+  will-change: transform, color, filter;
+}
+
+.lyrics-line:hover {
+  color: rgba(255, 255, 255, 0.6);
+  filter: blur(0px);
+}
+
+.lyrics-line.active {
+  color: white;
+  font-size: 36px; /* Must match the base font-size */
+  filter: blur(0px); /* Crystal clear focus on active line */
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.55), 0 0 30px rgba(255, 255, 255, 0.2); /* Dreamy light glow */
+  transform: scale(1.08); /* Visually zooms the active line without shifting layout boxes */
+}
+
+.lyrics-line.passed {
+  color: rgba(255, 255, 255, 0.15);
+  filter: blur(1px);
+}
+
+/* Optimizations for Maximized and Fullscreen (F11) */
+@media (min-width: 1400px) {
+  .lyrics-overlay-container {
+    max-width: 1600px;
+    gap: 8%;
+  }
+
+  .lyrics-track-info {
+    flex: 0 0 35%; /* Giữ tỷ lệ 35% trên màn hình lớn */
+  }
+
+  #lyrics-cover {
+    max-width: 480px; /* Giảm từ 540px xuống 480px */
+  }
+
+  .lyrics-metadata-row,
+  .lyrics-seek-container,
+  .lyrics-controls,
+  .lyrics-volume-container {
+    max-width: 480px;
+  }
+
+  .lyrics-track-info .player-track-name {
+    font-size: 32px; /* Chữ to rõ hơn */
+  }
+
+  .lyrics-track-info .player-track-artist {
+    font-size: 20px;
+  }
+
+  .lyrics-controls .btn-play-pause {
+    width: 68px;
+    height: 68px;
+  }
+  
+  .lyrics-controls .btn-play-pause .icon {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .lyrics-controls .btn-icon {
+    width: 48px;
+    height: 48px;
+  }
+  .lyrics-controls .btn-icon .icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .lyrics-line {
+    font-size: 46px; /* Lyrics to hơn, dễ đọc từ xa */
+  }
+
+  .lyrics-line.active {
+    font-size: 46px;
+  }
+}
+
+@media (min-width: 1800px) {
+  .lyrics-overlay-container {
+    max-width: 1900px;
+  }
+  
+  #lyrics-cover,
+  .lyrics-metadata-row,
+  .lyrics-seek-container,
+  .lyrics-controls,
+  .lyrics-volume-container {
+    max-width: 640px;
+  }
+  
+  .lyrics-line {
+    font-size: 54px;
+  }
+  .lyrics-line.active {
+    font-size: 54px;
+  }
+}

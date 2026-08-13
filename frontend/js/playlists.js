@@ -1,0 +1,332 @@
+class PlaylistManager {
+  constructor() {
+    this.playlists = [];
+    this.currentPlaylistId = null;
+    
+    // Elements
+    this.container = document.getElementById('playlist-container');
+    
+    this.btnCreate = document.getElementById('btn-create-playlist');
+    this.modalCreate = document.getElementById('create-playlist-modal');
+    this.inputName = document.getElementById('input-playlist-name');
+    this.btnSave = document.getElementById('btn-save-playlist');
+    this.btnCancel = document.getElementById('btn-cancel-playlist');
+    
+    this.btnImportFolder = document.getElementById('btn-playlist-import-folder');
+    this.btnImportFiles = document.getElementById('btn-playlist-import-files');
+    this.coverContainer = document.getElementById('playlist-cover-container');
+
+    this.submenu = document.getElementById('playlist-submenu');
+    this.ctxAddToPlaylist = document.getElementById('ctx-add-to-playlist');
+    this.ctxRemoveFromPlaylist = document.getElementById('ctx-remove-from-playlist');
+
+    this.init();
+  }
+
+  async init() {
+    await window.api.readyPromise;
+    this.bindEvents();
+    this.loadPlaylists();
+    
+    // Listen to store for UI updates
+    window.store.subscribe(['view', 'playlistId'], (state) => {
+      const header = document.getElementById('playlist-header');
+      if (!header) return;
+      
+      if (state.view === 'playlist') {
+        let p = this.playlists.find(x => x.id === state.playlistId);
+        
+        if (state.playlistId === 'all') {
+            p = { name: 'All Songs', track_count: window.libraryManager ? window.libraryManager.totalCount : 0, cover_url: '' };
+        } else if (state.playlistId === 'favorites') {
+            p = { name: 'Favorite Songs', track_count: window.libraryManager ? window.libraryManager.totalCount : 0, cover_url: '' };
+        }
+
+        if (p) {
+          header.classList.remove('hidden');
+          document.getElementById('playlist-detail-name').textContent = p.name;
+          document.getElementById('playlist-detail-count').textContent = `${p.track_count || 0} tracks`;
+          
+          const coverEl = document.getElementById('playlist-detail-cover');
+          if (p.cover_url) {
+            coverEl.src = p.cover_url;
+          } else {
+            let svgContent = '';
+            if (state.playlistId === 'all') {
+               svgContent = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><defs><linearGradient id='g1' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%234facfe'/><stop offset='100%' stop-color='%2300f2fe'/></linearGradient></defs><rect width='24' height='24' fill='url(%23g1)'/><path d='M9 18V5l12-2v13 M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M18 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>";
+            } else if (state.playlistId === 'favorites') {
+               svgContent = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><defs><linearGradient id='g2' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%23ff0844'/><stop offset='100%' stop-color='%23ffb199'/></linearGradient></defs><rect width='24' height='24' fill='url(%23g2)'/><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>";
+            } else {
+               svgContent = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%23282828'/><path d='M9 18V5l12-2v13' stroke='%23888' stroke-width='2' fill='none'/><circle cx='6' cy='18' r='3' stroke='%23888' stroke-width='2' fill='none'/><circle cx='18' cy='16' r='3' stroke='%23888' stroke-width='2' fill='none'/></svg>";
+            }
+            coverEl.src = svgContent;
+          }
+        }
+      } else {
+        header.classList.add('hidden');
+      }
+    });
+  }
+
+  bindEvents() {
+    this.btnCreate?.addEventListener('click', () => {
+      this.inputName.value = '';
+      this.modalCreate.classList.remove('hidden');
+      this.inputName.focus();
+    });
+
+    this.btnCancel?.addEventListener('click', () => {
+      this.modalCreate.classList.add('hidden');
+    });
+
+    this.btnSave?.addEventListener('click', async () => {
+      const name = this.inputName.value.trim();
+      if (name) {
+        await window.api.createPlaylist(name);
+        this.modalCreate.classList.add('hidden');
+        this.loadPlaylists();
+      }
+    });
+
+    this.inputName?.addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') this.btnSave.click();
+    });
+
+    this.btnImportFolder?.addEventListener('click', async () => {
+      if (!this.currentPlaylistId) return;
+      const folderPath = await window.api.selectMusicDir();
+      if (folderPath) {
+        const originalText = this.btnImportFolder.textContent;
+        this.btnImportFolder.textContent = 'Đang quét thư mục...';
+        this.btnImportFolder.disabled = true;
+        
+        await window.api.importFolderToPlaylist(this.currentPlaylistId, folderPath);
+        
+        this.btnImportFolder.textContent = originalText;
+        this.btnImportFolder.disabled = false;
+        if (window.libraryManager) window.libraryManager.reload();
+        this.loadPlaylists();
+      }
+    });
+
+    this.btnImportFiles?.addEventListener('click', async () => {
+      if (!this.currentPlaylistId) return;
+      const filePaths = await window.api.selectMusicFiles();
+      if (filePaths && filePaths.length > 0) {
+        const originalText = this.btnImportFiles.textContent;
+        this.btnImportFiles.textContent = 'Đang xử lý...';
+        this.btnImportFiles.disabled = true;
+        
+        await window.api.importFilesToPlaylist(this.currentPlaylistId, filePaths);
+        
+        this.btnImportFiles.textContent = originalText;
+        this.btnImportFiles.disabled = false;
+        if (window.libraryManager) window.libraryManager.reload();
+        this.loadPlaylists();
+      }
+    });
+
+    this.coverContainer?.addEventListener('click', async () => {
+      if (!this.currentPlaylistId) return;
+      const imagePath = await window.api.selectCoverImage(); 
+      if (imagePath) {
+        const res = await window.api.updatePlaylistCover(this.currentPlaylistId, imagePath);
+        if (res.status === 'success') {
+          this.loadPlaylists();
+          this.openPlaylist(this.currentPlaylistId); 
+        }
+      }
+    });
+
+    this.ctxRemoveFromPlaylist?.addEventListener('click', async () => {
+      const menu = document.getElementById('context-menu');
+      const trackPath = menu ? menu.dataset.trackPath : null;
+      if (trackPath && this.currentPlaylistId) {
+        await window.api.removeFromPlaylist(this.currentPlaylistId, trackPath);
+        menu.classList.add('hidden');
+        if (window.libraryManager) window.libraryManager.reload();
+        this.loadPlaylists();
+      }
+    });
+
+    this.ctxAddToPlaylist?.addEventListener('mouseenter', async (e) => {
+      await this.showSubmenu(e);
+    });
+    this.ctxAddToPlaylist?.addEventListener('mouseleave', (e) => {
+      setTimeout(() => {
+        if (!this.submenu.matches(':hover')) {
+          this.submenu.classList.add('hidden');
+        }
+      }, 100);
+    });
+    this.submenu?.addEventListener('mouseleave', () => {
+      this.submenu.classList.add('hidden');
+    });
+  }
+
+  async showSubmenu(e) {
+    if (!this.submenu) return;
+    
+    // Always refresh playlists to ensure newly created playlists appear
+    this.playlists = await window.api.getPlaylists() || [];
+    this.submenu.innerHTML = '';
+    
+    if (this.playlists.length === 0) {
+      const item = document.createElement('div');
+      item.className = 'context-menu-item';
+      item.style.color = '#888';
+      item.textContent = 'No playlists';
+      this.submenu.appendChild(item);
+    } else {
+      this.playlists.forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'context-menu-item';
+        item.textContent = p.name;
+        item.addEventListener('click', async () => {
+          const menu = document.getElementById('context-menu');
+          const trackPath = menu ? menu.dataset.trackPath : null;
+          if (trackPath) {
+            await window.api.addToPlaylist(p.id, trackPath);
+            menu.classList.add('hidden');
+            this.submenu.classList.add('hidden');
+          }
+        });
+        this.submenu.appendChild(item);
+      });
+    }
+
+    // Temporary unhide to measure dimensions
+    this.submenu.style.display = 'flex';
+    const subRect = this.submenu.getBoundingClientRect();
+    const subWidth = subRect.width || 180;
+    const subHeight = subRect.height || 120;
+    this.submenu.style.display = '';
+
+    const rect = e.target.getBoundingClientRect();
+    
+    // Boundary check X: if overflowing right edge, pop to the LEFT of main menu
+    let leftPos = rect.right;
+    if (leftPos + subWidth > window.innerWidth) {
+      leftPos = rect.left - subWidth;
+    }
+    if (leftPos < 0) leftPos = 8;
+
+    // Boundary check Y: if overflowing bottom edge, align upward
+    let topPos = rect.top;
+    if (topPos + subHeight > window.innerHeight) {
+      topPos = window.innerHeight - subHeight - 8;
+    }
+
+    this.submenu.style.left = `${leftPos}px`;
+    this.submenu.style.top = `${topPos}px`;
+    this.submenu.style.zIndex = '99999';
+    this.submenu.classList.remove('hidden');
+  }
+
+  async loadPlaylists() {
+    this.playlists = await window.api.getPlaylists() || [];
+    this.renderSidebarList();
+  }
+
+  renderSidebarList() {
+    if (!this.container) return;
+    this.container.innerHTML = '';
+    
+    // Add All Songs
+    const allItem = document.createElement('li');
+    allItem.innerHTML = `<div class="icon-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 22px; height: 22px; color: var(--accent);"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg></div>
+          <div class="library-list-text">
+            <div class="library-list-title">All Songs</div>
+            <div class="library-list-subtitle">Tất cả bài hát</div>
+          </div>`;
+    allItem.addEventListener('click', () => {
+      window.store.setState({ view: 'playlist', playlistId: 'all' });
+      document.querySelectorAll('.library-list li').forEach(el => el.classList.remove('active'));
+      allItem.classList.add('active');
+    });
+    this.container.appendChild(allItem);
+
+    // Add Favorites
+    const favItem = document.createElement('li');
+    favItem.innerHTML = `<div class="icon-placeholder"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" style="width: 22px; height: 22px; color: #e74c3c;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div>
+          <div class="library-list-text">
+            <div class="library-list-title">Favorite Songs</div>
+            <div class="library-list-subtitle">Bài hát yêu thích</div>
+          </div>`;
+    favItem.addEventListener('click', () => {
+      window.store.setState({ view: 'playlist', playlistId: 'favorites' });
+      document.querySelectorAll('.library-list li').forEach(el => el.classList.remove('active'));
+      favItem.classList.add('active');
+    });
+    this.container.appendChild(favItem);
+
+    // Custom Playlists
+    this.playlists.forEach(p => {
+      const li = document.createElement('li');
+      li.dataset.id = p.id;
+      
+      const content = document.createElement('div');
+      content.className = 'library-list-text';
+      content.innerHTML = `<div class="library-list-title">${p.name}</div><div class="library-list-subtitle">${p.track_count || 0} tracks</div>`;
+      
+      const icon = document.createElement('div');
+      icon.className = 'icon-placeholder';
+      if (p.cover_url) {
+        icon.innerHTML = `<img src="${p.cover_url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">`;
+      } else {
+        icon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 22px; height: 22px; color: #888;"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>`;
+      }
+      li.appendChild(icon);
+      li.appendChild(content);
+
+      // Drag and Drop
+      li.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        li.classList.add('drag-over');
+      });
+      li.addEventListener('dragleave', () => li.classList.remove('drag-over'));
+      li.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        li.classList.remove('drag-over');
+        const trackPath = e.dataTransfer.getData('text/plain');
+        if (trackPath) {
+          await window.api.addToPlaylist(p.id, trackPath);
+          if (window.libraryManager) window.libraryManager.reload();
+          this.loadPlaylists();
+        }
+      });
+
+      li.addEventListener('click', () => {
+        document.querySelectorAll('.library-list li').forEach(el => el.classList.remove('active'));
+        li.classList.add('active');
+        this.openPlaylist(p.id);
+      });
+
+      this.container.appendChild(li);
+    });
+    
+    // Select active based on store
+    const state = window.store.getState();
+    if (state.view === 'playlist') {
+      const el = document.querySelector(`.library-list li[data-id="${state.playlistId}"]`);
+      if (el) el.classList.add('active');
+    }
+    
+    // Sync Home view
+    if (window.homeManager && window.homeManager.loaded) {
+      window.homeManager.loadPlaylists();
+    }
+  }
+
+  async openPlaylist(id) {
+    this.currentPlaylistId = id;
+    const p = this.playlists.find(x => x.id === id);
+    if (!p) return;
+
+    window.store.setState({ view: 'playlist', playlistId: id });
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  window.playlistManager = new PlaylistManager();
+});
