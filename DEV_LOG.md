@@ -1439,3 +1439,10 @@ gba(255,255,255,0.15)). Replaced hardcoded occurrences in library.css and main.c
 - **Danh sÃ¡ch tá»‡p tin thay Ä‘á»•i**:
   - LICENSE (Sá»­a Ä‘á»•i)
 - **MÃ´ táº£ chi tiáº¿t ká»¹ thuáº­t**: Thay tháº¿ thÃ´ng tin báº£n quyá»n chung báº±ng nÄƒm 2026 vÃ  tÃªn chá»§ sá»Ÿ há»¯u Zenny126 á»Ÿ cuá»‘i tá»‡p LICENSE.
+## [2026-08-14T01:43:00+07:00] Fix Audio Speedup on Resume
+- **Tác v? th?c hi?n**: S?a l?i nh?c b? tua nhanh (speedup) khi ?n Play sau khi dã Pause m?t th?i gian.
+- **Danh sách t?p tin thay d?i**:
+  - ackend/audio/engine.py
+- **Mô t? chi ti?t k? thu?t**:
+  S?a l?i hàm play() g?i _create_stream() t?o ra m?t stream WASAPI hoàn toàn m?i dè lên stream cu chua du?c gi?i phóng sau khi pause(). Khi có 2 stream cùng kéo d? li?u t? m?t AudioRingBuffer duy nh?t, t?c d? trích xu?t d? li?u tang g?p dôi, làm gi?m 1 n?a frame và gây ra hi?n tu?ng tua nhanh. Ğã b? sung c? ki?m tra if self.stream is None: tru?c khi t?o stream m?i.
+

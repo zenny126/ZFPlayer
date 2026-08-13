@@ -185,9 +185,8 @@ class AudioEngine:
             return
 
         with self._lock:
-            # Always create a fresh stream — WASAPI Exclusive Push
-            # cannot reliably restart a stopped stream.
-            self._create_stream()
+            if self.stream is None:
+                self._create_stream()
 
             # Trigger 20ms micro fade-in ramp to eliminate start pops/clicks
             fade_samples = int(self._current_samplerate * 0.020)
