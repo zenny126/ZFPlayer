@@ -1,5 +1,26 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T13:17:33.265642
+### Tác vụ thực hiện
+Nâng cấp toàn bộ hệ thống chuyển động UI/UX bằng đường cong Bezier (Bezier Curve Motion Design System).
+
+### Danh sách tệp tin thay đổi
+- rontend/css/main.css (MODIFIED)
+- rontend/css/player.css (MODIFIED)
+- rontend/css/lyrics.css (MODIFIED)
+- rontend/css/library.css (MODIFIED)
+- rontend/css/albums.css (MODIFIED)
+- 	ask.md (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Design System Curve Tokens (main.css)**: Khai báo các hằng số đường cong cubic-bezier chuyên nghiệp (--ease-out-quint, --ease-out-expo, --ease-spring, --ease-spring-soft, --ease-in-out-smooth) và các biến transition có thời gian & đường cong phanh mượt.
+2. **Core Layout & Components (main.css)**: Nâng cấp hiệu ứng nảy nhẹ & phanh mượt cho Sidebar collapse/expand, Top Bar Nav Buttons, Search Container focus/hover, Filter Chips, Seekbar/Volume slider thumb expansion, Buttons (Primary, Outline, Ghost) và keyframe animations cho Modal (ackdropFadeIn, modalScaleUp) & Context Menu (contextMenuPop).
+3. **Player Bar (player.css)**: Áp dụng spring bounce curves cho nút Play/Pause vòng tròn (.btn-play-pause-circle), Like button, và hiệu ứng zoom ảnh bìa bài hát đang phát.
+4. **Lyrics Overlay & Text Scrolling (lyrics.css)**: Nâng cấp trượt xuất hiện Lyrics Overlay bằng --ease-out-expo, Close button nảy xoay góc -90deg, hiệu ứng cuộn lời bài hát #lyrics-content lướt êm ái với cubic-bezier(0.16, 1, 0.3, 1), và dòng chữ active nâng cấp hiệu ứng scale 1.08 + dreamy glow text-shadow + blur focus.
+5. **Library & Album Grid (library.css, lbums.css)**: Thêm hiệu ứng hover slide/highlight cho track rows, nút Play lớn, playlist cover zoom và album card elevation 	ranslateY(-4px) với spring bounce curves.
+
+---
+
 ## Timestamp: 2026-08-12T21:24:00+07:00
 ### Tác vụ thực hiện
 Dọn sạch toàn bộ dữ liệu trong cơ sở dữ liệu `library.db`.
@@ -272,25 +293,31 @@ Khoanh vùng danh sách phát (Queue Scope) chỉ chạy duy nhất trong Playli
 ## [2026-08-13] Switch to WASAPI Shared Mode
 - **Files modified:** ackend/audio/engine.py`n- **Details:** Changed the default audio playback mode from WASAPI High-Fidelity (Exclusive/low-latency) to WASAPI Shared Mode with 'high' latency to prevent audio crackling and popping that users were experiencing.
 ## [2026-08-13] White/Glass Premium Color Palette
-- **Files modified:** rontend/css/main.css, rontend/index.html`n- **Details:** Replaced the hardcoded Spotify green accent color with pure white (\#FFFFFF\) to better fit the dynamic cover art background. Modified \--text-primary\ to be 75% translucent white (\gba(255, 255, 255, 0.75)\), so that inactive text is dimmed while active states (using the white accent) are brilliantly bright. This creates a much more premium and elegant Apple Music aesthetic. Bumped cache to ?v=7.
+- **Files modified:** rontend/css/main.css, rontend/index.html`n- **Details:** Replaced the hardcoded Spotify green accent color with pure white (\#FFFFFF\) to better fit the dynamic cover art background. Modified \--text-primary\ to be 75% translucent white (\
+gba(255, 255, 255, 0.75)\), so that inactive text is dimmed while active states (using the white accent) are brilliantly bright. This creates a much more premium and elegant Apple Music aesthetic. Bumped cache to ?v=7.
 ## [2026-08-13] Fix Lyrics View Like Button Sync
 - **Files modified:** rontend/js/player.js, rontend/index.html`n- **Details:** Wired up the lyrics-like-btn in the lyrics view to correctly trigger the API toggle and synchronize state with the global store and main player bar. Bumped cache to ?v=8.
 ## [2026-08-13] Fix Like Button Store Sync Issue
 - **Files modified:** rontend/js/player.js, rontend/js/library.js`n- **Details:** Fixed a bug where clicking the like button failed to update the DOM because mutating the currentTrack object reference prevented store.setState from triggering syncUI(). Created a new object reference to ensure reactivity. Also wired the library list view to sync likes back to the global store if the liked track is currently playing.
 ## [2026-08-13] Eradicate Solid Background Colors
-- **Files modified:** rontend/css/main.css, rontend/css/library.css, rontend/index.html`n- **Details:** Refactored the base CSS variables (--bg-primary, --bg-secondary, --bg-elevated, --bg-highlight) from hardcoded opaque grays (#121212, #181818, #282828) to perfectly translucent glass layers (gba(0,0,0,0.2), gba(255,255,255,0.04), gba(255,255,255,0.08), gba(255,255,255,0.15)). Replaced hardcoded occurrences in library.css and main.css. This enforces a true 100% Immersive Glass UI everywhere in the app. Bumped cache to ?v=10.
+- **Files modified:** rontend/css/main.css, rontend/css/library.css, rontend/index.html`n- **Details:** Refactored the base CSS variables (--bg-primary, --bg-secondary, --bg-elevated, --bg-highlight) from hardcoded opaque grays (#121212, #181818, #282828) to perfectly translucent glass layers (
+gba(0,0,0,0.2), 
+gba(255,255,255,0.04), 
+gba(255,255,255,0.08), 
+gba(255,255,255,0.15)). Replaced hardcoded occurrences in library.css and main.css. This enforces a true 100% Immersive Glass UI everywhere in the app. Bumped cache to ?v=10.
 ## [2026-08-13] Dreamy Glow Typography
 - **Files modified:** rontend/css/main.css, rontend/css/library.css, rontend/index.html`n- **Details:** Replaced heavy dark text-shadow with a subtle legibility shadow. Boosted all text variables to pure white or high-opacity white. Added 'dreamy' white text-shadow glows (	ext-shadow: 0 0 10px rgba(255,255,255,0.4)) to active elements (playing track, active buttons, filter chips) and soft box-shadow glows to the solid white play buttons.
 ## [2026-08-13] Fix Popup/Modal Frosted Glass
 - **Files modified:** rontend/css/main.css, rontend/css/library.css, rontend/index.html`n- **Details:** Fixed an issue where the Create Playlist modal and Context Menus were almost completely transparent and illegible against the background text due to the removal of solid backgrounds. Applied heavy \ackdrop-filter: blur(40px) saturate(1.5)\, a subtle white border, and stronger box-shadows to these popup elements so they correctly act as frosted glass hovering above the UI. Bumped cache to ?v=13.
 ## [2026-08-13] Sticky Library Header Row
-- **Files modified:** rontend/css/library.css, rontend/index.html`n- **Details:** Made the library header row (Title/Album/Date Added) sticky when scrolling. Changed position: relative to position: sticky; top: 0; and added a frosted glass background (gba(0,0,0,0.3) + ackdrop-filter: blur(20px)) so that absolutely positioned tracks scrolling up slide cleanly underneath it without text overlap. Bumped cache to ?v=14.
+- **Files modified:** rontend/css/library.css, rontend/index.html`n- **Details:** Made the library header row (Title/Album/Date Added) sticky when scrolling. Changed position: relative to position: sticky; top: 0; and added a frosted glass background (
+gba(0,0,0,0.3) + ackdrop-filter: blur(20px)) so that absolutely positioned tracks scrolling up slide cleanly underneath it without text overlap. Bumped cache to ?v=14.
 ## [2026-08-13] Fix VirtualList Gap On Scroll
 - **Files modified:** rontend/js/library.js, rontend/index.html`n- **Details:** Fixed a critical bug in VirtualList calculation where 	his.scrollTop was directly used to compute startIndex without subtracting scroller.offsetTop. When scrolling past the playlist header (~300px), VirtualList erroneously calculated that the top 5 tracks were offscreen and unmounted them, leaving a huge empty blank gap below the sticky header. Subtracted scroller.offsetTop from scrollTop in update() to accurately calculate visible index offset. Bumped cache to ?v=15.
 ## [2026-08-13] Fix Header Row Grid Alignment
 - **Files modified:** rontend/css/library.css, rontend/index.html`n- **Details:** Fixed misaligned column headers (TITLE, ALBUM, DATE ADDED, Duration) caused by an extra display: flex directive on .track-row.header-row overriding .track-row's CSS Grid (grid-template-columns: 40px 6fr 4fr 3fr 40px 40px 80px). Removed display: flex so the header row matches the track data rows pixel for pixel. Bumped cache to ?v=16.
 ## [2026-08-13] Fix Home View Bottom Padding & Scroll
-- **Files modified:** rontend/index.html, rontend/js/home.js`n- **Details:** Fixed an issue where the Home view could not scroll down deep enough, causing the bottom of the 'G?n ��y' (Recently Played) section to get cut off by the bottom player bar. Increased #home-view's bottom padding from 24px to 120px, and set explicit 180px card widths for the horizontal scroll list. Bumped cache to ?v=17.
+- **Files modified:** rontend/index.html, rontend/js/home.js`n- **Details:** Fixed an issue where the Home view could not scroll down deep enough, causing the bottom of the 'G?n y' (Recently Played) section to get cut off by the bottom player bar. Increased #home-view's bottom padding from 24px to 120px, and set explicit 180px card widths for the horizontal scroll list. Bumped cache to ?v=17.
 ## [2026-08-13] Fix Recent Cards Vertical Collapse
 - **Files modified:** rontend/js/home.js, rontend/index.html`n- **Details:** Fixed an issue where recent track cards in the Home view collapsed into 20px-tall paper-thin strips. Added explicit 148px height/width on .album-cover-container inside home.js and set lign-items: flex-start on #home-recent-grid in index.html to prevent Flexbox from collapsing percentage aspect-ratio elements. Bumped cache to ?v=18.
 ## [2026-08-13] Convert Home Recent Section to 20-Track Table List
