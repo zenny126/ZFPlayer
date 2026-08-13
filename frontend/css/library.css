@@ -127,11 +127,11 @@
   border-radius: var(--border-radius-sm);
   position: absolute;
   width: 100%;
-  transition: background-color var(--transition-fast), transform var(--transition-spring-soft);
+  transition: background-color var(--transition-fast);
 }
 
 .track-row:hover { background-color: rgba(255, 255, 255, 0.1); cursor: pointer; }
-.track-row:active { transform: scale(0.99); }
+.track-row:active { opacity: 0.85; }
 .track-row.active { color: var(--accent); background-color: rgba(255, 255, 255, 0.12); text-shadow: 0 0 10px rgba(255,255,255,0.4); }
 
 .track-row-static {
@@ -145,8 +145,8 @@
 
 /* Title with thumbnail and artist */
 .track-title { display: flex; align-items: center; gap: 12px; overflow: hidden; }
-.track-thumbnail { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; background-color: var(--bg-highlight); flex-shrink: 0; transition: transform var(--transition-spring); }
-.track-row:hover .track-thumbnail { transform: scale(1.05); }
+.track-thumbnail { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; background-color: var(--bg-highlight); flex-shrink: 0; transition: transform var(--transition-fast); }
+.track-row:hover .track-thumbnail { transform: scale(1.02); }
 .track-title-text { display: flex; flex-direction: column; overflow: hidden; justify-content: center; }
 .track-title-name { color: var(--text-primary); font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .track-title-artist { color: var(--text-secondary); font-size: 12px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -158,8 +158,8 @@
 .track-like { font-size: 18px; color: var(--text-subdued); cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity var(--transition-fast), color var(--transition-fast), transform var(--transition-spring); }
 .track-row:hover .track-like, .track-like.liked { opacity: 1; }
 .track-like.liked { color: var(--accent); }
-.track-like:hover { transform: scale(1.2); color: var(--text-primary); }
-.track-like.liked:hover { transform: scale(1.2); color: var(--accent-hover); }
+.track-like:hover { transform: scale(1.1); color: var(--text-primary); }
+.track-like.liked:hover { transform: scale(1.1); color: var(--accent-hover); }
 
 .track-row.header-row {
   position: sticky;
@@ -186,7 +186,7 @@
 
 .track-more { font-size: 18px; color: var(--text-subdued); cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity var(--transition-fast), color var(--transition-fast), transform var(--transition-spring); }
 .track-row:hover .track-more { opacity: 1; }
-.track-more:hover { color: var(--text-primary); transform: scale(1.15); }
+.track-more:hover { color: var(--text-primary); transform: scale(1.1); }
 
 /* --- Playlist Specific Styles --- */
 .glassmorphism {
@@ -208,7 +208,7 @@
   transition: transform var(--transition-spring), box-shadow var(--transition-fast);
 }
 .playlist-cover-container:hover {
-  transform: scale(1.03);
+  transform: scale(1.01);
   box-shadow: 0 12px 32px rgba(0,0,0,0.7);
 }
 
@@ -234,7 +234,7 @@
   opacity: 1;
 }
 .playlist-cover-container:hover img {
-  transform: scale(1.08);
+  transform: scale(1.04);
 }
 
 .cover-edit-overlay svg {

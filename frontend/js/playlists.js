@@ -74,18 +74,14 @@ class PlaylistManager {
           document.getElementById('playlist-detail-count').textContent = `${p.track_count || 0} tracks`;
           
           const coverEl = document.getElementById('playlist-detail-cover');
-          if (p.cover_url) {
-            coverEl.src = p.cover_url;
+          if (state.playlistId === 'all') {
+             coverEl.src = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%23181818'/><path d='M9 18V5l12-2v13 M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M18 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>";
+          } else if (state.playlistId === 'favorites') {
+             coverEl.src = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%23181818'/><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' fill='%23ffffff'/></svg>";
+          } else if (p.cover_url) {
+             coverEl.src = p.cover_url;
           } else {
-            let svgContent = '';
-            if (state.playlistId === 'all') {
-               svgContent = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><defs><linearGradient id='g1' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%234facfe'/><stop offset='100%' stop-color='%2300f2fe'/></linearGradient></defs><rect width='24' height='24' fill='url(%23g1)'/><path d='M9 18V5l12-2v13 M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M18 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>";
-            } else if (state.playlistId === 'favorites') {
-               svgContent = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><defs><linearGradient id='g2' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%23ff0844'/><stop offset='100%' stop-color='%23ffb199'/></linearGradient></defs><rect width='24' height='24' fill='url(%23g2)'/><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>";
-            } else {
-               svgContent = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%23282828'/><path d='M9 18V5l12-2v13' stroke='%23888' stroke-width='2' fill='none'/><circle cx='6' cy='18' r='3' stroke='%23888' stroke-width='2' fill='none'/><circle cx='18' cy='16' r='3' stroke='%23888' stroke-width='2' fill='none'/></svg>";
-            }
-            coverEl.src = svgContent;
+             coverEl.src = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%23282828'/><path d='M9 18V5l12-2v13' stroke='%23888' stroke-width='2' fill='none'/><circle cx='6' cy='18' r='3' stroke='%23888' stroke-width='2' fill='none'/><circle cx='18' cy='16' r='3' stroke='%23888' stroke-width='2' fill='none'/></svg>";
           }
 
           // Hide import buttons for Favorite Songs playlist
@@ -175,10 +171,14 @@ class PlaylistManager {
         // Refresh preview image inside edit modal
         const previewImg = document.getElementById('edit-playlist-cover-preview');
         if (previewImg) {
-          let p = this.playlists.find(x => String(x.id) === String(this.targetPlaylistId));
-          if (this.targetPlaylistId === 'all') p = { cover_url: this.systemCovers.all };
-          if (this.targetPlaylistId === 'favorites') p = { cover_url: this.systemCovers.favorites };
-          if (p && p.cover_url) previewImg.src = p.cover_url;
+          if (this.targetPlaylistId === 'all') {
+            previewImg.src = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%23181818'/><path d='M9 18V5l12-2v13 M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M18 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>";
+          } else if (this.targetPlaylistId === 'favorites') {
+            previewImg.src = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%23181818'/><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' fill='%23ffffff'/></svg>";
+          } else {
+            let p = this.playlists.find(x => String(x.id) === String(this.targetPlaylistId));
+            if (p && p.cover_url) previewImg.src = p.cover_url;
+          }
         }
       }
     };
@@ -381,18 +381,14 @@ class PlaylistManager {
       if (inputName) inputName.value = p.name || '';
       
       if (previewImg) {
-        if (p.cover_url) {
+        if (playlistId === 'all') {
+          previewImg.src = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%23181818'/><path d='M9 18V5l12-2v13 M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M18 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>";
+        } else if (playlistId === 'favorites') {
+          previewImg.src = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%23181818'/><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' fill='%23ffffff'/></svg>";
+        } else if (p.cover_url) {
           previewImg.src = p.cover_url;
         } else {
-          let svgContent = '';
-          if (playlistId === 'all') {
-            svgContent = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><defs><linearGradient id='g1' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%234facfe'/><stop offset='100%' stop-color='%2300f2fe'/></linearGradient></defs><rect width='24' height='24' fill='url(%23g1)'/><path d='M9 18V5l12-2v13 M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M18 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>";
-          } else if (playlistId === 'favorites') {
-            svgContent = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><defs><linearGradient id='g2' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%23ff0844'/><stop offset='100%' stop-color='%23ffb199'/></linearGradient></defs><rect width='24' height='24' fill='url(%23g2)'/><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>";
-          } else {
-            svgContent = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%23282828'/><path d='M9 18V5l12-2v13' stroke='%23888' stroke-width='2' fill='none'/><circle cx='6' cy='18' r='3' stroke='%23888' stroke-width='2' fill='none'/><circle cx='18' cy='16' r='3' stroke='%23888' stroke-width='2' fill='none'/></svg>";
-          }
-          previewImg.src = svgContent;
+          previewImg.src = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%23282828'/><path d='M9 18V5l12-2v13' stroke='%23888' stroke-width='2' fill='none'/><circle cx='6' cy='18' r='3' stroke='%23888' stroke-width='2' fill='none'/><circle cx='18' cy='16' r='3' stroke='%23888' stroke-width='2' fill='none'/></svg>";
         }
       }
 
@@ -548,7 +544,7 @@ class PlaylistManager {
     // Add All Songs
     const allItem = document.createElement('li');
     const allCover = this.systemCovers.all;
-    allItem.innerHTML = `<div class="icon-placeholder">${allCover ? `<img src="${allCover}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">` : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 22px; height: 22px; color: var(--accent);"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>`}</div>
+    allItem.innerHTML = `<div class="icon-placeholder system-icon">${allCover ? `<img src="${allCover}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">` : `<svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 24px; height: 24px; color: #ffffff;"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>`}</div>
           <div class="library-list-text">
             <div class="library-list-title">All Songs</div>
             <div class="library-list-subtitle">All your local tracks</div>
@@ -566,7 +562,7 @@ class PlaylistManager {
     // Add Favorites
     const favItem = document.createElement('li');
     const favCover = this.systemCovers.favorites;
-    favItem.innerHTML = `<div class="icon-placeholder">${favCover ? `<img src="${favCover}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">` : `<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" style="width: 22px; height: 22px; color: #e74c3c;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`}</div>
+    favItem.innerHTML = `<div class="icon-placeholder system-icon">${favCover ? `<img src="${favCover}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">` : `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width: 24px; height: 24px; color: #ffffff;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`}</div>
           <div class="library-list-text">
             <div class="library-list-title">Favorite Songs</div>
             <div class="library-list-subtitle">Your favorite tracks</div>

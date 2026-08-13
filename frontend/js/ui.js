@@ -44,21 +44,28 @@ class UIController {
       const albumsView = document.getElementById('albums-view');
       const homeView = document.getElementById('home-view');
       
+      const activateView = (v) => {
+        if (!v) return;
+        v.classList.remove('hidden');
+        v.classList.add('active');
+        v.classList.remove('active-view-fade');
+        void v.offsetWidth;
+        v.classList.add('active-view-fade');
+      };
+
       // Helper to hide all views
       [libraryView, albumsView, homeView].forEach(v => {
-        if (v) { v.classList.add('hidden'); v.classList.remove('active'); }
+        if (v) { v.classList.add('hidden'); v.classList.remove('active', 'active-view-fade'); }
       });
 
       if (state.view === 'home') {
-        homeView?.classList.remove('hidden');
-        homeView?.classList.add('active');
+        activateView(homeView);
         const searchInput = document.getElementById('search-input');
         if (searchInput) searchInput.value = '';
         if (window.libraryManager) window.libraryManager.searchQuery = '';
         if (window.homeManager) window.homeManager.loadHome();
       } else if (state.view === 'songs') {
-        libraryView?.classList.remove('hidden');
-        libraryView?.classList.add('active');
+        activateView(libraryView);
         if (window.libraryManager) {
           window.libraryManager.currentPlaylistId = 'all';
           window.libraryManager.reload();
@@ -68,15 +75,13 @@ class UIController {
           }
         }
       } else if (state.view === 'albums') {
-        albumsView?.classList.remove('hidden');
-        albumsView?.classList.add('active');
+        activateView(albumsView);
         
         if (window.albumsManager && window.albumsManager.albums.length === 0) {
           window.albumsManager.loadAlbums();
         }
       } else if (state.view === 'playlist') {
-        libraryView?.classList.remove('hidden');
-        libraryView?.classList.add('active');
+        activateView(libraryView);
         if (window.libraryManager) {
           window.libraryManager.currentPlaylistId = state.playlistId;
           window.libraryManager.reload();
@@ -154,13 +159,13 @@ class UIController {
           id: 'all',
           name: 'All Songs',
           subtitle: 'All your local tracks',
-          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 22px; height: 22px; color: var(--accent);"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>`
+          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 24px; height: 24px; color: #ffffff;"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>`
         },
         {
           id: 'favorites',
           name: 'Favorite Songs',
           subtitle: 'Your favorite tracks',
-          icon: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" style="width: 22px; height: 22px; color: #e74c3c;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`
+          icon: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width: 24px; height: 24px; color: #ffffff;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`
         }
       ];
 

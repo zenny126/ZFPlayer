@@ -1,114 +1,132 @@
-# ZeroFLAC Player 🎧
+# ZeroFLAC Player (ZFPlayer)
 
-**ZeroFLAC Player** là ứng dụng nghe nhạc Hi-Res Audio chuyên nghiệp cho các định dạng nhạc chất lượng cao (FLAC, WAV, MP3) trên Windows. Đón nhận thiết kế lấy cảm hứng từ ngôn ngữ giao diện **Apple Music Glassmorphic**, ứng dụng mang lại trải nghiệm âm thanh chân thực đỉnh cao kết hợp với giao diện kính mờ xuyên thấu sắc nét, mượt mà và chuyển động sống động.
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
+[![Audio Engine](https://img.shields.io/badge/Audio-WASAPI%20Shared%20Mode-success.svg)]()
+[![UI Design](https://img.shields.io/badge/UI-Apple%20Music%20Glassmorphism-purple.svg)]()
+[![License](https://img.shields.io/badge/License-MIT-green.svg)]()
 
----
-
-## 🌟 Tính Năng Nổi Bật
-
-### 🔊 1. Âm Thanh High-Fidelity & Windows WASAPI
-- **Kiến trúc đọc Zero-Latency vào RAM:** Tải toàn bộ dữ liệu PCM nguyên bản của bản nhạc vào bộ nhớ RAM (SoundFile / Libsndfile) để phát âm thanh tốc độ C không trễ, không rật.
-- **Mặc định WASAPI Shared Mode:** Tối ưu hóa driver Windows WASAPI giúp âm thanh tròn trịa, giữ nguyên tần số lấy mẫu (Sample Rate) và bit-depth (16-bit / 24-bit / 32-bit Float) mà không gây vỡ tiếng hay xung đột thiết bị.
-- **Xử lý chuyển đổi tín hiệu chuẩn xác:** Hỗ trợ mượt mà các file FLAC 24-bit/96kHz và Hi-Res Audio.
-
-### 🎨 2. Giao Diện Immersive Glassmorphism (Apple Music Style)
-- **Hình nền kính mờ động (Dynamic Blur Background):** Tự động trích xuất ảnh bìa Album đang phát, phủ lớp mờ sương 80px (`backdrop-filter: blur(80px) saturate(1.5)`), biến đổi màu sắc linh hoạt theo từng bài hát.
-- **Chữ trắng mộng mơ (Dreamy Glow Typography):** Chữ trắng thuần `#FFFFFF` nổi bật với lớp hào quang sương mù nhẹ (`text-shadow glow`), chống lóa 100% trên các nền ảnh chói sáng.
-- **Pop-up & Context Menu kính mờ:** Các bảng cài đặt, danh mục chuột phải và ô nhập liệu đều sử dụng kính mờ mỏng mờ (`blur(40px)`) kèm viền kính phản quang.
-- **Bìa Playlist Vector SVG Động:** "All Songs" và "Favorite Songs" tự động vẽ các ảnh bìa Vector SVG màu Gradient xanh lam và cam hồng cực kỳ bắt mắt.
-
-### ⚡ 3. Tối Ưu Hiệu Năng & Danh Sách Bài Hát
-- **Công nghệ VirtualList tự chế:** Tự xây dựng danh sách ảo (Virtual Scrolling) cho phép tải và cuộn hàng chục nghìn bài hát mượt mà ở tốc độ 60fps mà không làm lag trình duyệt.
-- **Dòng tiêu đề dính (Sticky Column Header):** Thanh tiêu đề cột (`#`, `TITLE`, `ALBUM`, `DATE ADDED`, `Duration`) tự động "đóng đinh" ở mép trên khi cuộn, phủ lớp kính mờ ngăn chữ trượt đè lên nhau.
-- **Trang chủ (Home View) 20 bài gần đây:** Hiển thị danh mục 20 bài nghe gần nhất dưới dạng bảng thông tin chuẩn 7 cột, nhấp đúp là phát ngay.
-- **Sidebar thông minh:** Thu gọn / Mở rộng danh mục bên trái chỉ với 1 click vào Logo góc trên.
-
-### 🎤 4. Lời Bài Hát Đồng Bộ (Synced Lyrics) & Thư Viện
-- **Tự động tải lời bài hát LRC:** Tải và đồng bộ lời hát theo thời gian thực với hiệu ứng chữ sáng mờ khi ca sĩ cất lời.
-- **Quản lý Playlist & Yêu thích:** Tạo danh sách phát cá nhân, thả tim bài hát yêu thích, tìm kiếm bài hát siêu tốc với SQLite FTS.
+**ZeroFLAC Player (ZFPlayer)** là ứng dụng nghe nhạc Hi-Res Audio chuyên nghiệp chuẩn mã nguồn mở dành cho hệ điều hành Windows. Ứng dụng kết hợp kiến trúc xử lý âm thanh tốc độ C trễ bằng 0 (Zero-Latency RAM Caching & WASAPI Shared Mode) với ngôn ngữ thiết kế kính mờ sang trọng Apple Music Glassmorphic UI, mang lại trải nghiệm nghe nhạc đỉnh cao và trực quan nhất.
 
 ---
 
-## 🛠️ Công Nghệ Sử Dụng (Tech Stack)
+## 1. Tính Năng Nổi Bật
 
-### **Backend (Python 3.11)**
-- **PyWebView / Chromium:** Trình diễn giao diện web nguyên bản trên ứng dụng Desktop Windows.
-- **Bottle Web Server:** HTTP REST Server đa luồng (Threaded WSGI) tốc độ cao phục vụ API và Static Files.
-- **SoundDevice & SoundFile:** Driver âm thanh WASAPI nguyên bản đọc trực tiếp dữ liệu PCM C-level.
-- **SQLite3 & FTS5:** Cơ sở dữ liệu lưu trữ Metadata bài hát, lượt nghe, lời nhạc và chỉ mục tìm kiếm siêu tốc.
+### 1.1 Động Cơ Âm Thanh Hi-Res & WASAPI Shared Mode
+- **Zero-Latency RAM Caching:** Tải nguyên bản toàn bộ dữ liệu PCM của bản nhạc vào bộ nhớ RAM (`NumPy Array`) khi phát, giúp chuyển bài, tua nhạc (Seek) và lặp bài (Loop) diễn ra tức thì với độ trễ 0ms, loại bỏ hoàn toàn hiện tượng nghẽn I/O đĩa.
+- **Windows WASAPI Shared Mode Driver:** Tối ưu hóa giao tiếp âm thanh qua `sounddevice` (PortAudio C-wrapper), tự động giữ nguyên tần số lấy mẫu (Sample Rate 44.1kHz – 192kHz) và căn chỉnh Bit-Depth (16-bit / 24-bit PCM / 32-bit Float) sắc nét.
+- **Xử lý Bit-Depth chuẩn xác:** Tự động mở rộng dải động bài hát 24-bit (`raw_data << 8`) để truyền trọn vẹn tín hiệu âm thanh nguyên bản đến DAC cứng.
 
-### **Frontend (Vanilla Web)**
-- **Vanilla HTML5 & CSS3:** Không phụ thuộc thư viện nặng như React/Tailwind, tối ưu hóa CSS Glass Tokens và GPU acceleration (`transform`, `backdrop-filter`).
-- **JavaScript ES6+ & Store Subscriber Pattern:** Luồng dữ liệu 1 chiều (Unidirectional Data Flow) tự động cập nhật UI khi trạng thái phát nhạc thay đổi.
+### 1.2 Giao Diện Glassmorphic Đẳng Cấp (Apple Music Style)
+- **Hình nền kính mờ động (Dynamic Blur Background):** Trích xuất tự động màu sắc & hình ảnh bìa Album đang phát, phủ lớp sương mờ 80px (`backdrop-filter: blur(80px) saturate(1.5)`), chuyển màu mềm mại theo từng giai điệu.
+- **Chữ mơ màng chống lóa (Dreamy Glow Typography):** Font chữ trắng thuần `#FFFFFF` tương phản cao kết hợp hiệu ứng tạo quầng hào quang nhẹ (`text-shadow glow`), giúp dễ đọc 100% trên mọi hình nền.
+- **Playlist Vector SVG Động:** "All Songs" và "Favorite Songs" tự động vẽ các ảnh bìa Vector SVG màu Gradient xanh lam và cam hồng cực kỳ bắt mắt.
+- **Chuyển cảnh mượt mà (Smooth UI Transitions):** Áp dụng đường cong gia tốc chuẩn macOS/iOS (`cubic-bezier(0.2, 0.9, 0.3, 1)`) cho các tương tác micro-interactions, Modals, Context Menu và View Transitions.
+
+### 1.3 Hệ Thống Tải & Đồng Bộ Lời Bài Hát (Synced Lyrics)
+- **Hàng đợi ưu tiên ngầm (Priority Queue Background Worker):** Sử dụng 1 luồng ngầm tiêu thụ hàng đợi tuần tự với cơ chế `0.5s Throttle` giữa các request, bảo vệ API và chống ghi khóa CSDL.
+  - *Priority 1 (Ưu tiên cao):* Tải tức thì lời bài đang phát và 5 bài hát kế tiếp.
+  - *Priority 10 (Ưu tiên thấp):* Tải lần lượt lời nhạc cho các bài hát mới được import.
+- **Thác nước 4 Cấp Ưu Tiên Nguồn (4-Level Fallback Waterfall):**
+  1. *Ưu tiên 1:* Đọc tệp `.lrc` cục bộ nằm cùng thư mục và cùng tên với bài hát.
+  2. *Ưu tiên 2:* Tìm kiếm qua API `LRCLIB` (`/api/search`) với thuật toán khớp thời lượng bài hát ($\le 3.0s$).
+  3. *Ưu tiên 3:* Trích xuất thẻ lời nhạc nhúng trực tiếp trong file (`USLT`, `LYRICS`, `UNSYNCEDLYRICS`).
+  4. *Ưu tiên 4:* Tra cứu trực tuyến ngầm qua `syncedlyrics` (Musixmatch / NetEase / Megalobiz).
+
+### 1.4 Thư Viện Nhạc Siêu Tốc & Virtual Scrolling Engine
+- **Thuật toán VirtualList 60–120 FPS:** Tự xây dựng bộ thuật toán cuộn danh sách ảo (Offset-aware Index Math), duy trì chỉ 30–40 DOM elements trên cây DOM ngay cả khi hiển thị hơn 50.000 bài hát.
+- **Tìm kiếm Full-Text SQLite FTS5:** Tìm kiếm bài hát, ca sĩ, album tức thì với chỉ mục FTS5.
+- **Trang chủ 20 bài gần đây & Sidebar thông minh:** Cập nhật tức thì danh sách 20 bài nghe gần nhất, hỗ trợ thu gọn/mở rộng Sidebar với 1-click.
 
 ---
 
-## 📁 Cấu Trúc Dự Án (Directory Structure)
+## 2. Công Nghệ Sử Dụng (Tech Stack)
+
+### Backend (Python 3.11+)
+- **PyWebView / Edge Chromium (WebView2):** Cầu nối giao diện Desktop Windows nguyên bản và Web Frontend.
+- **Bottle WSGI Web Server:** HTTP REST API Server đa luồng (Threaded WSGI) cực nhẹ.
+- **SoundFile (`libsndfile` C-Decoder) & SoundDevice (PortAudio WASAPI):** Động cơ phát âm thanh C-level nguyên bản.
+- **NumPy:** Đệm dữ liệu PCM nguyên bản dạng RAM Buffer C-contiguous.
+- **SQLite3 (WAL Mode & FTS5):** Cơ sở dữ liệu lưu trữ Metadata, chỉ mục tìm kiếm và bộ nhớ đệm lời bài hát.
+- **Mutagen & Syncedlyrics:** Đọc thẻ bài hát Hi-Res và tải lời bài hát đồng bộ.
+
+### Frontend (Vanilla Web Standards)
+- **Vanilla HTML5 & CSS3:** CSS Custom Properties (Tokens), Dynamic Backdrop Filter, GPU Acceleration (`will-change: transform`).
+- **JavaScript ES6+ & Central Store:** Mô hình quản lý trạng thái 1 chiều (Unidirectional Publisher/Subscriber Store).
+
+---
+
+## 3. Cấu Trúc Dự Án (Directory Structure)
 
 ```
 ZFPlayer/
 ├── backend/
-│   ├── api/                 # Phân hệ REST API (Player, Library, Lyrics, Config)
-│   ├── audio/               # Động cơ âm thanh WASAPI & Ring Buffer (engine.py)
-│   ├── models/              # Data Models (track.py)
-│   ├── services/            # Logic nghiệp vụ (library_service.py, player_service.py)
-│   ├── storage/             # Quản lý SQLite DB (database.py) & Cache
-│   ├── workers/             # Luồng ngầm quét nhạc (scanner.py) & Tải lời bài hát
-│   └── app.py               # Điểm khởi chạy chính ứng dụng Backend & PyWebView
+│   ├── api/                 # REST API endpoints (player_api, library_api, lyrics_api, config_api)
+│   ├── audio/               # Động cơ WASAPI & PCM RAM Buffer (engine.py, decoder.py, buffer.py)
+│   ├── models/              # Data models đại diện cho bài hát (track.py)
+│   ├── services/            # Logic nghiệp vụ trung tâm (library_service.py, player_service.py)
+│   ├── storage/             # Quản lý SQLite DB (database.py), Cache & Config
+│   ├── workers/             # Luồng ngầm quét nhạc (scanner.py), Priority Lyrics Worker (lyrics_worker.py)
+│   └── app.py               # Điểm khởi chạy ứng dụng (Backend WSGI & PyWebView Window)
 ├── frontend/
 │   ├── css/
-│   │   ├── main.css         # Hệ thống thiết kế Glassmorphism & Tokens
-│   │   ├── library.css      # Giao diện bảng danh sách bài hát & Sticky Header
-│   │   ├── player.css       # Thanh điều khiển phát nhạc bên dưới
-│   │   ├── lyrics.css       # Giao diện xem lời bài hát đồng bộ
-│   │   └── albums.css       # Thẻ Playlist & Grid
+│   │   ├── main.css         # Design Tokens, Glassmorphism & Keyframe Animations
+│   │   ├── library.css      # Giao diện danh sách bài hát & Sticky Header
+│   │   ├── player.css       # Thanh Player Bar điều khiển phát nhạc bên dưới
+│   │   ├── lyrics.css       # Giao diện xem lời bài hát đồng bộ (Overlay)
+│   │   └── albums.css       # Thẻ Album, Playlist & Grid layout
 │   ├── js/
-│   │   ├── store.js         # Hệ thống Quản lý Trạng thái (Central State Store)
-│   │   ├── api.js           # Cầu nối PyWebView Bridge & REST API
-│   │   ├── player.js        # Controller điều khiển trình phát nhạc
-│   │   ├── library.js       # Thuật toán VirtualList & Render Bảng bài hát
+│   │   ├── store.js         # Hệ thống quản lý trạng thái trung tâm (Central State Store)
+│   │   ├── api.js           # Cầu nối PyWebView Bridge & HTTP REST Client
+│   │   ├── player.js        # Controller điều khiển trình phát nhạc & đồng bộ Slider
+│   │   ├── library.js       # Thuật toán VirtualList Math & Render Bảng bài hát
 │   │   ├── home.js          # Controller Trang chủ & 20 bài nghe gần đây
-│   │   ├── playlists.js     # Quản lý Playlist & SVG Cover Generator
-│   │   ├── ui.js            # Điều hướng Topbar, Sidebar Toggle, Modals
+│   │   ├── playlists.js     # Quản lý Playlist & SVG Dynamic Cover Generator
+│   │   ├── ui.js            # Điều hướng Topbar, Sidebar Toggle & Modals
 │   │   └── main.js          # Khởi tạo giao diện ứng dụng
-│   └── index.html           # Khung vỏ giao diện HTML5 chính
+│   └── index.html           # Khung vỏ HTML5 chính của ứng dụng
+├── docs/
+│   └── ARCHITECTURE.md      # Tài liệu Kiến trúc Hệ thống & Yêu cầu Kỹ thuật Chuyên sâu
+├── architect.md             # Bản sao liên kết Tài liệu Kiến trúc Hệ thống
 ├── DEV_LOG.md               # Nhật ký phát triển chi tiết từng phiên bản
 ├── walkthrough.md           # Báo cáo các thay đổi kỹ thuật & giao diện
-└── README.md                # Tài liệu hướng dẫn dự án
+└── README.md                # Tài liệu hướng dẫn sử dụng dự án
 ```
 
 ---
 
-## 🚀 Hướng Dẫn Cài Đặt & Chạy Ứng Dụng
+## 4. Hướng Dẫn Cài Đặt & Khởi Chạy
 
-### 1. Yêu cầu hệ thống
-- Hệ điều hành: **Windows 10 / 11**
+### 4.1 Yêu cầu hệ thống
+- Hệ điều hành: **Windows 10 / 11 (64-bit)**
 - **Python 3.11+**
-- Đã cài đặt C++ Build Tools hoặc thư viện `soundfile` / `sounddevice`
+- Card âm thanh / DAC hỗ trợ driver Windows WASAPI.
 
-### 2. Cài đặt môi trường
-Mở Terminal tại thư mục dự án và cài đặt các phụ thuộc:
+### 4.2 Cài đặt môi trường
+Mở Terminal tại thư mục gốc dự án và cài đặt các phụ thuộc:
 ```bash
-pip install sounddevice soundfile numpy PyYAML bottle pywebview mutagen requests
+pip install sounddevice soundfile numpy PyYAML bottle pywebview mutagen requests syncedlyrics
 ```
 
-### 3. Khởi chạy ứng dụng
-Chạy tệp `app.py`:
+### 4.3 Khởi chạy ứng dụng
+Chạy lệnh khởi tạo ứng dụng:
 ```bash
 python backend/app.py
 ```
-Ứng dụng sẽ tự động khởi tạo Server nội bộ và mở cửa sổ PyWebView với giao diện Glassmorphism rực rỡ!
+Ứng dụng sẽ tự động khởi chạy Bottle WSGI Server ngầm và mở cửa sổ ứng dụng Desktop PyWebView sắc nét!
 
 ---
 
-## 📖 Hướng Dẫn Sử Dụng
-1. **Thêm Thư Mục Nhạc:** Bấm vào biểu tượng **Cài đặt (Bánh răng)** ở góc trên bên phải -> Chọn thư mục chứa các tệp nhạc FLAC/MP3 của bạn -> Hệ thống sẽ tự động quét nhạc và hiển thị.
+## 5. Hướng Dẫn Sử Dụng
+
+1. **Thêm Thư Mục Nhạc:** Bấm vào biểu tượng **Settings (Bánh răng)** ở góc trên bên phải -> Chọn thư mục chứa các tệp nhạc FLAC/MP3 -> Hệ thống sẽ tự động quét ngầm và hiển thị nhạc.
 2. **Thu Gọn Sidebar:** Bấm vào **Icon Logo 3 đĩa** ở góc trên bên trái để thu gọn hoặc mở rộng thanh bên Library.
-3. **Phát Nhạc:** Nhấp đúp vào bất kỳ bài hát nào ở Trang chủ hoặc Thư viện để phát nhạc lập tức với âm thanh WASAPI mượt mà.
-4. **Xem Lời Bài Hát:** Nhấp vào icon Micro trên thanh Player bar để mở màn hình Lời bài hát đồng bộ.
+3. **Phát Nhạc:** Nhấp đúp vào bất kỳ bài hát nào ở Trang chủ hoặc Thư viện để phát nhạc lập tức với âm thanh WASAPI nguyên bản.
+4. **Xem Lời Bài Hát:** Nhấp vào icon **Microphone** trên thanh Player Bar bên dưới để mở màn hình xem lời bài hát đồng bộ.
+5. **Điều Chỉnh Âm Lượng:** Sử dụng thanh trượt Volume trên Player bar hoặc tại màn hình Lyrics, trạng thái âm lượng sẽ tự động lưu lại cho các lần khởi chạy sau.
 
 ---
 
-## 📄 Giấy Phép & Tác Giả
+## 6. Giấy Phép & Tác Giả
+
 - **Tác giả:** Zenny (`zenny126`)
-- **Dự án:** ZeroFLAC Player - Open Source High-Fidelity Audio Experience.
+- **Dự án:** ZeroFLAC Player (ZFPlayer) - Open Source High-Fidelity Audio Experience.

@@ -21,16 +21,16 @@
   /* Bezier Curve Design System Tokens */
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --ease-spring-soft: cubic-bezier(0.25, 1.25, 0.5, 1);
+  --ease-spring: cubic-bezier(0.2, 0.9, 0.3, 1);
+  --ease-spring-soft: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out-smooth: cubic-bezier(0.65, 0, 0.35, 1);
 
   /* Modern Curve Transitions */
-  --transition-fast: 180ms var(--ease-out-quint);
-  --transition-normal: 300ms var(--ease-out-expo);
-  --transition-slow: 500ms var(--ease-out-expo);
-  --transition-spring: 350ms var(--ease-spring);
-  --transition-spring-soft: 300ms var(--ease-spring-soft);
+  --transition-fast: 150ms var(--ease-out-expo);
+  --transition-normal: 250ms var(--ease-out-expo);
+  --transition-slow: 400ms var(--ease-out-expo);
+  --transition-spring: 220ms var(--ease-spring);
+  --transition-spring-soft: 200ms var(--ease-spring-soft);
 }
 
 * {
@@ -197,12 +197,17 @@ h1, h2, h3, h4, h5, h6 {
   display: flex; align-items: center; padding: 8px; border-radius: var(--border-radius-sm);
   cursor: pointer; transition: background-color var(--transition-fast), transform var(--transition-spring-soft); gap: 12px;
 }
-.library-list li:hover { background-color: var(--bg-elevated); transform: translateX(3px); }
+.library-list li:hover { background-color: var(--bg-elevated); }
 .library-list li:active { transform: scale(0.98); }
 .library-list li.active { background-color: rgba(255,255,255,0.1); }
 .library-list li img, .library-list li .icon-placeholder {
   width: 48px; height: 48px; border-radius: 4px; object-fit: cover; flex-shrink: 0;
   background-color: var(--bg-elevated); display: flex; align-items: center; justify-content: center;
+}
+.library-list li .icon-placeholder.system-icon {
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
 }
 .library-list li.artist img { border-radius: 50%; }
 .library-list-text { flex: 1; min-width: 0; }
@@ -328,7 +333,7 @@ input[type="range"]::-webkit-slider-runnable-track {
   background: rgba(0,0,0,0.7); z-index: 1000;
   display: flex; align-items: center; justify-content: center;
   backdrop-filter: blur(8px);
-  animation: backdropFadeIn 300ms var(--ease-out-quint) forwards;
+  animation: backdropFadeIn 180ms var(--ease-out-expo) forwards;
 }
 .modal-content {
   background: rgba(255, 255, 255, 0.05); 
@@ -338,7 +343,8 @@ input[type="range"]::-webkit-slider-runnable-track {
   padding: 32px; border-radius: var(--border-radius-lg);
   width: 400px; max-width: 90%;
   box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4);
-  animation: modalScaleUp 350ms var(--ease-out-expo) forwards;
+  will-change: transform, opacity;
+  animation: modalScaleUp 180ms var(--ease-out-expo) forwards;
 }
 
 @keyframes backdropFadeIn {
@@ -347,7 +353,7 @@ input[type="range"]::-webkit-slider-runnable-track {
 }
 
 @keyframes modalScaleUp {
-  from { opacity: 0; transform: scale(0.9) translateY(12px); }
+  from { opacity: 0; transform: scale(0.96) translateY(6px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
@@ -413,11 +419,12 @@ input[type="range"]::-webkit-slider-runnable-track {
   z-index: 9999;
   font-size: 14px;
   transform-origin: top left;
-  animation: contextMenuPop 250ms var(--ease-out-expo) forwards;
+  will-change: transform, opacity;
+  animation: contextMenuPop 150ms var(--ease-out-expo) forwards;
 }
 
 @keyframes contextMenuPop {
-  from { opacity: 0; transform: scale(0.94) translateY(-4px); }
+  from { opacity: 0; transform: scale(0.96) translateY(-2px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
@@ -428,12 +435,11 @@ input[type="range"]::-webkit-slider-runnable-track {
   display: flex;
   justify-content: space-between;
   color: var(--text-secondary);
-  transition: background-color var(--transition-fast), color var(--transition-fast), transform var(--transition-spring-soft);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 .context-menu-item:hover {
   background: rgba(255,255,255,0.12);
   color: var(--text-primary);
-  transform: translateX(2px);
 }
 .context-menu-divider {
   height: 1px;
@@ -454,7 +460,7 @@ input[type="range"]::-webkit-slider-runnable-track {
   box-shadow: var(--shadow-lg);
   z-index: 1001;
   transform-origin: top left;
-  animation: contextMenuPop 200ms var(--ease-out-expo) forwards;
+  animation: contextMenuPop 150ms var(--ease-out-expo) forwards;
 }
 .context-menu-item:hover > .context-submenu {
   display: block;
@@ -462,5 +468,19 @@ input[type="range"]::-webkit-slider-runnable-track {
 .context-submenu.hidden {
   display: none !important;
 }
+
+/* View Fade Transition */
+.view-container {
+  will-change: opacity, transform;
+}
+.view-container.active-view-fade {
+  animation: viewFadeIn 180ms var(--ease-out-expo) forwards;
+}
+
+@keyframes viewFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .hidden { display: none !important; }
 

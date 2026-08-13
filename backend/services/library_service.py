@@ -189,11 +189,9 @@ class LibraryService:
         return {'status': 'error', 'message': 'Invalid playlist id'}
 
     def get_system_playlist_covers(self) -> Dict[str, Any]:
-        from storage.config import Config
-        cfg = Config()
         return {
-            'all': cfg.get('cover_all'),
-            'favorites': cfg.get('cover_favorites')
+            'all': None,
+            'favorites': None
         }
 
     def get_playlists(self) -> List[Dict[str, Any]]:

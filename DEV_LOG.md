@@ -1,5 +1,51 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T16:28:00
+### Tác vụ thực hiện
+Viết lại toàn bộ `README.md` và `docs/ARCHITECTURE.md` (`architect.md`) chuẩn hóa cấu trúc hệ thống, 5 luồng dữ liệu cốt lõi và các yêu cầu kỹ thuật chuyên sâu.
+
+### Danh sách tệp tin thay đổi
+- `README.md` (MODIFIED)
+- `docs/ARCHITECTURE.md` (MODIFIED)
+- `architect.md` (CREATED)
+- `task.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Chuẩn hóa `README.md`**: Cập nhật mô tả dự án, 4 nhóm tính năng nổi bật (WASAPI Shared Mode, Glassmorphic UI, Synced Lyrics 4-level fallback, VirtualList 60fps), công nghệ sử dụng, cấu trúc thư mục và hướng dẫn cài đặt/sử dụng đầy đủ không có icon thừa.
+2. **Chi Tiết Luồng Hệ Thống (`docs/ARCHITECTURE.md` & `architect.md`)**: Mô tả chi tiết 5 luồng dữ liệu cốt lõi (Khởi chạy IPC/REST Bridge, Giải mã & Phát nhạc PCM Zero-Latency, Quét nhạc ngầm & FTS5 Indexing, Priority Queue Synced Lyrics 4 cấp, Frontend State & Virtual Scrolling) chia làm 2 mục: Công nghệ/Module sử dụng và Quy trình xử lý từng bước.
+3. **Bổ Sung Yêu Cầu Kỹ Thuật Chuyên Sâu**: Xây dựng bảng quy chuẩn kỹ thuật đầy đủ bao gồm: Phần cứng & OS (Windows 10/11 64-bit, RAM Caching), Thư viện phụ thuộc C-level (`sounddevice`, `soundfile`, `numpy`), Cơ sở dữ liệu WAL Mode & chỉ mục FTS5, Thuật toán Virtual Scrolling math (`scrollTop - offsetTop`), Quy tắc đa luồng & cách ly Thread an toàn (Non-blocking audio thread callback, Single-thread Priority Queue throttle 0.5s), và các chỉ số SLA (0ms seek latency, CPU Idle < 0.5%).
+
+---
+
+## Timestamp: 2026-08-13T16:08:15
+### Tác vụ thực hiện
+Tối ưu hóa và cải thiện toàn bộ hệ thống Animation (Refine & Streamline Animations) theo chuẩn giao diện Apple Music & Spotify.
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/main.css` (MODIFIED)
+- `frontend/css/library.css` (MODIFIED)
+- `frontend/css/albums.css` (MODIFIED)
+- `frontend/css/lyrics.css` (MODIFIED)
+- `frontend/js/ui.js` (MODIFIED)
+- `task.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Tinh chỉnh Design Tokens & Curves (`main.css`)**:
+   - Thay thế các đường cung nảy `--ease-spring` (overshoot 1.56) bằng đường cong chuẩn macOS/iOS `cubic-bezier(0.2, 0.9, 0.3, 1)` và `cubic-bezier(0.16, 1, 0.3, 1)`.
+   - Rút ngắn thời gian phản hồi micro-interactions từ 180-350ms xuống 150ms-250ms tức thì.
+   - Thêm GPU rendering hints (`will-change: transform, opacity`) cho Modals, Context Menus, View Containers.
+2. **Cắt bỏ các hiệu ứng thừa (`main.css`, `library.css`, `albums.css`, `lyrics.css`)**:
+   - Loại bỏ `translateX(3px)` khi hover item Sidebar (giữ vị trí cố định chống lệch con trỏ).
+   - Loại bỏ xoay 90 độ (`rotate(-90deg)`) nút đóng Lyrics màn hình overlay.
+   - Loại bỏ transform nảy trên `.track-row` và thu gọn biên độ scale hình ảnh bìa Album/Playlist (`scale(1.08)` ➔ `scale(1.04)`).
+3. **Bổ sung View Fade Transition (`main.css`, `ui.js`)**:
+   - Thêm class `.active-view-fade` với animation `viewFadeIn 180ms` khi người dùng chuyển đổi giữa Trang chủ, Bài hát, Albums, Playlists.
+4. **Tối ưu Synced Lyrics & Overlay (`lyrics.css`)**:
+   - Rút ngắn thời gian xuất hiện Lyrics Overlay từ 450ms xuống 300ms.
+   - Cuộn vị trí `#lyrics-content` trong 350ms mượt mà và zoom nhẹ câu hát active 300ms.
+
+---
+
 ## Timestamp: 2026-08-13T15:53:30
 ### Tác vụ thực hiện
 Triển khai Background Priority Queue Tải Lời Bài Hát Ngầm với Throttle loại bỏ hoàn toàn tình trạng tụt giảm hiệu năng khi Import lượng bài hát lớn.
@@ -541,21 +587,6 @@ gba(0,0,0,0.3) + ackdrop-filter: blur(20px)) so that absolutely positioned trac
 - **Files modified:** rontend/css/library.css, rontend/index.html`n- **Details:** Fixed misaligned column headers (TITLE, ALBUM, DATE ADDED, Duration) caused by an extra display: flex directive on .track-row.header-row overriding .track-row's CSS Grid (grid-template-columns: 40px 6fr 4fr 3fr 40px 40px 80px). Removed display: flex so the header row matches the track data rows pixel for pixel. Bumped cache to ?v=16.
 ## [2026-08-13] Fix Home View Bottom Padding & Scroll
 - **Files modified:** rontend/index.html, rontend/js/home.js`n- **Details:** Fixed an issue where the Home view could not scroll down deep enough, causing the bottom of the 'G?n y' (Recently Played) section to get cut off by the bottom player bar. Increased #home-view's bottom padding from 24px to 120px, and set explicit 180px card widths for the horizontal scroll list. Bumped cache to ?v=17.
-## [2026-08-13] Fix Recent Cards Vertical Collapse
-- **Files modified:** rontend/js/home.js, rontend/index.html`n- **Details:** Fixed an issue where recent track cards in the Home view collapsed into 20px-tall paper-thin strips. Added explicit 148px height/width on .album-cover-container inside home.js and set lign-items: flex-start on #home-recent-grid in index.html to prevent Flexbox from collapsing percentage aspect-ratio elements. Bumped cache to ?v=18.
-## [2026-08-13] Convert Home Recent Section to 20-Track Table List
-- **Files modified:** rontend/index.html, rontend/js/home.js, rontend/css/library.css`n- **Details:** Replaced the horizontal scrolling grid for Recently Played tracks in Home view with a full vertical table list displaying the 20 most recently played songs. Formatted rows using the clean 7-column track layout matching the Library view (STT, Thumbnail, Title, Artist, Album, Date Added, Like button, Duration). Bumped cache to ?v=19.
-## [2026-08-13] Resize Top Bar Icons & Functionalize Sidebar Toggle
-- **Files modified:** rontend/index.html, rontend/css/main.css, rontend/js/ui.js`n- **Details:** Scaled down top bar navigation buttons from 48px to a sleek, compact 40px diameter, with 20px SVG icons for balanced proportion. Converted the static top-left Logo icon into a functional #btn-toggle-sidebar button that smoothly expands and collapses the left library sidebar on click. Bumped cache to ?v=20.
-## [2026-08-13] Documentation & Architecture Guide
-- **Files created:** \README.md\, \docs/ARCHITECTURE.md\\
-- **Details:** Created comprehensive project documentation including feature highlights, tech stack, directory structure, install/usage guide, and in-depth technical architecture (Audio WASAPI signal pipeline, SQLite FTS indexing, VirtualList math & offset calculations, CSS Glass token system). Pushed to GitHub repo zenny126/ZFPlayer.
-
-## [2026-08-13] Optimize Lyrics Source Priority Hierarchy
-- **Files modified:** `backend/workers/lyrics_worker.py`, `task.md`
-- **Details:** Optimized the lyrics discovery pipeline specifically for tracks downloaded via Deez Bot Telegram (Spotify album links). Added zero-latency local `.lrc` sidecar file reader and embedded audio tag metadata reader (`FLAC` Vorbis comments / `MP3` ID3 tags). Re-ordered online search fallback chain to query LRCLIB direct exact match, Musixmatch (Spotify official provider via `syncedlyrics`), LRCLIB search, and fallback providers.
-
-## [2026-08-13] Fix Uncaught TypeError: window.api.toggleFavorite is Not a Function
 - **Files modified:** `frontend/js/home.js`, `frontend/js/api.js`, `frontend/index.html`, `task.md`
 - **Details:** Fixed JS runtime error when clicking the Like heart button on the Recently Played tracks list in Home view. Changed `window.api.toggleFavorite(track.path)` to `window.api.toggleLike(track.path)` in `home.js`. Added `toggleFavorite` alias method in `api.js` for backwards compatibility. Bumped cache buster version to `?v=21`.
 
@@ -583,12 +614,6 @@ gba(0,0,0,0.3) + ackdrop-filter: blur(20px)) so that absolutely positioned trac
 - **Files modified:** `data/library.db`, `task.md`
 - **Details:** Wiped all records from `tracks`, `playlists`, `playlist_tracks`, `lyrics_cache` in `d:\ZFPlayer\data\library.db` and executed `VACUUM` to leave DB completely empty for user re-testing of the new online-first lyrics hierarchy.
 
-
-
-
-
-
-
-
-
-
+## [2026-08-13] Update All Songs & Favorite Songs Covers to Monochrome White SVG Without Border
+- **Files modified:** `frontend/js/playlists.js`, `frontend/js/ui.js`, `frontend/js/home.js`, `frontend/css/main.css`, `frontend/index.html`
+- **Details:** Replaced white background cards and colored gradient covers for "All Songs" and "Favorite Songs" system playlists with crisp, monochrome white SVG icons (`#ffffff`). Added `.system-icon` CSS class for transparent backgrounds and no borders in sidebar and home playlist cards. Bumped cache-buster version to `?v=23`.

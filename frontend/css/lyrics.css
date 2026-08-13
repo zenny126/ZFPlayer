@@ -8,15 +8,16 @@
   justify-content: center;
   padding: 0 8vw;
   overflow: hidden;
-  transition: opacity 450ms var(--ease-out-expo), transform 450ms var(--ease-out-expo), visibility 450ms var(--ease-out-expo);
+  transition: opacity 300ms var(--ease-out-expo), transform 300ms var(--ease-out-expo), visibility 300ms var(--ease-out-expo);
   transform: translateY(0);
+  will-change: opacity, transform;
 }
 
 #lyrics-overlay.hidden {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transform: translateY(40px);
+  transform: translateY(24px);
 }
 
 #lyrics-overlay::before {
@@ -59,10 +60,10 @@
 }
 .lyrics-close-btn:hover {
   color: white;
-  transform: scale(1.15) rotate(-90deg);
+  transform: scale(1.08);
 }
 .lyrics-close-btn:active {
-  transform: scale(0.9) rotate(-90deg);
+  transform: scale(0.92);
 }
 .lyrics-close-btn .icon {
   width: 28px;
@@ -248,7 +249,8 @@
   display: flex;
   flex-direction: column;
   padding: 35vh 0;
-  transition: transform 550ms var(--ease-out-expo);
+  transition: transform 350ms var(--ease-out-expo);
+  will-change: transform;
 }
 
 .lyrics-line {
@@ -257,10 +259,10 @@
   font-weight: 700;
   color: rgba(255, 255, 255, 0.28);
   filter: blur(1.5px); /* Soft focus / dreamy blur for upcoming lines */
-  transition: color 450ms var(--ease-out-expo), 
-              transform 450ms var(--ease-out-expo), 
-              filter 450ms var(--ease-out-expo),
-              text-shadow 450ms var(--ease-out-expo);
+  transition: color 300ms var(--ease-out-expo), 
+              transform 300ms var(--ease-out-expo), 
+              filter 300ms var(--ease-out-expo),
+              text-shadow 300ms var(--ease-out-expo);
   padding: 16px 0;
   text-align: left;
   cursor: pointer;

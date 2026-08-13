@@ -39,7 +39,7 @@ graph TD
 - **Module Frontend:** `frontend/js/api.js`, `frontend/js/main.js`.
 
 #### Quy trình xử lý từng bước:
-1. khi chạy `python backend/app.py`, ứng dụng khởi tạo cấu hình từ `config.json` và khởi chạy `Bottle` WSGI WSGI Web Server ở chế độ Threaded Server trên cổng local (`http://127.0.0.1:port`).
+1. Khi chạy `python backend/app.py`, ứng dụng khởi tạo cấu hình từ `config.json` và khởi chạy `Bottle` WSGI Web Server ở chế độ Threaded Server trên cổng local (`http://127.0.0.1:port`).
 2. Backend đăng ký các tuyến HTTP REST Endpoints (VD: `/api/library/tracks`, `/api/player/play`, `/api/lyrics/...`).
 3. Backend khởi tạo cửa sổ PyWebView (Edge Chromium / WebView2 Engine), nạp tệp `frontend/index.html` và phơi bày Cầu nối Native IPC Bridge (`window.pywebview.api`).
 4. Tại Frontend, `api.js` thực hiện kiểm tra cầu nối Native Bridge. Nếu có mặt `pywebview.api`, Frontend gọi trực tiếp các phương thức Python IPC. Ngược lại, Frontend tự động fallback sang gọi HTTP `fetch()` REST API.
@@ -54,7 +54,7 @@ graph TD
 - **Thư viện C & Python:** `soundfile` (`libsndfile` C-Decoder), `sounddevice` (PortAudio C-wrapper cho WASAPI), `numpy` C-contiguous array buffer.
 
 #### Quy trình xử lý từng bước:
-1. khi người dùng yêu cầu phát một bài hát (`path`), `AudioDecoder` dùng `soundfile.read()` đọc toàn bộ tệp âm thanh (FLAC, WAV, MP3, M4A, OGG) và giải mã PCM thô trực tiếp vào bộ nhớ RAM dưới dạng `numpy.ndarray`.
+1. Khi người dùng yêu cầu phát một bài hát (`path`), `AudioDecoder` dùng `soundfile.read()` đọc toàn bộ tệp âm thanh (FLAC, WAV, MP3, M4A, OGG) và giải mã PCM thô trực tiếp vào bộ nhớ RAM dưới dạng `numpy.ndarray`.
 2. **Căn chỉnh Bit-depth:**
    - *16-bit PCM:* Đọc dạng `int16`, truyền trực tiếp vào stream buffer.
    - *24-bit PCM:* Đọc dạng `int32`, tự động dịch bít `raw_data = raw_data << 8` để giữ trọn vẹn dải động 24-bit gốc cho buffer WASAPI 32-bit.
