@@ -1,5 +1,24 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T16:38:30
+### Tác vụ thực hiện
+Tối ưu hóa phản hồi hiển thị lời bài hát (Optimistic UI Update) khi người dùng click vào dòng Lyric để seek âm thanh.
+
+### Danh sách tệp tin thay đổi
+- `frontend/js/player.js` (MODIFIED)
+- `frontend/js/lyrics.js` (MODIFIED)
+- `task.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Optimistic UI Update Trong `player.js`**:
+   - Thay đổi phương thức `seek(seconds)`: Đồng bộ trạng thái `ticker` (`ticker.sync`) và gọi `updateSeekUI` ngay lập tức tại thời điểm xảy ra sự kiện click (0ms latency), thay vì chờ kết quả từ lệnh IPC `await window.api.seek(seconds)`.
+   - Bổ sung cờ thời gian `this.lastSeekTime`: Vô hiệu hóa việc ghi đè vị trí từ luồng polling ngầm `startSyncLoop` trong vòng 1.5 giây sau khi seek, giúp tránh tình trạng lyric bị giật lùi về vị trí cũ trước khi backend kịp phát âm thanh tại mốc thời gian mới.
+2. **Xử Lý Tức Thì Trong `lyrics.js`**:
+   - Cập nhật sự kiện `click` trên mỗi dòng `.lyrics-line`: Kích hoạt ngay lập tức `this.update(line.time)` để tự động nhảy dòng active và cuộn vị trí `scrollToLine()` smooth scroll ngay tại frame click đầu tiên.
+   - Hỗ trợ mốc thời lượng `line.time >= 0` thay vì điều kiện loại trừ `line.time > 0`.
+
+---
+
 ## Timestamp: 2026-08-13T16:28:00
 ### Tác vụ thực hiện
 Viết lại toàn bộ `README.md` và `docs/ARCHITECTURE.md` (`architect.md`) chuẩn hóa cấu trúc hệ thống, 5 luồng dữ liệu cốt lõi và các yêu cầu kỹ thuật chuyên sâu.
@@ -556,39 +575,11 @@ Khoanh vùng danh sách phát (Queue Scope) chỉ chạy duy nhất trong Playli
 ## [2026-08-13] Redesign Modal UI
 - **Files modified:** rontend/css/main.css, rontend/index.html`n- **Details:** Redesigned the 'Create Playlist' modal to match the dark theme and eliminate the jarring 'glassmorphism' bug that ruined text legibility. Added .text-input class to style the input box properly. Added .btn-ghost for subtle cancel buttons. Adjusted margins and gaps for a premium layout. Bumped cache buster to ?v=4.
 ## [2026-08-13] Global Immersive Glass UI
-- **Files modified:** rontend/css/main.css, rontend/css/library.css, rontend/css/player.css, rontend/js/player.js, rontend/index.html`n- **Details:** Re-architected the entire app's layout to use the 'Apple Music / Windows 11 Mica' immersive glass aesthetic. The global #app container now has a dynamic, heavily blurred pseudo-element background that matches the currently playing track's cover art. All panels (sidebar, main content, top bar, player bar) have been updated to be translucent/glassy to allow the gorgeous background to bleed through everywhere. Bumped cache to ?v=5.
-## [2026-08-13] Glass UI Opacity Tweak
-- **Files modified:** rontend/css/main.css, rontend/index.html`n- **Details:** Reduced panel background opacity from 0.4/0.5 down to 0.15/0.2 to let more of the blurred immersive background bleed through. Increased brightness of the blur layer slightly (0.7). Bumped cache to ?v=6.
-## [2026-08-13] Switch to WASAPI Shared Mode
-- **Files modified:** ackend/audio/engine.py`n- **Details:** Changed the default audio playback mode from WASAPI High-Fidelity (Exclusive/low-latency) to WASAPI Shared Mode with 'high' latency to prevent audio crackling and popping that users were experiencing.
-## [2026-08-13] White/Glass Premium Color Palette
-- **Files modified:** rontend/css/main.css, rontend/index.html`n- **Details:** Replaced the hardcoded Spotify green accent color with pure white (\#FFFFFF\) to better fit the dynamic cover art background. Modified \--text-primary\ to be 75% translucent white (\
-gba(255, 255, 255, 0.75)\), so that inactive text is dimmed while active states (using the white accent) are brilliantly bright. This creates a much more premium and elegant Apple Music aesthetic. Bumped cache to ?v=7.
-## [2026-08-13] Fix Lyrics View Like Button Sync
-- **Files modified:** rontend/js/player.js, rontend/index.html`n- **Details:** Wired up the lyrics-like-btn in the lyrics view to correctly trigger the API toggle and synchronize state with the global store and main player bar. Bumped cache to ?v=8.
-## [2026-08-13] Fix Like Button Store Sync Issue
-- **Files modified:** rontend/js/player.js, rontend/js/library.js`n- **Details:** Fixed a bug where clicking the like button failed to update the DOM because mutating the currentTrack object reference prevented store.setState from triggering syncUI(). Created a new object reference to ensure reactivity. Also wired the library list view to sync likes back to the global store if the liked track is currently playing.
-## [2026-08-13] Eradicate Solid Background Colors
-- **Files modified:** rontend/css/main.css, rontend/css/library.css, rontend/index.html`n- **Details:** Refactored the base CSS variables (--bg-primary, --bg-secondary, --bg-elevated, --bg-highlight) from hardcoded opaque grays (#121212, #181818, #282828) to perfectly translucent glass layers (
 gba(0,0,0,0.2), 
 gba(255,255,255,0.04), 
 gba(255,255,255,0.08), 
 gba(255,255,255,0.15)). Replaced hardcoded occurrences in library.css and main.css. This enforces a true 100% Immersive Glass UI everywhere in the app. Bumped cache to ?v=10.
 ## [2026-08-13] Dreamy Glow Typography
-- **Files modified:** rontend/css/main.css, rontend/css/library.css, rontend/index.html`n- **Details:** Replaced heavy dark text-shadow with a subtle legibility shadow. Boosted all text variables to pure white or high-opacity white. Added 'dreamy' white text-shadow glows (	ext-shadow: 0 0 10px rgba(255,255,255,0.4)) to active elements (playing track, active buttons, filter chips) and soft box-shadow glows to the solid white play buttons.
-## [2026-08-13] Fix Popup/Modal Frosted Glass
-- **Files modified:** rontend/css/main.css, rontend/css/library.css, rontend/index.html`n- **Details:** Fixed an issue where the Create Playlist modal and Context Menus were almost completely transparent and illegible against the background text due to the removal of solid backgrounds. Applied heavy \ackdrop-filter: blur(40px) saturate(1.5)\, a subtle white border, and stronger box-shadows to these popup elements so they correctly act as frosted glass hovering above the UI. Bumped cache to ?v=13.
-## [2026-08-13] Sticky Library Header Row
-- **Files modified:** rontend/css/library.css, rontend/index.html`n- **Details:** Made the library header row (Title/Album/Date Added) sticky when scrolling. Changed position: relative to position: sticky; top: 0; and added a frosted glass background (
-gba(0,0,0,0.3) + ackdrop-filter: blur(20px)) so that absolutely positioned tracks scrolling up slide cleanly underneath it without text overlap. Bumped cache to ?v=14.
-## [2026-08-13] Fix VirtualList Gap On Scroll
-- **Files modified:** rontend/js/library.js, rontend/index.html`n- **Details:** Fixed a critical bug in VirtualList calculation where 	his.scrollTop was directly used to compute startIndex without subtracting scroller.offsetTop. When scrolling past the playlist header (~300px), VirtualList erroneously calculated that the top 5 tracks were offscreen and unmounted them, leaving a huge empty blank gap below the sticky header. Subtracted scroller.offsetTop from scrollTop in update() to accurately calculate visible index offset. Bumped cache to ?v=15.
-## [2026-08-13] Fix Header Row Grid Alignment
-- **Files modified:** rontend/css/library.css, rontend/index.html`n- **Details:** Fixed misaligned column headers (TITLE, ALBUM, DATE ADDED, Duration) caused by an extra display: flex directive on .track-row.header-row overriding .track-row's CSS Grid (grid-template-columns: 40px 6fr 4fr 3fr 40px 40px 80px). Removed display: flex so the header row matches the track data rows pixel for pixel. Bumped cache to ?v=16.
-## [2026-08-13] Fix Home View Bottom Padding & Scroll
-- **Files modified:** rontend/index.html, rontend/js/home.js`n- **Details:** Fixed an issue where the Home view could not scroll down deep enough, causing the bottom of the 'G?n y' (Recently Played) section to get cut off by the bottom player bar. Increased #home-view's bottom padding from 24px to 120px, and set explicit 180px card widths for the horizontal scroll list. Bumped cache to ?v=17.
-- **Files modified:** `frontend/js/home.js`, `frontend/js/api.js`, `frontend/index.html`, `task.md`
-- **Details:** Fixed JS runtime error when clicking the Like heart button on the Recently Played tracks list in Home view. Changed `window.api.toggleFavorite(track.path)` to `window.api.toggleLike(track.path)` in `home.js`. Added `toggleFavorite` alias method in `api.js` for backwards compatibility. Bumped cache buster version to `?v=21`.
 
 ## [2026-08-13] Multi-Threaded Auto Lyrics Prefetch on Track Import & Lock-Wait Fix
 - **Files modified:** `backend/workers/lyrics_worker.py`, `backend/workers/scanner.py`, `backend/services/library_service.py`, `task.md`

@@ -284,8 +284,17 @@ class PlayerController {
   }
 
   async seek(seconds) {
-    await window.api.seek(seconds);
-    this.ticker.position = parseFloat(seconds);
+    const targetPos = parseFloat(seconds) || 0;
+    const storeState = window.store.getState();
+    const duration = storeState.currentTrack ? storeState.currentTrack.duration : 0;
+    
+    this.lastSeekTime = Date.now();
+    
+    // Optimistic UI Update: Sync ticker and UI elements instantly without waiting for IPC response
+    this.ticker.sync(targetPos, duration, storeState.isPlaying);
+    this.updateSeekUI(targetPos, duration);
+    
+    await window.api.seek(targetPos);
   }
 
   async setVolume(level) {
@@ -349,6 +358,11 @@ class PlayerController {
 
   startSyncLoop() {
     setInterval(async () => {
+      // Skip background polling override if user seeked recently (within last 1500ms)
+      if (this.lastSeekTime && Date.now() - this.lastSeekTime < 1500) {
+        return;
+      }
+      
       const state = await window.api.getPlayerState();
       if (state) {
         const storeState = window.store.getState();

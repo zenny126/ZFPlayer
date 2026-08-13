@@ -114,7 +114,9 @@ class LyricsRenderer {
       el.textContent = line.text;
       el.dataset.index = idx;
       el.addEventListener('click', () => {
-        if (window.playerController && line.time > 0) {
+        if (window.playerController && line.time >= 0) {
+          // Immediately highlight & scroll to selected lyric line before seek IPC responds
+          this.update(line.time);
           window.playerController.seek(line.time);
         }
       });
