@@ -1,5 +1,27 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T20:24:00
+### Tác vụ thực hiện
+Chuyển đổi kiến trúc cuộn sang True Staggered Parallax Scroll (Tách biệt vận tốc từng câu hát bằng CSS Variables).
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/lyrics.css` (MODIFIED)
+- `frontend/js/lyrics.js` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+- `task.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Thay Đổi Kiến Trúc CSS (`lyrics.css`)**:
+   - Dừng di chuyển khung container `#lyrics-content` (Xóa `transition: transform`).
+   - Gắn `transform: translateY(var(--scroll-y, 0px))` vào tất cả các class `.lyrics-line`.
+   - Kết hợp với `scale(1.06)` trên câu `.active` qua nội suy transform đa thuộc tính.
+2. **Cập Nhật JS Truyền CSS Variable (`lyrics.js`)**:
+   - Hàm `scrollToLine` bắn độ lệch vào `--scroll-y` thay vì gắn `style.transform` cho khối container.
+   - Quản lý logic class `.far-jump` nạp thẳng vào container, cập nhật CSS rule `#lyrics-content.far-jump .lyrics-line` cho các trường hợp jump cách xa.
+=> Hệ quả: Giúp giải phóng vận tốc, mỗi dòng tự tính khoảng thời gian transition (500ms / 350ms / 750ms) trên quỹ đạo độc lập, tái tạo hiệu ứng đàn hồi nén Accordion chuẩn xác Apple Music.
+
+---
+
 ## Timestamp: 2026-08-13T20:20:00
 ### Tác vụ thực hiện
 Triển khai hiệu ứng Trượt 3 Tầng Tốc Độ & Độ Nảy (3-Tier Spring Parallax Bounce) chuẩn phong cách Apple Music.

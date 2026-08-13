@@ -177,16 +177,18 @@ class LyricsRenderer {
     if (!lineEl) return;
 
     if (isFarJump) {
-      this.container.style.transition = 'transform 350ms cubic-bezier(0.34, 1.35, 0.64, 1)';
+      this.container.classList.add('far-jump');
     } else {
-      this.container.style.transition = '';
+      this.container.classList.remove('far-jump');
     }
 
     const containerHeight = this.container.parentElement.clientHeight;
     const offsetTop = lineEl.offsetTop;
     const halfHeight = containerHeight / 2;
     const scrollAmount = halfHeight - offsetTop - (lineEl.clientHeight / 2);
-    this.container.style.transform = `translateY(${scrollAmount}px)`;
+    
+    // Set variable for individual child transforms (True staggered parallax)
+    this.container.style.setProperty('--scroll-y', `${scrollAmount}px`);
   }
 }
 
