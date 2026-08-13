@@ -138,6 +138,11 @@ class LyricsRenderer {
     if (newIndex !== this.activeIndex && newIndex !== -1) {
       const isFarJump = this.activeIndex >= 0 && Math.abs(newIndex - this.activeIndex) > 3;
       const lines = this.container.children;
+      
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i]) lines[i].classList.remove('next');
+      }
+
       if (this.activeIndex >= 0 && lines[this.activeIndex]) {
         lines[this.activeIndex].classList.remove('active');
         lines[this.activeIndex].classList.add('passed');
@@ -152,6 +157,11 @@ class LyricsRenderer {
         lines[newIndex].classList.remove('passed');
         this.scrollToLine(newIndex, isFarJump);
       }
+
+      if (lines[newIndex + 1]) {
+        lines[newIndex + 1].classList.add('next');
+      }
+
       this.activeIndex = newIndex;
     }
   }

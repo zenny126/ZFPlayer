@@ -290,6 +290,18 @@
   transform: scale(1.06); /* Visually zooms active line smoothly within container bounds */
 }
 
+/* Immediate next line transitions faster (420ms) with a gentle preview focus */
+.lyrics-line.active + .lyrics-line,
+.lyrics-line.next {
+  color: rgba(255, 255, 255, 0.42);
+  filter: blur(0.8px);
+  transition: color 420ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)), 
+              transform 420ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)), 
+              filter 420ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)),
+              text-shadow 420ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)),
+              opacity 420ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1));
+}
+
 .lyrics-line.passed {
   color: rgba(255, 255, 255, 0.18);
   filter: blur(1.2px);

@@ -1,5 +1,24 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T20:04:30
+### Tác vụ thực hiện
+Tăng tốc chuyển động (420ms) và nạp trước điểm focus nhẹ cho câu lyric tiếp theo (`.lyrics-line.next`).
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/lyrics.css` (MODIFIED)
+- `frontend/js/lyrics.js` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+- `task.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Thiết Lập Selector CSS `.lyrics-line.next` (`lyrics.css`)**:
+   - Thêm quy định CSS cho `.lyrics-line.active + .lyrics-line` và `.lyrics-line.next` với thời lượng transition **420ms** (nhanh hơn 180ms so với nhịp 600ms tiêu chuẩn).
+   - Tự động nạp trước điểm focus nhẹ với độ sáng `color: rgba(255,255,255,0.42)` và độ mờ nhẹ `blur(0.8px)`.
+2. **Cập Nhật JS Tự Động Quản Lý Class `.next` (`lyrics.js`)**:
+   - Trong phương thức `update()`, tự động gắn class `.next` cho dòng `lines[newIndex + 1]` mỗi khi chuyển câu active mới.
+
+---
+
 ## Timestamp: 2026-08-13T19:49:00
 ### Tác vụ thực hiện
 Nâng cấp hiệu ứng cuộn và chuyển dòng Lyric mềm mại, mượt mà chuẩn phong cách Apple Music bằng đường cong Bezier hãm quán tính chuyên dụng (`cubic-bezier(0.25, 1, 0.35, 1)`).
@@ -703,47 +722,6 @@ Nâng cấp tính năng Tạo Danh sách phát (Playlist): Bổ sung khả năng
 Trang trí lại giao diện Trang chủ (Home View) cho các danh sách phát.
 
 ### Danh sách tệp tin thay đổi
-- `frontend/js/home.js` (MODIFIED)
-
-### Mô tả chi tiết kỹ thuật
-1. **Trang trí Icon**: Thay đổi mã hiển thị các danh sách phát mặc định. Sử dụng hiệu ứng nền chuyển màu (`linear-gradient`) tuyệt đẹp thay cho nền xám trong suốt: màu xanh lam (Blue) cho `All Songs`, đỏ cam (Red) cho `Favorite Songs`, và tím mộng mơ (Purple) cho các playlist trống ảnh bìa. SVG icon cũng được đổi thành nét bo tròn trắng (`#ffffff`) sang trọng.
-2. **Thêm thẻ tạo mới**: Bổ sung một thẻ tĩnh ở cuối danh sách phát mang tên `Tạo Danh Sách Phát` với icon hình dấu `+` lớn. Khi người dùng bấm vào thẻ này, nó sẽ gọi trực tiếp hành động mở Modal tạo danh sách phát, giúp tăng đáng kể tính khả dụng (UX).
-- 2026-08-12 02:04: Playlist UI Enhancement: Added Spotify-like Playlist Header with dynamic background gradient, stats (total tracks, duration) and Play button. Modified library.js, library.css, index.html, api.js, library_api.py, library_service.py, database.py.
-- 2026-08-12 08:24: Bug Fix: Changed playlist_id type hint from int to Any in library_api.py to prevent PyWebView ValueError when passing 'all' or 'favorites' from JS.
----
-
-## Timestamp: 2026-08-12T19:35:00+07:00
-### Tác vụ thực hiện
-Gỡ bỏ toàn bộ tính năng Playlist (theo yêu cầu của người dùng).
-
-### Danh sách tệp tin thay đổi
-- ackend/storage/database.py (MODIFIED)
-- ackend/services/library_service.py (MODIFIED)
-- ackend/api/library_api.py (MODIFIED)
-- rontend/index.html (MODIFIED)
-- rontend/js/api.js (MODIFIED)
-- rontend/js/ui.js (MODIFIED)
-- rontend/js/library.js (MODIFIED)
-- rontend/js/home.js (MODIFIED)
-
-### Mô tả chi tiết kỹ thuật
-1. **Backend Database (database.py)**: Xóa các hàm CRUD liên quan đến Playlist như create_playlist, update_playlist, delete_playlist, get_playlists, v.v... Cập nhật lại các hàm get_tracks_paginated và get_track_count để chỉ hỗ trợ thuộc tính is_favorites.
-2. **Backend Services & API**: Xóa các phương thức gọi (wrapper) đến Playlist trong library_service.py và library_api.py. Khôi phục lại logic của scan_library để chỉ quét các thư mục được thiết lập trong cấu hình.
-3. **Frontend API & UI**: Xóa các giao diện tạo và quản lý Playlist (các nút bấm add, context menu, modal) khỏi index.html.
-4. **Frontend Javascript**: Đơn giản hóa ui.js, library.js, home.js để chỉ hiển thị các playlist mặc định của hệ thống là All Songs và Favorite Songs.
-
----
-
-## Timestamp: 2026-08-12T23:43:00+07:00
-### Tác vụ thực hiện
-Xây dựng kiến trúc "RAM Playback" (Memory Playback) và Tối ưu hóa WASAPI Exclusive Bit-Perfect 100%.
-
-### Danh sách tệp tin thay đổi
-- `backend/audio/engine.py` (MODIFIED)
-- `backend/audio/decoder.py` (MODIFIED)
-- `backend/storage/config.py` (MODIFIED)
-
-### Danh sách tệp tin thay đổi
 - `backend/services/player_service.py` (MODIFIED)
 - `backend/api/player_api.py` (MODIFIED)
 - `frontend/js/player.js` (MODIFIED)
@@ -794,3 +772,7 @@ gba(255,255,255,0.15)). Replaced hardcoded occurrences in library.css and main.c
 ## [2026-08-13] Update All Songs & Favorite Songs Covers to Monochrome White SVG Without Border
 - **Files modified:** `frontend/js/playlists.js`, `frontend/js/ui.js`, `frontend/js/home.js`, `frontend/css/main.css`, `frontend/index.html`
 - **Details:** Replaced white background cards and colored gradient covers for "All Songs" and "Favorite Songs" system playlists with crisp, monochrome white SVG icons (`#ffffff`). Added `.system-icon` CSS class for transparent backgrounds and no borders in sidebar and home playlist cards. Bumped cache-buster version to `?v=23`.
+
+## [2026-08-13] Sửa Lỗi Bootstrap sys.path Khi Chạy Python Direct
+- **Files modified:** ackend/app.py
+- **Details:** Di chuyển đoạn lệnh kiểm tra và bổ sung PROJECT_ROOT vào sys.path lên đầu ackend/app.py trước khi import ackend.*. Giúp khởi chạy python backend/app.py thành công từ bất kỳ thư mục làm việc nào.
