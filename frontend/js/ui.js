@@ -85,6 +85,44 @@ class UIController {
       }
     });
 
+    // Context Menu item handlers
+    document.getElementById('ctx-play-next')?.addEventListener('click', async () => {
+      const menu = document.getElementById('context-menu');
+      const path = menu?.dataset.trackPath;
+      if (path && window.api && window.api.playNext) {
+        await window.api.playNext(path);
+      }
+      menu?.classList.add('hidden');
+    });
+
+    document.getElementById('ctx-go-album')?.addEventListener('click', () => {
+      const menu = document.getElementById('context-menu');
+      const album = menu?.dataset.trackAlbum;
+      menu?.classList.add('hidden');
+      if (album) {
+        const searchInput = document.getElementById('search-input');
+        if (searchInput) {
+          searchInput.value = album;
+          searchInput.dispatchEvent(new Event('input'));
+        }
+        window.store.setState({ view: 'albums' });
+      }
+    });
+
+    document.getElementById('ctx-go-artist')?.addEventListener('click', () => {
+      const menu = document.getElementById('context-menu');
+      const artist = menu?.dataset.trackArtist;
+      menu?.classList.add('hidden');
+      if (artist) {
+        const searchInput = document.getElementById('search-input');
+        if (searchInput) {
+          searchInput.value = artist;
+          searchInput.dispatchEvent(new Event('input'));
+        }
+        window.store.setState({ view: 'songs' });
+      }
+    });
+
     // Global click to close context menu
     document.addEventListener('click', (e) => {
       const menu = document.getElementById('context-menu');
@@ -112,13 +150,13 @@ class UIController {
         {
           id: 'all',
           name: 'All Songs',
-          subtitle: 'Tất cả bài hát',
+          subtitle: 'All your local tracks',
           icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 22px; height: 22px; color: var(--accent);"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>`
         },
         {
           id: 'favorites',
           name: 'Favorite Songs',
-          subtitle: 'Bài hát yêu thích',
+          subtitle: 'Your favorite tracks',
           icon: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" style="width: 22px; height: 22px; color: #e74c3c;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`
         }
       ];
@@ -148,6 +186,7 @@ class UIController {
   }
 
   showContextMenu(e, track) {
+    if (!track) return;
     e.preventDefault();
     e.stopPropagation();
     const menu = document.getElementById('context-menu');
@@ -169,7 +208,9 @@ class UIController {
     menu.classList.remove('hidden');
 
     // Store track info
-    menu.dataset.trackPath = track.path;
+    menu.dataset.trackPath = track.path || '';
+    menu.dataset.trackAlbum = track.album || '';
+    menu.dataset.trackArtist = track.artist || '';
     
     // Show/hide "Remove from Playlist"
     const btnRemove = document.getElementById('ctx-remove-from-playlist');

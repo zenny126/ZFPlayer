@@ -20,8 +20,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   if (config) {
     if (config.volume !== undefined) {
-      window.store.setState({ volume: config.volume });
-      document.getElementById('volume-bar').value = config.volume * 100;
+      const volVal = typeof config.volume === 'number' ? config.volume : parseFloat(config.volume);
+      const volPercent = Math.round(volVal <= 1 ? volVal * 100 : volVal);
+      window.store.setState({ volume: volPercent });
+      
+      const volBar = document.getElementById('volume-bar');
+      const volBarLyrics = document.getElementById('lyrics-volume-bar');
+      if (volBar) {
+        volBar.value = volPercent;
+        volBar.style.setProperty('--progress', `${volPercent}%`);
+      }
+      if (volBarLyrics) {
+        volBarLyrics.value = volPercent;
+        volBarLyrics.style.setProperty('--progress', `${volPercent}%`);
+      }
     }
     
     if (config.shuffle !== undefined) {

@@ -84,20 +84,25 @@ class PlayerController {
     const volBar = document.getElementById('volume-bar');
     const volBarLyrics = document.getElementById('lyrics-volume-bar');
     const updateVolUI = (val) => {
-      if (volBar) volBar.style.setProperty('--progress', `${val}%`);
-      if (volBarLyrics) volBarLyrics.style.setProperty('--progress', `${val}%`);
+      const num = parseFloat(val);
+      if (volBar) {
+        volBar.value = num;
+        volBar.style.setProperty('--progress', `${num}%`);
+      }
+      if (volBarLyrics) {
+        volBarLyrics.value = num;
+        volBarLyrics.style.setProperty('--progress', `${num}%`);
+      }
     };
     if (volBar) {
       volBar.addEventListener('input', (e) => {
         this.setVolume(e.target.value);
-        if (volBarLyrics) volBarLyrics.value = e.target.value;
         updateVolUI(e.target.value);
       });
     }
     if (volBarLyrics) {
       volBarLyrics.addEventListener('input', (e) => {
         this.setVolume(e.target.value);
-        if (volBar) volBar.value = e.target.value;
         updateVolUI(e.target.value);
       });
     }

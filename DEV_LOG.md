@@ -1,25 +1,5 @@
 # DEV LOG
 
-## Timestamp: 2026-08-13T14:25:00
-### Tác vụ thực hiện
-Tối ưu và loại bỏ over-engineering CSS theo quy chuẩn Ponytail Review (/ponytail-review css).
-
-### Danh sách tệp tin thay đổi
-- `frontend/css/main.css` (MODIFIED)
-- `frontend/css/player.css` (MODIFIED)
-- `frontend/css/library.css` (MODIFIED)
-- `frontend/css/lyrics.css` (MODIFIED)
-- `frontend/css/albums.css` (MODIFIED)
-
-### Mô tả chi tiết kỹ thuật
-1. **`main.css`**: Thêm lớp utility `.truncate`, sử dụng biến token `var(--error)` thay cho hex `#e22134`, xóa các prefix `-webkit-backdrop-filter` thừa, xóa selector trùng lặp `.context-submenu.hidden` và quy tắc `::-webkit-scrollbar` dư thừa.
-2. **`player.css`**: Rút gọn khai báo ellipsis lặp lại, kế thừa quy tắc hiển thị dot active từ main stylesheet.
-3. **`library.css`**: Loại bỏ quy tắc `.hidden` scoped dư thừa, xóa `.track-row-static` không sử dụng, xóa `-webkit-backdrop-filter` và transition lặp lại trên danh sách library.
-4. **`lyrics.css`**: Rút gọn cú pháp shorthand `transition: 450ms var(--ease-out-expo)`, loại bỏ font-size trùng lặp trên `.lyrics-line.active` ở các breakpoints media query.
-5. **`albums.css`**: Rút gọn `aspect-ratio: 1 / 1` thành `aspect-ratio: 1`.
-
----
-
 ## Timestamp: 2026-08-13T14:23:20
 ### Tác vụ thực hiện
 Cập nhật văn bản mô tả Audio Engine trong Settings Modal thành WASAPI Shared Mode.

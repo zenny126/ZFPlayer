@@ -25,8 +25,8 @@ class HomeManager {
       this.playlistsContainer.innerHTML = '';
       
       const playlists = [
-        { id: 'all', name: 'All Songs', subtitle: 'Tất cả bài hát', icon: 'M9 18V5l12-2v13 M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M18 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z', bg: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: '#ffffff' },
-        { id: 'favorites', name: 'Favorite Songs', subtitle: 'Bài hát yêu thích', icon: 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z', bg: 'linear-gradient(135deg, #ff0844 0%, #ffb199 100%)', color: '#ffffff', fill: 'currentColor' }
+        { id: 'all', name: 'All Songs', subtitle: 'All your local tracks', icon: 'M9 18V5l12-2v13 M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M18 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z', bg: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: '#ffffff' },
+        { id: 'favorites', name: 'Favorite Songs', subtitle: 'Your favorite tracks', icon: 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z', bg: 'linear-gradient(135deg, #ff0844 0%, #ffb199 100%)', color: '#ffffff', fill: 'currentColor' }
       ];
 
       // Fetch custom playlists
@@ -47,7 +47,7 @@ class HomeManager {
       playlists.push({
         id: 'create',
         name: 'Create Playlist',
-        subtitle: 'Tạo danh sách mới',
+        subtitle: 'Create a new playlist',
         icon: 'M12 5v14M5 12h14',
         bg: 'rgba(255,255,255,0.05)',
         color: '#888'
@@ -106,7 +106,7 @@ class HomeManager {
       const tracks = await window.api.getTracks(0, 20, "", "last_played", "DESC", null);
       this.recentContainer.innerHTML = '';
       if (!tracks || tracks.length === 0) {
-        this.recentContainer.innerHTML = '<div style="color: var(--text-subdued); padding: 16px;">Chưa có bài hát nào được phát gần đây.</div>';
+        this.recentContainer.innerHTML = '<div style="color: var(--text-subdued); padding: 16px;">No recently played tracks yet.</div>';
         return;
       }
       
@@ -156,9 +156,19 @@ class HomeManager {
             });
             return;
           }
+          if (e.target.closest('.track-more')) {
+            e.stopPropagation();
+            if (window.uiController) window.uiController.showContextMenu(e, track);
+            return;
+          }
           if (window.playerController) {
             window.playerController.playTrack(track);
           }
+        });
+        
+        row.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          if (window.uiController) window.uiController.showContextMenu(e, track);
         });
         
         this.recentContainer.appendChild(row);

@@ -8,7 +8,7 @@
   justify-content: center;
   padding: 0 8vw;
   overflow: hidden;
-  transition: 450ms var(--ease-out-expo);
+  transition: opacity 450ms var(--ease-out-expo), transform 450ms var(--ease-out-expo), visibility 450ms var(--ease-out-expo);
   transform: translateY(0);
 }
 
@@ -276,6 +276,7 @@
 
 .lyrics-line.active {
   color: white;
+  font-size: 36px; /* Must match the base font-size */
   filter: blur(0px); /* Crystal clear focus on active line */
   text-shadow: 0 0 18px rgba(255, 255, 255, 0.65), 0 0 35px rgba(255, 255, 255, 0.25); /* Dreamy light glow */
   transform: scale(1.08); /* Visually zooms the active line without shifting layout boxes */
@@ -339,7 +340,9 @@
     font-size: 46px; /* Lyrics to hơn, dễ đọc từ xa */
   }
 
-
+  .lyrics-line.active {
+    font-size: 46px;
+  }
 }
 
 @media (min-width: 1800px) {
@@ -358,5 +361,7 @@
   .lyrics-line {
     font-size: 54px;
   }
-
+  .lyrics-line.active {
+    font-size: 54px;
+  }
 }

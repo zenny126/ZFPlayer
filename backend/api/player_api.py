@@ -40,3 +40,7 @@ class PlayerAPI:
 
     def setActivePlaylist(self, playlist_id: Any) -> Dict[str, Any]:
         return self.player_service.set_active_playlist(playlist_id)
+
+    def play_next(self, path: str) -> Dict[str, Any]:
+        return self.player_service.insert_play_next(path)
+

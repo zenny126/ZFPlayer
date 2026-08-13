@@ -36,11 +36,13 @@
   color: var(--text-primary);
   font-weight: 500;
   font-size: 14px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   margin-bottom: 2px;
 }
 .player-track-artist {
   color: var(--text-secondary);
   font-size: 12px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
 .player-like-btn {

@@ -36,6 +36,7 @@ class ApiWrapper {
   getTrackCount(search, playlistId = null) { return this.call('get_track_count', search, playlistId); }
 
   play(path, playlistId = null) { return this.call('play', path, playlistId); }
+  playNext(path) { return this.call('play_next', path); }
   pause() { return this.call('pause'); }
   resume() { return this.call('resume'); }
   stop() { return this.call('stop'); }

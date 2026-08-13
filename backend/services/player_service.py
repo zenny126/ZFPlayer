@@ -17,6 +17,10 @@ class PlayerService:
         self.shuffled_playlist = []
         self.current_playlist_id = self.config.get('last_playlist_id', 'all')
         
+        # Restore saved volume level
+        saved_vol = self.config.get('volume', 0.8)
+        self.audio_engine.set_volume(saved_vol)
+        
         # Set up auto-next on track end
         self.audio_engine.on_track_end = lambda: self.next_track(user_initiated=False)
 
@@ -179,6 +183,36 @@ class PlayerService:
         logger.debug(f"Setting volume to {level}")
         self.audio_engine.set_volume(level)
         self.config.set('volume', level)
+
+    def insert_play_next(self, path: str) -> Dict[str, Any]:
+        logger.info(f"Queuing track to play next: {path}")
+        if not path:
+            return {"status": "error", "message": "Invalid track path"}
+            
+        self._sync_playlists_and_index(self.current_path or '', self.current_playlist_id)
+
+        # Insert after current_path in normal_playlist
+        if self.current_path and self.current_path in self.normal_playlist:
+            idx = self.normal_playlist.index(self.current_path)
+            if path in self.normal_playlist:
+                self.normal_playlist.remove(path)
+            self.normal_playlist.insert(idx + 1, path)
+        else:
+            if path not in self.normal_playlist:
+                self.normal_playlist.insert(0, path)
+
+        # Insert after current_path in shuffled_playlist
+        if self.current_path and self.current_path in self.shuffled_playlist:
+            idx = self.shuffled_playlist.index(self.current_path)
+            if path in self.shuffled_playlist:
+                self.shuffled_playlist.remove(path)
+            self.shuffled_playlist.insert(idx + 1, path)
+        else:
+            if path not in self.shuffled_playlist:
+                self.shuffled_playlist.insert(0, path)
+
+        return {"status": "success", "message": "Track queued as next"}
+
 
     def set_active_playlist(self, playlist_id: Any) -> Dict[str, Any]:
         logger.info(f"Setting active playlist scope to: {playlist_id}")

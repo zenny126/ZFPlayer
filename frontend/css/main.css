@@ -228,6 +228,9 @@ h1, h2, h3, h4, h5, h6 {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.2); border-radius: 10px; transition: background-color var(--transition-fast); }
 ::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.4); }
+.horizontal-scroll-list::-webkit-scrollbar {
+  scrollbar-width: none;
+}
 .horizontal-scroll-list {
   scrollbar-width: none;
 }
@@ -264,16 +267,16 @@ h1, h2, h3, h4, h5, h6 {
 .btn-icon-large.danger {
   background: rgba(226, 33, 52, 0.15);
   border-color: rgba(226, 33, 52, 0.3);
-  color: var(--error);
+  color: #e22134;
 }
 .btn-icon-large.danger:hover {
   background: rgba(226, 33, 52, 0.28);
-  border-color: var(--error);
+  border-color: #e22134;
   box-shadow: 0 0 14px rgba(226, 33, 52, 0.4);
 }
 
 .context-menu-item.danger {
-  color: var(--error) !important;
+  color: #e22134 !important;
 }
 .context-menu-item.danger:hover {
   background: rgba(226, 33, 52, 0.2) !important;
@@ -320,12 +323,6 @@ input[type="range"]::-webkit-slider-runnable-track {
 
 ::selection { background-color: rgba(255,255,255,0.3); color: var(--text-primary); }
 
-.truncate {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .modal {
   position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
   background: rgba(0,0,0,0.7); z-index: 1000;
@@ -336,6 +333,7 @@ input[type="range"]::-webkit-slider-runnable-track {
 .modal-content {
   background: rgba(255, 255, 255, 0.05); 
   backdrop-filter: blur(40px) saturate(1.5);
+  -webkit-backdrop-filter: blur(40px) saturate(1.5);
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 32px; border-radius: var(--border-radius-lg);
   width: 400px; max-width: 90%;
@@ -406,6 +404,7 @@ input[type="range"]::-webkit-slider-runnable-track {
   position: fixed;
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(40px) saturate(1.5);
+  -webkit-backdrop-filter: blur(40px) saturate(1.5);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
   padding: 6px;
@@ -459,6 +458,9 @@ input[type="range"]::-webkit-slider-runnable-track {
 }
 .context-menu-item:hover > .context-submenu {
   display: block;
+}
+.context-submenu.hidden {
+  display: none !important;
 }
 .hidden { display: none !important; }
 
