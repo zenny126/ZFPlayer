@@ -27,8 +27,13 @@ class PlayerService:
     def _preload_next_tracks_lyrics(self, current_path: str):
         if not self.lyrics_worker:
             return
-        time.sleep(2.0)
         try:
+            # 1. High Priority: Current track
+            current_track = self.library_service.get_track_info(current_path)
+            if current_track:
+                self.lyrics_worker.enqueue_track(current_track, priority=True)
+
+            # 2. High Priority: Next 5 tracks in playlist
             shuffle_mode = self.config.get('shuffle', False)
             active_list = self.shuffled_playlist if shuffle_mode else self.normal_playlist
             if not active_list:
@@ -41,34 +46,18 @@ class PlayerService:
             except ValueError:
                 current_idx = 0
                 
+            next_tracks = []
             for offset in range(1, 6):
                 next_idx = (current_idx + offset) % len(active_list)
                 next_path = active_list[next_idx]
-                
                 track_info = self.library_service.get_track_info(next_path)
                 if track_info:
-                    # Check if already cached to avoid hitting online API or logging unnecessarily
-                    cache_key = self.lyrics_worker._get_cache_key(
-                        track_info.get('artist', ''),
-                        track_info.get('title', ''),
-                        track_info.get('album', ''),
-                        track_info.get('duration', 0.0)
-                    )
-                    db_cache = self.lyrics_worker.database.get_lyrics(cache_key)
-                    if db_cache:
-                        continue
-                        
-                    logger.info(f"Preloading lyrics [{offset}/5] for: {track_info.get('title')} - {track_info.get('artist')}")
-                    self.lyrics_worker.fetch_lyrics(
-                        track_info.get('artist', ''),
-                        track_info.get('title', ''),
-                        track_info.get('album', ''),
-                        track_info.get('duration', 0.0),
-                        track_info.get('path', '')
-                    )
-                    time.sleep(0.3) # rate-limiting prevention
+                    next_tracks.append(track_info)
+                    
+            if next_tracks:
+                self.lyrics_worker.enqueue_tracks(next_tracks, priority=True)
         except Exception as e:
-            logger.debug(f"Failed to preload next 5 tracks lyrics: {e}")
+            logger.debug(f"Failed to enqueue next tracks lyrics: {e}")
 
     def _sync_playlists_and_index(self, path: str, playlist_id: Any = None):
         if playlist_id is not None:

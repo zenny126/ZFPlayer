@@ -1,5 +1,61 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T15:53:30
+### Tác vụ thực hiện
+Triển khai Background Priority Queue Tải Lời Bài Hát Ngầm với Throttle loại bỏ hoàn toàn tình trạng tụt giảm hiệu năng khi Import lượng bài hát lớn.
+
+### Danh sách tệp tin thay đổi
+- `backend/workers/lyrics_worker.py` (MODIFIED)
+- `backend/workers/scanner.py` (MODIFIED)
+- `backend/services/library_service.py` (MODIFIED)
+- `backend/services/player_service.py` (MODIFIED)
+- `task.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Background Priority Queue (`lyrics_worker.py`)**:
+   - Sử dụng `queue.PriorityQueue` với 1 worker thread duy nhất (`_queue_loop`) tiêu thụ hàng đợi tuần tự ngầm.
+   - Thêm `throttle_delay=0.5s` giữa mỗi request để chống quá tải API và triệt tiêu SQLite write lock contention.
+   - Hỗ trợ phân cấp ưu tiên: `priority=True` (Priority 1) cho bài đang phát / sắp phát, `priority=False` (Priority 10) cho bài vừa import.
+   - Lọc trùng lặp bài hát (`_queued_keys`) và kiểm tra nhanh DB cache trước khi tải.
+2. **Loại Bỏ ThreadPool 4 Luồng Khi Import (`scanner.py` & `library_service.py`)**:
+   - Thay thế việc gọi `ThreadPoolExecutor(max_workers=4)` dồn dập trong lúc scan bằng phương thức `lyrics_worker.enqueue_tracks(tracks, priority=False)`.
+3. **Ưu Tiên Lời Cho Bài Đang Phát (`player_service.py`)**:
+   - Khi phát nhạc hoặc chuyển bài, tự động đẩy bài hát hiện tại và 5 bài tiếp theo vào Queue với `priority=True`.
+
+---
+
+## Timestamp: 2026-08-13T15:41:00
+### Tác vụ thực hiện
+Dọn dẹp sạch toàn bộ cơ sở dữ liệu (`library.db`) và chạy VACUUM tối ưu đĩa.
+
+### Danh sách tệp tin thay đổi
+- `data/library.db` (MODIFIED)
+- `task.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Dọn Dẹp Bản Ghi CSDL (`library.db`)**: Thực thi xóa toàn bộ dữ liệu trong các bảng `playlist_tracks`, `playlists`, `tracks`, `lyrics_cache`.
+2. **Tối Ưu Dung Lượng Đĩa (`VACUUM`)**: Thực hiện lệnh `VACUUM` để tái cấu trúc và giải phóng bộ nhớ lưu trữ vật lý của tệp SQLite.
+3. **Kiểm Chứng Dữ Liệu**: Số lượng bản ghi trong toàn bộ các bảng xác nhận đã về `0`.
+
+---
+
+## Timestamp: 2026-08-13T15:40:00
+### Tác vụ thực hiện
+Tái cấu trúc và áp dụng thứ tự 4 cấp ưu tiên nguồn tải Lyric bài hát trong LyricsWorker.
+
+### Danh sách tệp tin thay đổi
+- `backend/workers/lyrics_worker.py` (MODIFIED)
+- `task.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Cấu Trúc Thứ Tự Nguồn Lyric Mới (`lyrics_worker.py`)**:
+   - **Ưu tiên 1 (`local_lrc`)**: Quét tệp `.lrc` cục bộ cùng thư mục & cùng tên với bài hát.
+   - **Ưu tiên 2 (`lrclib_search`)**: Gọi API LRCLIB Search (`/api/search`), chọn bản dịch khớp nhất với thời lượng (ngưỡng chênh lệch \(\le 3.0\) giây, thử tối đa 2 lần).
+   - **Ưu tiên 3 (`embedded_tag`)**: Đọc thẻ nhúng trực tiếp trong file âm thanh (FLAC/MP3).
+   - **Ưu tiên 4 (`syncedlyrics`)**: Tìm kiếm qua các nhà cung cấp trực tuyến Musixmatch ➔ NetEase ➔ Megalobiz (thử tối đa 2 lần).
+
+---
+
 ## Timestamp: 2026-08-13T15:32:00
 ### Tác vụ thực hiện
 Sửa lỗi tính năng tìm kiếm (Search) ở Trang chủ (Home View) không hoạt động.
