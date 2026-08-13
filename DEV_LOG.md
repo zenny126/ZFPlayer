@@ -1,6 +1,40 @@
 # DEV LOG
 
-## Timestamp: 2026-08-13T21:12:00
+## Timestamp: 2026-08-13T21:48:00
+### Tác vụ thực hiện
+Cố định kích thước cột trái (Album Cover & Controls) trong giao diện Lời bài hát để không bị thay đổi theo tỷ lệ cửa sổ.
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/lyrics.css` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- Thay đổi thuộc tính flex của `.lyrics-track-info` từ `flex: 0 0 35%` thành `flex: 0 0 400px`.
+- Việc sử dụng tỷ lệ phần trăm (35%) trước đó khiến cho kích thước thật của cột bên trái (và do đó là bìa album bên trong) phình to hoặc teo nhỏ liên tục khi người dùng thay đổi kích thước chiều ngang của cửa sổ ứng dụng. 
+- Việc chốt cứng `400px` đảm bảo bìa album và cụm điều khiển luôn giữ nguyên một kích thước chuẩn xác và ổn định ở mọi độ phân giải màn hình Desktop.
+
+---
+
+## Timestamp: 2026-08-13T21:14:00
+### Tác vụ thực hiện
+Thay thế nền CSS bằng công nghệ **WebGL Fluid Shader** (Phương án 2) để mang lại đồ họa siêu mượt theo phong cách Apple Music thực thụ và tối ưu hoàn toàn cho GPU.
+
+### Danh sách tệp tin thay đổi
+- `frontend/index.html` (MODIFIED)
+- `frontend/css/main.css` (MODIFIED)
+- `frontend/css/lyrics.css` (MODIFIED)
+- `frontend/js/player.js` (MODIFIED)
+- `frontend/js/lyrics.js` (MODIFIED)
+- `frontend/js/fluid-shader.js` (NEW)
+
+### Mô tả chi tiết kỹ thuật
+- **Kiến trúc mới**: Xóa bỏ các thẻ `div` bong bóng (`.blob`) và hoạt ảnh CSS `@keyframes`. Thay vào đó, đặt duy nhất 1 thẻ `<canvas id="webgl-fluid-bg">` ở gốc trang web (`body`) làm hình nền dùng chung cho cả giao diện chính và giao diện Lời bài hát.
+- **WebGL Shader**: Tạo tệp `fluid-shader.js` chứa mã nguồn Vertex và Fragment Shader viết bằng GLSL. Sử dụng thuật toán Simplex Noise để tạo ra sự pha trộn ngẫu nhiên của 4 màu sắc giống như chất lỏng chuyển động liên tục.
+- **Tối ưu cực đại**: GPU giờ đây chỉ cần tính toán 1 shader pass trên độ phân giải rất thấp (25% kích thước màn hình), sau đó nội suy toàn màn hình. Hiệu năng vượt trội hơn cả việc dùng thẻ DOM.
+- **Đồng bộ hóa**: Cập nhật `player.js` để đẩy mảng màu mới vào hàm `updateFluidColors()` của shader. Lớp shader tự động nội suy chéo (crossfade) siêu mượt giữa bài cũ và bài mới trong 1.5 giây.
+- **Xử lý UI**: Khi mở Lyrics, hàm `show()` tự động gán `opacity: 0` cho giao diện chính (`#app`) để lộ ra nền WebGL bên dưới một cách trơn tru, thay vì phải duy trì 2 lớp nền nặng nề.
+
+---## Timestamp: 2026-08-13T21:12:00
 ### Tác vụ thực hiện
 Tinh chỉnh lại thời lượng Khúc Phát Sáng lên 1200ms theo phản hồi người dùng.
 

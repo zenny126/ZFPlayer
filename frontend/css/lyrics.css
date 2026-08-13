@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   z-index: 200;
-  background-color: #000000; /* Must be 100% solid to block main app */
+  background-color: transparent; /* Transparent so WebGL canvas shows through */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -58,7 +58,7 @@
 }
 
 .lyrics-track-info {
-  flex: 0 0 35%; /* Giảm từ 45% xuống 35% để phần lời bài hát có nhiều không gian hơn */
+  flex: 0 0 400px; /* Chuyển từ % sang kích thước cố định để bìa album không bị phình/teo khi resize */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
