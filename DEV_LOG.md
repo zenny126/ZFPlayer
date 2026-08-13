@@ -1,5 +1,66 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T16:55:50
+### Tác vụ thực hiện
+Khắc phục triệt để lỗi câu lyric dài bị lẹm / cắt chữ và quầng sáng glow mép phải trên giao diện Lyrics Overlay.
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/lyrics.css` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+- `task.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Khống chế Chiều Rộng & Ngắt Dòng Tự Động (`lyrics.css`)**:
+   - Bổ sung `max-width: calc(100% - 60px)` (và `70px`/`80px` trên màn hình lớn) cho `.lyrics-line` để luôn chừa vùng đệm an toàn chiều ngang.
+   - Thêm `word-wrap: break-word; overflow-wrap: break-word; white-space: normal;` giúp các câu lyric siêu dài tự động ngắt dòng tự nhiên mà không bao giờ vượt qua mép khung hiển thị.
+2. **Mở Rộng Không Gian & Vùng Đệm An Toàn**:
+   - Thu hẹp khoảng cách `gap` giữa cột track info và cột lyric từ `10%` xuống `6%` trong `.lyrics-overlay-container`.
+   - Tăng `padding-right` của `.lyrics-container` từ `80px` lên `100px`, đồng thời điều chỉnh `transform: scale(1.05)` (thay vì `1.08`), đảm bảo cả nét chữ và quầng tỏa sáng `text-shadow: 0 0 35px` nằm hoàn toàn trong vùng hiển thị an toàn.
+3. **Chuẩn Hóa Font-Size Tương Thích Nhiều Màn Hình**:
+   - Màn hình thường (<1400px): `32px` (tinh chỉnh từ 36px).
+   - Màn hình lớn (>=1400px): `40px` (từ 46px).
+   - Màn hình 4K (>=1800px): `48px` (từ 54px).
+
+---
+
+## Timestamp: 2026-08-13T16:55:00
+### Tác vụ thực hiện
+Loại bỏ ô vuông nền đen (`<rect fill="#181818">`) phía sau biểu tượng SVG của All Songs & Favorite Songs trên Trang chủ và Trang chi tiết Playlist.
+
+### Danh sách tệp tin thay đổi
+- `frontend/js/playlists.js` (MODIFIED)
+- `frontend/js/home.js` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Loại bỏ thẻ `<rect fill="#181818">`**:
+   - Xóa bỏ hoàn toàn thẻ vẽ hình chữ nhật nền màu đen trong mã `svgContent` data URL của `playlists.js`. Giờ đây cả nốt nhạc đôi và trái tim đặc trắng là các đường nét vector trên nền hoàn toàn trong suốt (100% transparent).
+2. **Transparent Cover Container**:
+   - Cập nhật `bg: 'transparent'` trong `home.js` cho 2 playlist hệ thống, đảm bảo không bị khung ô vuông màu đen bao quanh icon khi hiển thị ở Trang chủ.
+3. **Cache-Buster**: Nâng version cache buster lên `?v=26`.
+
+---
+
+## Timestamp: 2026-08-13T16:48:00
+### Tác vụ thực hiện
+Đồng bộ hoàn toàn biểu tượng vector SVG đơn sắc màu trắng cho All Songs và Favorite Songs trên toàn bộ các giao diện (Sidebar, Trang chủ, Trang chi tiết).
+
+### Danh sách tệp tin thay đổi
+- `frontend/js/playlists.js` (MODIFIED)
+- `frontend/js/ui.js` (MODIFIED)
+- `frontend/css/main.css` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Đồng bộ hóa biểu tượng SVG vector**:
+   - Thống nhất mã đường dẫn `d` của biểu tượng **All Songs** là nốt nhạc đôi stroke trắng (`M9 18V5l12-2v13 M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M18 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z`) và **Favorite Songs** là trái tim đặc fill trắng (`M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z`).
+2. **Loại bỏ ảnh ô vuông viền trắng cũ trên Sidebar**:
+   - Loại bỏ đoạn mã fallback kiểm tra `allCover ? ...` / `favCover ? ...` trong `playlists.js` để Sidebar luôn luôn render biểu tượng SVG vector trắng mượt mà, không bao giờ dùng các tệp ảnh ô vuông viền trắng cũ.
+   - Thêm quy tắc CSS `.library-list li .icon-placeholder.system-icon` với `background-color: transparent !important` và `border: none !important`.
+3. **Cache-Buster**: Nâng version cache buster lên `?v=25`.
+
+---
+
 ## Timestamp: 2026-08-13T16:38:30
 ### Tác vụ thực hiện
 Tối ưu hóa phản hồi hiển thị lời bài hát (Optimistic UI Update) khi người dùng click vào dòng Lyric để seek âm thanh.

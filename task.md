@@ -1,7 +1,6 @@
-# Tasks - Tối ưu hiển thị Lyric khi Click Seek
+# Tasks - Sửa lỗi Lyric dài bị lẹm mép phải
 
-- [x] Lập kế hoạch tối ưu hiển thị lyric (Optimistic UI Update) và trình phê duyệt <!-- id: 0 -->
-- [x] Cập nhật `frontend/js/player.js` để cập nhật `ticker` và `updateSeekUI` tức thì khi seek <!-- id: 1 -->
-- [x] Cập nhật `frontend/js/lyrics.js` kích hoạt hiệu ứng cuộn và highlight lyric ngay lập tức khi click <!-- id: 2 -->
-- [x] Kiểm thử thủ công thao tác click lyric trên giao diện web player <!-- id: 3 -->
-- [x] Ghi nhật ký phát triển vào `DEV_LOG.md` và `walkthrough.md` <!-- id: 4 -->
+- [x] Lập kế hoạch khắc phục lỗi lyric lẹm chữ và trình phê duyệt <!-- id: 0 -->
+- [x] Cập nhật `frontend/css/lyrics.css` thêm `max-width`, `word-wrap`, điều chỉnh `gap`, `padding-right` và `scale` <!-- id: 1 -->
+- [x] Kiểm thử thủ công hiển thị câu lyric dài trên giao diện web player <!-- id: 2 -->
+- [x] Ghi nhật ký phát triển vào `DEV_LOG.md` và `walkthrough.md` <!-- id: 3 -->

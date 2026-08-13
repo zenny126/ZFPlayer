@@ -39,7 +39,7 @@
   max-width: 1200px;
   height: 85vh;
   align-items: center;
-  gap: 10%;
+  gap: 6%;
 }
 
 .lyrics-close-btn {
@@ -240,7 +240,7 @@
   height: 100%;
   overflow-y: hidden;
   position: relative;
-  padding-right: 80px; /* Safe padding for scaled active text to avoid edge clipping */
+  padding-right: 100px; /* Safe padding for scaled active text & text-shadow to prevent edge clipping */
   mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
 }
@@ -251,11 +251,12 @@
   padding: 35vh 0;
   transition: transform 350ms var(--ease-out-expo);
   will-change: transform;
+  width: 100%;
 }
 
 .lyrics-line {
   font-family: 'Outfit', sans-serif;
-  font-size: 36px; /* Identical font-size for all states to prevent layout shifts and text re-wrapping */
+  font-size: 32px; /* Identical font-size for all states to prevent layout shifts and text re-wrapping */
   font-weight: 700;
   color: rgba(255, 255, 255, 0.28);
   filter: blur(1.5px); /* Soft focus / dreamy blur for upcoming lines */
@@ -269,6 +270,10 @@
   transform-origin: left center;
   line-height: 1.3;
   will-change: transform, color, filter;
+  max-width: calc(100% - 60px); /* Leaves safe room for transform scale & text-shadow glow without clipping */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
 }
 
 .lyrics-line:hover {
@@ -278,10 +283,10 @@
 
 .lyrics-line.active {
   color: white;
-  font-size: 36px; /* Must match the base font-size */
+  font-size: 32px; /* Must match the base font-size */
   filter: blur(0px); /* Crystal clear focus on active line */
   text-shadow: 0 0 18px rgba(255, 255, 255, 0.65), 0 0 35px rgba(255, 255, 255, 0.25); /* Dreamy light glow */
-  transform: scale(1.08); /* Visually zooms the active line without shifting layout boxes */
+  transform: scale(1.05); /* Visually zooms active line safely within container bounds */
 }
 
 .lyrics-line.passed {
@@ -293,7 +298,7 @@
 @media (min-width: 1400px) {
   .lyrics-overlay-container {
     max-width: 1600px;
-    gap: 8%;
+    gap: 6%;
   }
 
   .lyrics-track-info {
@@ -339,11 +344,12 @@
   }
 
   .lyrics-line {
-    font-size: 46px; /* Lyrics to hơn, dễ đọc từ xa */
+    font-size: 40px; /* Lyrics to hơn, dễ đọc từ xa */
+    max-width: calc(100% - 70px);
   }
 
   .lyrics-line.active {
-    font-size: 46px;
+    font-size: 40px;
   }
 }
 
@@ -361,9 +367,10 @@
   }
   
   .lyrics-line {
-    font-size: 54px;
+    font-size: 48px;
+    max-width: calc(100% - 80px);
   }
   .lyrics-line.active {
-    font-size: 54px;
+    font-size: 48px;
   }
 }
