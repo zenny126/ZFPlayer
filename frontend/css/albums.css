@@ -30,7 +30,7 @@
 
 .album-cover-container {
   width: 100%;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 1;
   border-radius: var(--border-radius-sm);
   overflow: hidden;
   margin-bottom: 16px;

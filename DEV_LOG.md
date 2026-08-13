@@ -1,8 +1,86 @@
 # DEV LOG
 
-## Timestamp: 2026-08-13T13:45:36.119422
+## Timestamp: 2026-08-13T14:25:00
 ### Tác vụ thực hiện
-Chuẩn hóa toàn bộ giao diện ứng dụng ZFPlayer sang Tiếng Anh 100% (English UI Standardization).
+Tối ưu và loại bỏ over-engineering CSS theo quy chuẩn Ponytail Review (/ponytail-review css).
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/main.css` (MODIFIED)
+- `frontend/css/player.css` (MODIFIED)
+- `frontend/css/library.css` (MODIFIED)
+- `frontend/css/lyrics.css` (MODIFIED)
+- `frontend/css/albums.css` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **`main.css`**: Thêm lớp utility `.truncate`, sử dụng biến token `var(--error)` thay cho hex `#e22134`, xóa các prefix `-webkit-backdrop-filter` thừa, xóa selector trùng lặp `.context-submenu.hidden` và quy tắc `::-webkit-scrollbar` dư thừa.
+2. **`player.css`**: Rút gọn khai báo ellipsis lặp lại, kế thừa quy tắc hiển thị dot active từ main stylesheet.
+3. **`library.css`**: Loại bỏ quy tắc `.hidden` scoped dư thừa, xóa `.track-row-static` không sử dụng, xóa `-webkit-backdrop-filter` và transition lặp lại trên danh sách library.
+4. **`lyrics.css`**: Rút gọn cú pháp shorthand `transition: 450ms var(--ease-out-expo)`, loại bỏ font-size trùng lặp trên `.lyrics-line.active` ở các breakpoints media query.
+5. **`albums.css`**: Rút gọn `aspect-ratio: 1 / 1` thành `aspect-ratio: 1`.
+
+---
+
+## Timestamp: 2026-08-13T14:23:20
+### Tác vụ thực hiện
+Cập nhật văn bản mô tả Audio Engine trong Settings Modal thành WASAPI Shared Mode.
+
+### Danh sách tệp tin thay đổi
+- `frontend/index.html` (MODIFIED)
+- `task.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Settings Modal (`index.html`)**: Cập nhật dòng mô tả cơ chế âm thanh thành `"WASAPI Shared Mode + Zero-Latency RAM Playback (Ultra Smooth 0% Disk I/O)"` để phản ánh đúng 100% cấu hình backend đang sử dụng.
+
+---
+### Tác vụ thực hiện
+Chuẩn hóa 100% văn bản Tiếng Anh cho toàn bộ giao diện (Clean Remaining Vietnamese Strings).
+
+### Danh sách tệp tin thay đổi
+- `frontend/js/home.js` (MODIFIED)
+- `frontend/js/ui.js` (MODIFIED)
+- `task.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Trang Chủ (home.js)**: Chuyển đổi phụ đề của các thẻ Playlist: `"Tất cả bài hát"` ➔ `"All your local tracks"`, `"Bài hát yêu thích"` ➔ `"Your favorite tracks"`, thẻ tạo mới `"Tạo danh sách mới"` ➔ `"Create a new playlist"`, và thông báo trống `"Chưa có bài hát nào được phát gần đây."` ➔ `"No recently played tracks yet."`.
+2. **Thanh bên (ui.js)**: Chuyển đổi phụ đề danh sách phát hệ thống Sidebar `"Tất cả bài hát"` ➔ `"All your local tracks"`, `"Bài hát yêu thích"` ➔ `"Your favorite tracks"`.
+
+---
+### Tác vụ thực hiện
+Sửa lỗi lưu và đồng bộ trạng thái âm lượng (Volume State Persistence & Synchronization Fix).
+
+### Danh sách tệp tin thay đổi
+- `backend/services/player_service.py` (MODIFIED)
+- `frontend/js/main.js` (MODIFIED)
+- `frontend/js/player.js` (MODIFIED)
+- `task.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Khởi Tạo Âm Lượng Backend (`player_service.py`)**: Tự động lấy giá trị âm lượng lưu từ `config.json` (`config.get('volume', 0.8)`) và thiết lập cho `AudioEngine` ngay khi tạo service.
+2. **Khôi Phục Trạng Thái Âm Lượng Frontend (`main.js`)**: Chuẩn hóa giá trị âm lượng dạng phần trăm (0–100%), thiết lập lại slider và thuộc tính CSS custom `--progress` trên cả 2 thanh âm lượng (`#volume-bar` và `#lyrics-volume-bar`) khi tải ứng dụng.
+3. **Đồng Bộ Hai Chiều Slider (`player.js`)**: Cập nhật hàm `updateVolUI` để đồng bộ mượt mà giá trị `.value` và `--progress` giữa các slider ở thanh điều khiển chính và màn hình lời bài hát.
+
+---
+### Tác vụ thực hiện
+Xóa nút 3 chấm ở Màn hình Lời bài hát & Kích hoạt các tính năng Context Menu ("Play Next", "Go to Album", "Go to Artist").
+
+### Danh sách tệp tin thay đổi
+- `backend/services/player_service.py` (MODIFIED)
+- `backend/api/player_api.py` (MODIFIED)
+- `frontend/js/api.js` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+- `frontend/js/ui.js` (MODIFIED)
+- `frontend/js/home.js` (MODIFIED)
+- `task.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Xóa Nút 3 Đấm Màn Hình Lời Bài Hát**: Loại bỏ hoàn toàn phần tử `#lyrics-more-btn` trong `index.html` trên màn hình xem lời nhạc đồng bộ.
+2. **Kích hoạt Nút 3 Đấm ở Playlist / Track List**: Thêm xử lý sự kiện click `.track-more` và right-click trên danh sách bài hát Trang chủ (`home.js`) và Thư viện (`library.js`), mở menu ngữ cảnh `#context-menu`.
+3. **Triển khai Tính năng Context Menu**:
+   - `Play Next`: Thêm phương thức `insert_play_next` trong `player_service.py` và API `play_next` để chèn bài hát được chọn phát tiếp theo.
+   - `Go to Album`: Tự động tìm kiếm theo tên Album và chuyển sang màn hình Albums view.
+   - `Go to Artist`: Tự động tìm kiếm theo tên Ca sĩ và chuyển sang màn hình Thư viện bài hát.
+
+---
 
 ### Danh sách tệp tin thay đổi
 - rontend/index.html (MODIFIED)
