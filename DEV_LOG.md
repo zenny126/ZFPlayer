@@ -1,5 +1,22 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T22:52:00
+### Tác vụ thực hiện
+Khắc phục vệt cắt thẳng đứng sắc cạnh của vệt sáng (`text-shadow`) ở mép bên phải.
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/lyrics.css` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- **Nguyên nhân**: Bán kính tỏa sáng (`blur radius`) của `text-shadow` trên dòng active lên tới 35px. Khi câu hát dài chạm tới giới hạn khung chứa bên phải, chữ cuối cùng nằm đúng mép `100%`, khiến bán kính 35px tỏa ra ngoài bị khung chứa `overflow: hidden` xén đứt một đường dọc thẳng tắp.
+- **Giải pháp**:
+  - Giữ nguyên giới hạn khung chứa bên phải của `.lyrics-container` (`padding-right: 32px`).
+  - Thêm thuộc tính `padding: 16px 45px 16px 0` và `box-sizing: border-box` trực tiếp vào thẻ dòng chữ `.lyrics-line`.
+  - Việc này ép chữ cuối cùng tự động ngắt dòng/dừng lại trước mép khung 45px. Bán kính phát sáng 35px giờ đây có tới 45px khoảng không gian đệm để mờ dần (fade out) hoàn toàn về 0% trước khi chạm tới vạch cắt, triệt tiêu 100% vết lẹm sắc cạnh.
+
+---
+
 ## Timestamp: 2026-08-13T22:49:00
 ### Tác vụ thực hiện
 Mở rộng giới hạn phía bên phải của vùng Lời bài hát để đạt sự đối xứng và cân bằng hoàn hảo.
