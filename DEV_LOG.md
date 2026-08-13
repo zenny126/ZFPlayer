@@ -1,5 +1,27 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T20:13:30
+### Tác vụ thực hiện
+Nhân 3 thời lượng nhịp phân tầng (Ultra-Dreamy Liquid Scroll: 2400ms / 2100ms / 2200ms / 1200ms) giúp hiệu ứng cuộn Lyric bồng bềnh tuyệt đối như lụa.
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/main.css` (MODIFIED)
+- `frontend/css/lyrics.css` (MODIFIED)
+- `frontend/js/lyrics.js` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+- `task.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Nhân 3 Các Token Thời Lượng Phân Tầng (`main.css` & `lyrics.css`)**:
+   - Khung cuộn trôi (`#lyrics-content` scroll): Tăng lên **2400ms** (2.4 giây) với đường hãm quán tính `cubic-bezier(0.25, 1, 0.35, 1)` cực dịu.
+   - Dòng active (`.active` focus): Tăng lên **2100ms** (2.1 giây) cho hiệu ứng phóng to & tỏa sáng glow mượt mờ dần.
+   - Dòng đã trôi qua (`.passed` fade): Tăng lên **2200ms** (2.2 giây).
+   - Câu kế tiếp (`.next` preview): Tăng lên **1200ms** (1.2 giây) nạp sáng trước 900ms.
+2. **Đồng Bộ JS Scroll Logic (`lyrics.js`)**:
+   - Cập nhật hàm `scrollToLine()` trường hợp `isFarJump` dùng nhịp 1400ms cùng đường cong Bezier `cubic-bezier(0.25, 1, 0.35, 1)`.
+
+---
+
 ## Timestamp: 2026-08-13T20:11:00
 ### Tác vụ thực hiện
 Tăng độ lệch nhịp phân tầng (Staggered Cascading Animation) và ép cố định 100% các thuộc tính sử dụng đường cong Bezier Apple Music (`cubic-bezier(0.25, 1, 0.35, 1)`).

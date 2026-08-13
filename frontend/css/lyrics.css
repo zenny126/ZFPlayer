@@ -249,7 +249,7 @@
   display: flex;
   flex-direction: column;
   padding: 35vh 0;
-  transition: transform 880ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1));
+  transition: transform 2400ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1));
   will-change: transform;
   width: 100%;
 }
@@ -260,11 +260,11 @@
   font-weight: 700;
   color: rgba(255, 255, 255, 0.28);
   filter: blur(1.5px); /* Soft focus / dreamy blur for upcoming lines */
-  transition: color 780ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)), 
-              transform 780ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)), 
-              filter 780ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)),
-              text-shadow 780ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)),
-              opacity 780ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1));
+  transition: color 2100ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)), 
+              transform 2100ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)), 
+              filter 2100ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)),
+              text-shadow 2100ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)),
+              opacity 2100ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1));
   padding: 16px 0;
   text-align: left;
   cursor: pointer;
@@ -280,8 +280,8 @@
 .lyrics-line:hover {
   color: rgba(255, 255, 255, 0.6);
   filter: blur(0px);
-  transition: color 400ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)),
-              filter 400ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1));
+  transition: color 500ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)),
+              filter 500ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1));
 }
 
 .lyrics-line.active {
@@ -292,25 +292,25 @@
   transform: scale(1.06); /* Visually zooms active line smoothly within container bounds */
 }
 
-/* Immediate next line transitions faster (480ms) with a gentle preview focus */
+/* Immediate next line transitions faster (1200ms) with a gentle preview focus */
 .lyrics-line.active + .lyrics-line,
 .lyrics-line.next {
   color: rgba(255, 255, 255, 0.42);
   filter: blur(0.8px);
-  transition: color 480ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)), 
-              transform 480ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)), 
-              filter 480ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)),
-              text-shadow 480ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)),
-              opacity 480ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1));
+  transition: color 1200ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)), 
+              transform 1200ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)), 
+              filter 1200ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)),
+              text-shadow 1200ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)),
+              opacity 1200ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1));
 }
 
 .lyrics-line.passed {
   color: rgba(255, 255, 255, 0.18);
   filter: blur(1.2px);
-  transition: color 800ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)), 
-              transform 800ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)), 
-              filter 800ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)),
-              opacity 800ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1));
+  transition: color 2200ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)), 
+              transform 2200ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)), 
+              filter 2200ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)),
+              opacity 2200ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1));
 }
 
 /* Optimizations for Maximized and Fullscreen (F11) */
