@@ -119,13 +119,36 @@ h1, h2, h3, h4, h5, h6 {
   min-width: 72px;
 }
 #sidebar.collapsed .library-title span,
+#sidebar.collapsed .library-list-text,
+#sidebar.collapsed .library-list-title,
 #sidebar.collapsed .library-list-subtitle,
-#sidebar.collapsed .library-actions {
+#sidebar.collapsed .library-actions,
+#sidebar.collapsed .library-filters {
   display: none !important;
 }
-#sidebar.collapsed .library-list-title {
-  font-size: 12px;
-  text-align: center;
+#sidebar.collapsed .library-header-bar {
+  padding: 16px 0 8px 0;
+  justify-content: center;
+}
+#sidebar.collapsed .library-title {
+  gap: 0;
+  justify-content: center;
+}
+#sidebar.collapsed .library-content {
+  padding: 8px 4px;
+}
+#sidebar.collapsed .library-list li {
+  justify-content: center;
+  padding: 8px 0;
+  gap: 0;
+  width: 100%;
+}
+#sidebar.collapsed .library-list li:hover {
+  transform: scale(1.05);
+}
+#sidebar.collapsed .library-list li img,
+#sidebar.collapsed .library-list li .icon-placeholder {
+  margin: 0 auto;
 }
 
 .workspace {

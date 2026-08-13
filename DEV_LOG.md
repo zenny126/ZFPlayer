@@ -1,5 +1,21 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T13:21:24.617011
+### Tác vụ thực hiện
+Sửa lỗi hiển thị trào lẹm và xô lệch khung của Sidebar khi thu nhỏ (Collapsed 72px state).
+
+### Danh sách tệp tin thay đổi
+- rontend/css/main.css (MODIFIED)
+- 	ask.md (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **#sidebar.collapsed CSS Fix (main.css)**:
+   - Ẩn hoàn toàn .library-list-text, .library-list-title, .library-list-subtitle, .library-filters, .library-actions, .library-title span bằng display: none !important khi thu nhỏ Sidebar.
+   - Căn giữa 100% cho các thành phần bên trong .library-header-bar và .library-list li (justify-content: center, padding: 8px 0, margin: 0 auto).
+   - Sửa hiệu ứng hover ở dạng thu nhỏ: đổi từ 	ransform: translateX(3px) (gây lẹm mép phải) sang 	ransform: scale(1.05) gọn gàng và thẩm mỹ.
+
+---
+
 ## Timestamp: 2026-08-13T13:17:33.265642
 ### Tác vụ thực hiện
 Nâng cấp toàn bộ hệ thống chuyển động UI/UX bằng đường cong Bezier (Bezier Curve Motion Design System).
