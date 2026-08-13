@@ -254,19 +254,18 @@
   width: 100%;
 }
 
-.lyrics-line,
-.lyrics-line.upcoming-far {
+.lyrics-line {
   font-family: 'Outfit', sans-serif;
   font-size: 32px; /* Identical font-size for all states to prevent layout shifts and text re-wrapping */
   font-weight: 700;
   color: rgba(255, 255, 255, 0.25);
   filter: blur(1.5px); /* Soft focus / dreamy blur for upcoming lines */
   transform: translateY(var(--scroll-y, 0px)); /* True staggered scroll */
-  transition: color 750ms var(--ease-spring-smooth, cubic-bezier(0.2, 0.95, 0.3, 1.04)), 
-              transform 750ms var(--ease-spring-smooth, cubic-bezier(0.2, 0.95, 0.3, 1.04)), 
-              filter 750ms var(--ease-spring-smooth, cubic-bezier(0.2, 0.95, 0.3, 1.04)),
-              text-shadow 750ms var(--ease-spring-smooth, cubic-bezier(0.2, 0.95, 0.3, 1.04)),
-              opacity 750ms var(--ease-spring-smooth, cubic-bezier(0.2, 0.95, 0.3, 1.04));
+  transition: color 750ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)), 
+              transform 750ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)), 
+              filter 750ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)),
+              text-shadow 750ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)),
+              opacity 750ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1));
   padding: 16px 0;
   text-align: left;
   cursor: pointer;
@@ -282,33 +281,21 @@
 .lyrics-line:hover {
   color: rgba(255, 255, 255, 0.6);
   filter: blur(0px);
-  transition: color 300ms var(--ease-spring-smooth, cubic-bezier(0.2, 0.95, 0.3, 1.04)),
-              filter 300ms var(--ease-spring-smooth, cubic-bezier(0.2, 0.95, 0.3, 1.04));
+  transition: color 300ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)),
+              filter 300ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1));
 }
 
-/* Tier 1: Active Line - Standard Speed (500ms) with smooth spring curve */
+/* Tier 2: Active Line - Glowing and Smooth (400ms) */
 .lyrics-line.active {
   color: white;
   font-size: 32px; /* Must match the base font-size */
   filter: blur(0px); /* Crystal clear focus on active line */
   text-shadow: 0 0 18px rgba(255, 255, 255, 0.65), 0 0 35px rgba(255, 255, 255, 0.25); /* Dreamy light glow */
   transform: translateY(var(--scroll-y, 0px)) scale(1.06); /* Visually zooms active line smoothly within container bounds */
-  transition: color 500ms var(--ease-spring-smooth, cubic-bezier(0.2, 0.95, 0.3, 1.04)), 
-              transform 500ms var(--ease-spring-smooth, cubic-bezier(0.2, 0.95, 0.3, 1.04)), 
-              filter 500ms var(--ease-spring-smooth, cubic-bezier(0.2, 0.95, 0.3, 1.04)),
-              text-shadow 500ms var(--ease-spring-smooth, cubic-bezier(0.2, 0.95, 0.3, 1.04));
-}
-
-/* Tier 2: Immediate Next Line - Fast Speed (350ms) with Spring Bounce */
-.lyrics-line.active + .lyrics-line,
-.lyrics-line.next {
-  color: rgba(255, 255, 255, 0.45);
-  filter: blur(0.6px);
-  transform: translateY(var(--scroll-y, 0px));
-  transition: color 350ms var(--ease-spring-bounce, cubic-bezier(0.34, 1.35, 0.64, 1)), 
-              transform 350ms var(--ease-spring-bounce, cubic-bezier(0.34, 1.35, 0.64, 1)), 
-              filter 350ms var(--ease-spring-bounce, cubic-bezier(0.34, 1.35, 0.64, 1)),
-              opacity 350ms var(--ease-spring-bounce, cubic-bezier(0.34, 1.35, 0.64, 1));
+  transition: color 400ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)), 
+              transform 400ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)), 
+              filter 400ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)),
+              text-shadow 400ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1));
 }
 
 /* Tier 1: Passed Lines - Standard Speed (500ms) */
@@ -316,9 +303,9 @@
   color: rgba(255, 255, 255, 0.18);
   filter: blur(1.2px);
   transform: translateY(var(--scroll-y, 0px)) scale(1.0);
-  transition: color 500ms var(--ease-spring-smooth, cubic-bezier(0.2, 0.95, 0.3, 1.04)), 
-              transform 500ms var(--ease-spring-smooth, cubic-bezier(0.2, 0.95, 0.3, 1.04)), 
-              filter 500ms var(--ease-spring-smooth, cubic-bezier(0.2, 0.95, 0.3, 1.04));
+  transition: color 500ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)), 
+              transform 500ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1)), 
+              filter 500ms var(--ease-apple-lyrics, cubic-bezier(0.25, 1, 0.35, 1));
 }
 
 /* Far jump override */

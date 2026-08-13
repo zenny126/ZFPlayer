@@ -141,31 +141,16 @@ class LyricsRenderer {
       
       for (let i = 0; i < lines.length; i++) {
         if (lines[i]) {
-          lines[i].classList.remove('next', 'upcoming-far');
-          if (i > newIndex + 1) {
-            lines[i].classList.add('upcoming-far');
+          lines[i].classList.remove('active', 'passed');
+          if (i < newIndex) {
+            lines[i].classList.add('passed');
           }
         }
-      }
-
-      if (this.activeIndex >= 0 && lines[this.activeIndex]) {
-        lines[this.activeIndex].classList.remove('active');
-        lines[this.activeIndex].classList.add('passed');
-      }
-      
-      for (let i = 0; i < newIndex; i++) {
-         if (lines[i]) { lines[i].classList.remove('active'); lines[i].classList.add('passed'); }
       }
       
       if (lines[newIndex]) {
         lines[newIndex].classList.add('active');
-        lines[newIndex].classList.remove('passed', 'upcoming-far');
         this.scrollToLine(newIndex, isFarJump);
-      }
-
-      if (lines[newIndex + 1]) {
-        lines[newIndex + 1].classList.add('next');
-        lines[newIndex + 1].classList.remove('upcoming-far');
       }
 
       this.activeIndex = newIndex;

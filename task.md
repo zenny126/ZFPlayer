@@ -1,8 +1,8 @@
-# Tasks - True Staggered Scroll Parallax (Tách biệt vận tốc từng dòng)
+# Tasks - Tái cấu trúc 3 khúc (Tối trên - Phát sáng - Tối dưới)
 
-- [x] Lập kế hoạch kiến trúc CSS Variables và trình phê duyệt <!-- id: 0 -->
-- [x] Cập nhật `frontend/css/lyrics.css`: Loại bỏ transform của container, áp dụng biến `--scroll-y` cho từng dòng với `translateY` <!-- id: 1 -->
-- [x] Cập nhật `frontend/js/lyrics.js`: Hàm `scrollToLine` cập nhật `--scroll-y` thay vì transform container, thêm xử lý `.far-jump` <!-- id: 2 -->
-- [x] Bổ sung cache buster v32 <!-- id: 3 -->
-- [x] Kiểm thử hiệu ứng nén (Accordion Effect) chuẩn Apple Music <!-- id: 4 -->
-- [x] Ghi chú vào nhật ký `DEV_LOG.md` và `walkthrough.md` <!-- id: 5 -->
+- [x] Lập phương án chia 3 khúc rõ ràng và trình phê duyệt <!-- id: 0 -->
+- [x] Dọn dẹp JS: Xóa logic quản lý class `.next` không cần thiết trong `lyrics.js` <!-- id: 1 -->
+- [x] CSS Khúc Tối Dưới: Xóa `.next`, hợp nhất toàn bộ các dòng dưới thành 1 tốc độ và màu mờ <!-- id: 2 -->
+- [x] CSS 3 Khúc Tốc Độ: Cài đặt tốc độ trượt riêng cho `.passed`, `.active`, và các dòng chưa hát với đường cong Apple Smooth <!-- id: 3 -->
+- [x] Kiểm thử chuyển động <!-- id: 4 -->
+- [x] Ghi chú cập nhật `DEV_LOG.md` và `walkthrough.md` <!-- id: 5 -->

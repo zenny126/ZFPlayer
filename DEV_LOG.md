@@ -1,5 +1,29 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T20:28:00
+### Tác vụ thực hiện
+Tái cấu trúc và chuẩn hóa hoàn toàn chuyển động Lyric về chuẩn 3 khúc rành mạch (Tối Trên - Phát Sáng - Tối Dưới) với đường cong mượt siêu cấp.
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/lyrics.css` (MODIFIED)
+- `frontend/js/lyrics.js` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+- `task.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Dọn Dẹp Logic Thừa (`lyrics.js`)**:
+   - Xóa bỏ hoàn toàn lớp `.next` và logic xử lý `.upcoming-far`. Từ nay hệ thống chỉ gán class `.active` (hiện tại) và `.passed` (đã qua).
+   - Bất kỳ dòng nào không có `.active` và `.passed` sẽ tự ngầm hiểu là Tối Dưới (sắp tới).
+2. **Quy Hoạch Giao Diện 3 Khúc Tối Giản (`lyrics.css`)**:
+   - Khúc 3 (Tối Dưới): Dùng style chung `.lyrics-line` cho toàn bộ các câu chưa hát (Opacity 0.25, Blur 1.5px).
+   - Tái áp dụng đường cong `cubic-bezier(0.25, 1, 0.35, 1)` cho toàn bộ các phase chuyển động để loại bỏ độ nảy gắt lò xo, thay vào đó là độ trượt mượt mà tuyệt đối như bơ của iOS Apple Music.
+3. **Cân Bằng 3 Tầng Tốc Độ**:
+   - Khúc Tối Trên (`.passed`): `500ms`.
+   - Khúc Phát Sáng (`.active`): `400ms`.
+   - Khúc Tối Dưới (Base `.lyrics-line`): `750ms`.
+
+---
+
 ## Timestamp: 2026-08-13T20:24:00
 ### Tác vụ thực hiện
 Chuyển đổi kiến trúc cuộn sang True Staggered Parallax Scroll (Tách biệt vận tốc từng câu hát bằng CSS Variables).
