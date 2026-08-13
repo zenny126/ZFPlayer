@@ -1,5 +1,21 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T20:39:00
+### Tác vụ thực hiện
+Áp dụng thông số thời gian cá nhân hóa của người dùng (1000ms, 1000ms, 1800ms) để đẩy tối đa hiệu ứng hãm phanh mượt mà của Spring Physics.
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/lyrics.css` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- Tăng thời gian chuyển động cho `Khúc Phát Sáng (.active)` lên **1000ms**.
+- Tăng thời gian chuyển động cho `Khúc Tối Trên (.passed)` lên **1000ms**.
+- Tăng thời gian chuyển động cho `Khúc Tối Dưới (.lyrics-line base)` lên **1800ms**.
+- Với Bezier `cubic-bezier(0.2, 1, 0.2, 1)`, mốc thời gian này sẽ mang lại cảm giác cực kỳ Cinematic (điện ảnh) và lướt bơ chậm rãi.
+
+---
+
 ## Timestamp: 2026-08-13T20:37:00
 ### Tác vụ thực hiện
 Áp dụng thông số thuật toán vật lý lò xo (Critically Damped Spring Physics) gốc của Apple Music UI.
