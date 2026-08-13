@@ -1,5 +1,28 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T20:37:00
+### Tác vụ thực hiện
+Áp dụng thông số thuật toán vật lý lò xo (Critically Damped Spring Physics) gốc của Apple Music UI.
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/main.css` (MODIFIED)
+- `frontend/css/lyrics.css` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+- `task.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Tinh chỉnh Bezier Apple Music Gốc (`main.css`)**:
+   - Chuyển `--ease-apple-lyrics` sang `cubic-bezier(0.2, 1, 0.2, 1)`. 
+   - Đây là sự chuyển đổi CSS chính xác nhất cho thuật toán Spring Animation gốc trên iOS (`response: 0.55, dampingFraction: 1.0` - Không có độ nảy/Bounce). Đường cong này tạo độ sắc bén, nảy vọt nhanh lúc đầu và đáp chính xác vào vị trí, ko quá trễ nhịp như curve `0.15` trước đó.
+2. **Trở về Thời Gian Thực Tế của Apple (`lyrics.css`)**:
+   - Việc nhân đôi thời lượng (lên 1800ms) khiến UI mất đi độ "Snappy" (Sắc bén/linh hoạt) của Apple.
+   - Để đồng bộ với thuật toán gốc, tôi đã đưa thời lượng về lại dải tốc độ `550ms - 750ms` y hệt API `CASpringAnimation`:
+   - `Khúc Phát Sáng (.active)`: **550ms**.
+   - `Khúc Tối Trên (.passed)`: **600ms**.
+   - `Khúc Tối Dưới (.lyrics-line base)`: **750ms**.
+
+---
+
 ## Timestamp: 2026-08-13T20:34:00
 ### Tác vụ thực hiện
 Nhân đôi thời lượng Animation để đẩy hiệu ứng Spring Physics Brake Tail (hãm phanh đuôi) lên mức lướt bơ mượt nhất.
