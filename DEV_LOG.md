@@ -1,5 +1,20 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T13:45:36.119422
+### Tác vụ thực hiện
+Chuẩn hóa toàn bộ giao diện ứng dụng ZFPlayer sang Tiếng Anh 100% (English UI Standardization).
+
+### Danh sách tệp tin thay đổi
+- rontend/index.html (MODIFIED)
+- rontend/js/playlists.js (MODIFIED)
+- 	ask.md (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Modals & Context Menus (index.html)**: Chuyển đổi toàn bộ các văn bản tiếng Việt sang Tiếng Anh: Edit Playlist, Change Cover Image, Playlist Name:, Delete Playlist, Save Changes, Cancel, Rename Playlist, Confirm Playlist Deletion.
+2. **Tooltips & Subtitles (playlists.js, index.html)**: Chuyển đổi subtitles sidebar (All your local tracks, Your favorite tracks), các tiêu đề trang chủ (Playlists, Recently Played (Last 20)), trạng thái nút bấm (Scanning..., Processing...) và thông báo cảnh báo xóa sang Tiếng Anh đồng bộ.
+
+---
+
 ## Timestamp: 2026-08-13T13:39:38.149184
 ### Tác vụ thực hiện
 Fix lỗi cú pháp JavaScript SyntaxError unexpected token ')' trong playlists.js.

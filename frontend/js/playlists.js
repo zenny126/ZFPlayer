@@ -262,7 +262,7 @@ class PlaylistManager {
       const folderPath = await window.api.selectMusicDir();
       if (folderPath) {
         const originalText = this.btnImportFolder.textContent;
-        this.btnImportFolder.textContent = 'Đang quét...';
+        this.btnImportFolder.textContent = 'Scanning...';
         this.btnImportFolder.disabled = true;
         
         await window.api.importFolderToPlaylist(this.currentPlaylistId, folderPath);
@@ -279,7 +279,7 @@ class PlaylistManager {
       const filePaths = await window.api.selectMusicFiles();
       if (filePaths && filePaths.length > 0) {
         const originalText = this.btnImportFiles.textContent;
-        this.btnImportFiles.textContent = 'Đang xử lý...';
+        this.btnImportFiles.textContent = 'Processing...';
         this.btnImportFiles.disabled = true;
         
         await window.api.importFilesToPlaylist(this.currentPlaylistId, filePaths);
@@ -422,7 +422,7 @@ class PlaylistManager {
     this.targetPlaylistId = playlistId;
     const warning = document.getElementById('delete-playlist-warning-text');
     if (warning) {
-      warning.textContent = `Bạn có chắc chắn muốn xóa playlist "${playlistName}"? Hành động này không thể hoàn tác.`;
+      warning.textContent = `Are you sure you want to delete the playlist "${playlistName}"? This action cannot be undone.`;
     }
     if (this.modalDelete) {
       this.modalDelete.classList.remove('hidden');
@@ -551,7 +551,7 @@ class PlaylistManager {
     allItem.innerHTML = `<div class="icon-placeholder">${allCover ? `<img src="${allCover}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">` : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 22px; height: 22px; color: var(--accent);"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>`}</div>
           <div class="library-list-text">
             <div class="library-list-title">All Songs</div>
-            <div class="library-list-subtitle">Tất cả bài hát</div>
+            <div class="library-list-subtitle">All your local tracks</div>
           </div>`;
     allItem.addEventListener('click', () => {
       window.store.setState({ view: 'playlist', playlistId: 'all' });
@@ -569,7 +569,7 @@ class PlaylistManager {
     favItem.innerHTML = `<div class="icon-placeholder">${favCover ? `<img src="${favCover}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">` : `<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" style="width: 22px; height: 22px; color: #e74c3c;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`}</div>
           <div class="library-list-text">
             <div class="library-list-title">Favorite Songs</div>
-            <div class="library-list-subtitle">Bài hát yêu thích</div>
+            <div class="library-list-subtitle">Your favorite tracks</div>
           </div>`;
     favItem.addEventListener('click', () => {
       window.store.setState({ view: 'playlist', playlistId: 'favorites' });
