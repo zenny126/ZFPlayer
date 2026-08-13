@@ -1,5 +1,25 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T22:00:00
+### Tác vụ thực hiện
+Khắc phục triệt để lỗi độ phân giải gốc của tệp ảnh bìa album làm thay đổi kích thước hiển thị giữa các bài hát khác nhau.
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/lyrics.css` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- **Phát hiện nguyên nhân chính xác 100%**:
+  - Khi trình duyệt Chromium/Electron render thẻ `<img>`, nếu thẻ cha `.lyrics-track-info` có thuộc tính `align-items: flex-start` (là căn lề trái mặc định cho flex column), trình duyệt sẽ **không bắt buộc thẻ `<img>` phải giãn ra đủ 100%**.
+  - Kết quả là: Những bài hát có tệp ảnh bìa độ phân giải nhỏ (như bài Charlie Puth có ảnh gốc 280x280px) sẽ dừng thu giãn ở đúng 280px. Trong khi những bài có tệp ảnh bìa sắc nét (như bài Pink Sweat$ có ảnh gốc 800x800px) sẽ được giãn tối đa 400px.
+  - Sự khác biệt về độ phân giải của tệp tin ảnh bìa gốc trên ổ đĩa chính là nguyên nhân làm giao diện bị thay đổi kích thước giữa các bài hát!
+- **Giải pháp xử lý**:
+  - Chuyển `align-items: flex-start` thành `align-items: stretch` trên thẻ cha `.lyrics-track-info`.
+  - Thiết lập `width: var(--max-cover-size)` cho `.lyrics-track-info` và ép `display: block; width: 100%; min-width: 100%;` cho `#lyrics-cover`.
+  - Giờ đây, dù tệp ảnh bìa gốc có kích thước siêu nhỏ (như 100x100px) hay siêu lớn (như 3000x3000px), trình duyệt buộc phải upscale/downscale tệp ảnh đó về đúng một kích thước vuông vức **đồng nhất 100%** với tất cả bài hát khác!
+
+---
+
 ## Timestamp: 2026-08-13T21:55:00
 ### Tác vụ thực hiện
 Sửa lỗi cột giao diện thông tin bài hát (bên trái) bị lệch kích thước, tràn chiều rộng hoặc co rút sai lệch trên các màn hình và thiết bị có độ phân giải khác nhau.

@@ -61,19 +61,20 @@
 }
 
 .lyrics-track-info {
-  flex: 0 0 35%; /* Giảm từ 45% xuống 35% để phần lời bài hát có nhiều không gian hơn */
+  flex: 0 0 35%; /* Giữ tỷ lệ 35% cho phần thông tin bài hát */
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch; /* Đảm bảo tất cả các phần tử con đều giãn 100% bề ngang */
   gap: 20px;
-  width: 100%;
-  max-width: var(--max-cover-size); /* Shrink entire column if window height is too short */
+  width: var(--max-cover-size); /* Cố định chính xác độ rộng theo kích thước tính toán */
+  max-width: var(--max-cover-size);
 }
 
 #lyrics-cover {
+  display: block;
   width: 100%;
-  max-width: var(--max-cover-size); /* Giảm từ 440px xuống 400px, điều chỉnh theo chiều cao */
-  aspect-ratio: 1;
+  min-width: 100%;
+  aspect-ratio: 1 / 1;
   border-radius: 12px;
   object-fit: cover;
   box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
