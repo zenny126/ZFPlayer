@@ -238,6 +238,7 @@
   height: 100%;
   overflow-y: hidden;
   position: relative;
+  padding-left: 32px; /* Shift lyrics slightly right & safe space for glow/scaling on the left */
   padding-right: 100px; /* Safe padding for scaled active text & text-shadow to prevent edge clipping */
   mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);

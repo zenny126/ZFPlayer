@@ -1,5 +1,127 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T22:46:00
+### Tác vụ thực hiện
+Thêm khoảng lề an toàn phía bên trái (`padding-left: 32px`) cho vùng hiển thị Lời bài hát.
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/lyrics.css` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- **Nguyên nhân**: Khi câu hát đang phát sáng (active line), hiệu ứng tỏa sáng (`text-shadow`) kết hợp với hiệu ứng phóng to nhẹ (`scale(1.06)`) làm vệt sáng bên trái sát mép cột hoặc chạm gần vào khu vực bìa album, tạo cảm giác bị lẹm viền chữ.
+- **Giải pháp**: Bổ sung `padding-left: 32px` cho `.lyrics-container`. Việc này dịch toàn bộ khối Lời bài hát sang bên phải 32px, tạo khoảng cách thở mềm mại và đảm bảo vệt phát sáng bên trái không bao giờ bị cắt viền.
+
+---
+
+## Timestamp: 2026-08-13T22:45:00
+### Tác vụ thực hiện
+Cập nhật tên thương hiệu ứng dụng chính thức thành ZennyFLAC Player (ZFPlayer) trên toàn bộ hệ thống và đóng gói lại tệp thực thi.
+
+### Danh sách tệp tin thay đổi
+- `backend/app.py` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+- `frontend/js/player.js` (MODIFIED)
+- `backend/workers/lyrics_worker.py` (MODIFIED)
+- `README.md` (MODIFIED)
+- `architect.md` (MODIFIED)
+- `docs/ARCHITECTURE.md` (MODIFIED)
+- `build_exe.py` (MODIFIED)
+- `task.md` (MODIFIED)
+- `dist/ZennyFLAC_Player.exe` (NEW)
+
+### Mô tả chi tiết kỹ thuật
+1. **Chuẩn hóa Tên Thương Hiệu `ZennyFLAC Player`**:
+   - Đổi tiêu đề cửa sổ PyWebView thành `'ZennyFLAC Player'`.
+   - Đổi `<title>` và `<meta name="description">` giao diện Web thành `ZennyFLAC Player`.
+   - Đổi fallback album metadata trong Windows SMTC thành `'ZennyFLAC Player'`.
+   - Đổi User-Agent header trong Lyrics Worker thành `'ZennyFLACPlayer/2.0'`.
+2. **Cập nhật Kịch bản Đóng gói & Rebuild**:
+   - Cập nhật `build_exe.py` tự động tạo bản sao thực thi thương hiệu mới [`dist/ZennyFLAC_Player.exe`](file:///d:/ZFPlayer/dist/ZennyFLAC_Player.exe).
+   - Đóng gói PyInstaller hoàn tất thành công 100%.
+
+---
+
+## Timestamp: 2026-08-13T22:41:00
+### Tác vụ thực hiện
+Tích hợp đầy đủ bộ Icon ZFP trên tất cả các vị trí hệ thống (Taskbar Window Icon, Window Titlebar, Favicon, và EXE Binary Icon).
+
+### Danh sách tệp tin thay đổi/tạo mới
+- `generate_icon.py` (MODIFIED)
+- `frontend/app_icon.png` (NEW)
+- `frontend/favicon.ico` (NEW)
+- `frontend/app_icon.ico` (NEW)
+- `backend/app.py` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+- `zfplayer.spec` (MODIFIED)
+- `build_exe.py` (MODIFIED)
+- `task.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Xuất Đa Định Dạng Icon (`generate_icon.py`)**:
+   - Tự động xuất tệp `app_icon.ico` (Windows EXE), `frontend/app_icon.png` (PyWebView Taskbar Window Icon 512x512 PNG), và `frontend/favicon.ico` (HTML Favicon).
+2. **PyWebView Taskbar & Titlebar Icon (`backend/app.py`)**:
+   - Thêm route `@app.route('/favicon.ico')` trong Bottle server.
+   - Truyền tham số `icon=str(app_icon_path)` vào `webview.create_window(...)` giúp thanh Taskbar Windows và góc cửa sổ ứng dụng hiển thị đúng biểu tượng ZFP khi đang chạy.
+3. **Đóng gói PyInstaller Đơn Tệp đầy đủ Icon**:
+   - Thêm `app_icon.ico` vào `datas` trong `zfplayer.spec`.
+   - Biên dịch thành công tệp thực thi duy nhất [`dist/ZFPlayer.exe`](file:///d:/ZFPlayer/dist/ZFPlayer.exe) và [`dist/ZFPlayer_FullIcon.exe`](file:///d:/ZFPlayer/dist/ZFPlayer_FullIcon.exe).
+
+---
+
+## Timestamp: 2026-08-13T22:35:00
+### Tác vụ thực hiện
+Loại bỏ hoàn toàn tùy chọn `WASAPI Exclusive (Event Driven)` theo yêu cầu của người dùng, tinh giản menu Settings UI chỉ còn 2 chế độ chuẩn: `WASAPI Shared Mode` và `WASAPI Exclusive Mode (Push Driven)`.
+
+### Danh sách tệp tin thay đổi
+- `backend/audio/engine.py` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+- `frontend/js/ui.js` (MODIFIED)
+- `DEV_LOG.md` (MODIFIED)
+
+---
+
+## Timestamp: 2026-08-13T22:32:40
+### Tác vụ thực hiện
+Cập nhật nhãn "— Recommended" trên giao diện Settings Modal cho tùy chọn `WASAPI Exclusive (Push Driven)` theo yêu cầu của người dùng.
+
+### Danh sách tệp tin thay đổi
+- `frontend/index.html` (MODIFIED)
+- `DEV_LOG.md` (MODIFIED)
+
+---
+
+## Timestamp: 2026-08-13T22:27:00
+### Tác vụ thực hiện
+Bổ sung tính năng cho phép người dùng lựa chọn 3 chế độ truyền dữ liệu âm thanh WASAPI (WASAPI Shared Mode, WASAPI Exclusive Event Driven, WASAPI Exclusive Push Driven) trực tiếp trên giao diện Cài đặt (Settings UI) kèm mô tả ưu/nhược điểm và yêu cầu thiết bị bằng tiếng Anh.
+
+### Danh sách tệp tin tạo mới & thay đổi
+- `backend/storage/config.py` (MODIFIED)
+- `backend/audio/engine.py` (MODIFIED)
+- `backend/api/config_api.py` (MODIFIED)
+- `backend/app.py` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+- `frontend/css/main.css` (MODIFIED)
+- `frontend/js/api.js` (MODIFIED)
+- `frontend/js/ui.js` (MODIFIED)
+- `DEV_LOG.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Cấu hình & Tích hợp Backend Audio Engine**:
+   - Khởi tạo giá trị mặc định `"audio_mode": "shared"` trong `Config`.
+   - Bổ sung logic khởi tạo WASAPI Stream trong `AudioEngine._create_stream()` hỗ trợ 3 chế độ:
+     - `shared`: `sd.WasapiSettings(exclusive=False)` với `latency='high'` (hỗ trợ phát nhạc đa ứng dụng qua Windows System Mixer).
+     - `exclusive_event`: `sd.WasapiSettings(exclusive=True)` với `latency='low'` (đầu ra bit-perfect 1:1, phần cứng DAC phát tín hiệu ngắt event callback yêu cầu dữ liệu âm thanh, trễ cực thấp).
+     - `exclusive_push`: `sd.WasapiSettings(exclusive=True)` kết hợp cờ `sd._lib.paWinWasapiPolling` với `latency='low'` (đầu ra bit-perfect 1:1, máy tính chủ động đẩy audio buffer cho DAC).
+   - Truy vấn đúng WASAPI output device index (`dev_id`) để tránh lỗi `PaErrorCode -9984` trên Windows.
+   - Thêm cơ chế tự động fallback về Shared Mode nếu chế độ Exclusive bị lỗi hoặc thiết bị âm thanh bận.
+   - Thêm phương thức `set_audio_mode(mode)` hỗ trợ chuyển đổi chế độ âm thanh tức thì mà không cần khởi động lại ứng dụng.
+2. **Nâng cấp Giao diện Settings Modal**:
+   - Thiết kế lại hộp thoại Settings với dropdown chọn chế độ WASAPI và thẻ thông tin tự động hiển thị chi tiết Pros, Cons, Best For bằng tiếng Anh chuẩn audiophile.
+   - Bổ sung hiệu ứng CSS glassmorphism, tùy biến giao diện select và thông báo toast khi người dùng thay đổi chế độ.
+
+---
+
 ## Timestamp: 2026-08-13T22:13:30
 ### Tác vụ thực hiện
 Khắc phục lỗi tiếng xì/nổ lách tách (Audio Clicks & Pops) khi Play/Pause/Seek bài hát bằng cơ chế Micro Fade-In/Out Ramp (20ms/15ms) và đồng bộ mã nguồn đẩy lên GitHub.
