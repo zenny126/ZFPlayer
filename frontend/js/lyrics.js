@@ -140,7 +140,12 @@ class LyricsRenderer {
       const lines = this.container.children;
       
       for (let i = 0; i < lines.length; i++) {
-        if (lines[i]) lines[i].classList.remove('next');
+        if (lines[i]) {
+          lines[i].classList.remove('next', 'upcoming-far');
+          if (i > newIndex + 1) {
+            lines[i].classList.add('upcoming-far');
+          }
+        }
       }
 
       if (this.activeIndex >= 0 && lines[this.activeIndex]) {
@@ -154,12 +159,13 @@ class LyricsRenderer {
       
       if (lines[newIndex]) {
         lines[newIndex].classList.add('active');
-        lines[newIndex].classList.remove('passed');
+        lines[newIndex].classList.remove('passed', 'upcoming-far');
         this.scrollToLine(newIndex, isFarJump);
       }
 
       if (lines[newIndex + 1]) {
         lines[newIndex + 1].classList.add('next');
+        lines[newIndex + 1].classList.remove('upcoming-far');
       }
 
       this.activeIndex = newIndex;
@@ -171,7 +177,7 @@ class LyricsRenderer {
     if (!lineEl) return;
 
     if (isFarJump) {
-      this.container.style.transition = 'transform 1400ms cubic-bezier(0.25, 1, 0.35, 1)';
+      this.container.style.transition = 'transform 350ms cubic-bezier(0.34, 1.35, 0.64, 1)';
     } else {
       this.container.style.transition = '';
     }

@@ -1,5 +1,28 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T20:20:00
+### Tác vụ thực hiện
+Triển khai hiệu ứng Trượt 3 Tầng Tốc Độ & Độ Nảy (3-Tier Spring Parallax Bounce) chuẩn phong cách Apple Music.
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/main.css` (MODIFIED)
+- `frontend/css/lyrics.css` (MODIFIED)
+- `frontend/js/lyrics.js` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+- `task.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Thiết Lập Các Spring Bounce Curves (`main.css`)**:
+   - Bổ sung Token `--ease-spring-bounce: cubic-bezier(0.34, 1.35, 0.64, 1)` (lực nảy bứt phá) và `--ease-spring-smooth: cubic-bezier(0.2, 0.95, 0.3, 1.04)` (đường hãm nảy nhẹ).
+2. **Cấu Hình 3 Tầng Tốc Độ Trượt Dọc (`lyrics.css`)**:
+   - **Tầng 1 (.active & .passed)**: Trượt lên với **Tốc độ Chuẩn (500ms)** trên đường nảy êm `cubic-bezier(0.2, 0.95, 0.3, 1.04)`.
+   - **Tầng 2 (.next / .active + .lyrics-line)**: Trượt bứt tốc **Nhanh hơn (350ms)** với lực nảy `cubic-bezier(0.34, 1.35, 0.64, 1)` giúp câu hát tiếp theo nảy vọt lên trước đón ánh nhìn.
+   - **Tầng 3 (.upcoming-far)**: Trượt **Chậm hơn (750ms)** đuổi theo phía sau từ từ, tạo hiệu ứng đàn hồi Co-Giãn (Accordion Parallax Effect).
+3. **Cập Nhật Tự Động Phân Tầng Trong JS (`lyrics.js`)**:
+   - Phương thức `update()` tự động phân loại và gắn class `.next` cũng như `.upcoming-far` cho các phần tử phía dưới.
+
+---
+
 ## Timestamp: 2026-08-13T20:13:30
 ### Tác vụ thực hiện
 Nhân 3 thời lượng nhịp phân tầng (Ultra-Dreamy Liquid Scroll: 2400ms / 2100ms / 2200ms / 1200ms) giúp hiệu ứng cuộn Lyric bồng bềnh tuyệt đối như lụa.
