@@ -84,6 +84,7 @@ class PlaylistManager {
                svgContent = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><defs><linearGradient id='g2' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%23ff0844'/><stop offset='100%' stop-color='%23ffb199'/></linearGradient></defs><rect width='24' height='24' fill='url(%23g2)'/><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>";
             } else {
                svgContent = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%23282828'/><path d='M9 18V5l12-2v13' stroke='%23888' stroke-width='2' fill='none'/><circle cx='6' cy='18' r='3' stroke='%23888' stroke-width='2' fill='none'/><circle cx='18' cy='16' r='3' stroke='%23888' stroke-width='2' fill='none'/></svg>";
+            }
             coverEl.src = svgContent;
           }
 

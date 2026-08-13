@@ -1,5 +1,17 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T13:39:38.149184
+### Tác vụ thực hiện
+Fix lỗi cú pháp JavaScript SyntaxError unexpected token ')' trong playlists.js.
+
+### Danh sách tệp tin thay đổi
+- rontend/js/playlists.js (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. Sửa thiếu đóng ngoặc nhọn } tại khối else gán svgContent trong phương thức init(), giải quyết triệt để lỗi syntax khi tải file playlists.js trên browser console.
+
+---
+
 ## Timestamp: 2026-08-13T13:37:34.202788
 ### Tác vụ thực hiện
 Ẩn 2 nút 'IMPORT FOLDER' và 'SELECT FILES' trên Playlist Header đối với riêng playlist Favorite Songs.
