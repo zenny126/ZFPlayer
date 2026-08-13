@@ -130,14 +130,8 @@
                   </button>
                   <button id="btn-playlist-import-folder" class="btn-outline">Import Folder</button>
                   <button id="btn-playlist-import-files" class="btn-outline">Select Files</button>
-                  <button id="btn-playlist-rename-header" class="btn-icon-large" title="Đổi tên Playlist">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                  </button>
-                  <button id="btn-playlist-cover-header" class="btn-icon-large" title="Đổi ảnh đại diện">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                  </button>
-                  <button id="btn-playlist-delete-header" class="btn-icon-large danger" title="Xóa Playlist">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  <button id="btn-playlist-edit-header" class="btn-icon-large" title="Chỉnh sửa Playlist">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                   </button>
                 </div>
               </div>
@@ -270,6 +264,38 @@
       <div style="display:flex; justify-content:flex-end; gap:16px; margin-top:32px;">
         <button id="btn-cancel-playlist" class="btn-ghost">Cancel</button>
         <button id="btn-save-playlist" class="btn-primary">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="edit-playlist-modal" class="modal hidden">
+    <div class="modal-content" style="width: 480px; max-width: 95%;">
+      <h2>Chỉnh sửa Playlist</h2>
+      
+      <div style="display: flex; gap: 20px; align-items: center; margin-top: 20px; background: rgba(255,255,255,0.04); padding: 16px; border-radius: var(--border-radius-md); border: 1px solid rgba(255,255,255,0.08);">
+        <div id="edit-playlist-cover-preview-container" class="playlist-cover-container" style="width: 100px; height: 100px; flex-shrink: 0; border-radius: 8px;">
+          <img id="edit-playlist-cover-preview" src="" alt="Cover Preview" style="width: 100%; height: 100%; object-fit: cover;">
+          <div class="cover-edit-overlay"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="width: 28px; height: 28px;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></div>
+        </div>
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+          <button id="btn-edit-playlist-change-cover" class="btn-outline" style="font-size: 12px; padding: 8px 16px; width: fit-content;">🖼️ Thay Đổi Ảnh Bìa</button>
+          <div style="font-size: 11px; color: var(--text-subdued);">Nhấp vào nút trên hoặc nhấp trực tiếp vào ảnh để đổi hình ảnh đại diện cho danh sách phát này.</div>
+        </div>
+      </div>
+
+      <div id="edit-playlist-name-section" style="margin-top: 20px; display: flex; flex-direction: column; gap: 8px;">
+        <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Tên Playlist:</label>
+        <input type="text" id="input-edit-playlist-name" placeholder="Tên Playlist" class="text-input">
+      </div>
+
+      <div id="edit-playlist-delete-section" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 13px; color: var(--text-subdued);">Xóa danh sách phát này</span>
+        <button id="btn-edit-playlist-trigger-delete" class="btn-outline" style="border-color: #e22134; color: #e22134; padding: 6px 16px; font-size: 12px;">🗑️ Xóa Playlist</button>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:16px; margin-top:28px;">
+        <button id="btn-cancel-edit-playlist" class="btn-ghost">Hủy</button>
+        <button id="btn-save-edit-playlist" class="btn-primary">Lưu Thay Đổi</button>
       </div>
     </div>
   </div>

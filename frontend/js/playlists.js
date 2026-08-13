@@ -30,9 +30,14 @@ class PlaylistManager {
     this.coverContainer = document.getElementById('playlist-cover-container');
 
     // Header Action Buttons
-    this.btnHeaderRename = document.getElementById('btn-playlist-rename-header');
-    this.btnHeaderCover = document.getElementById('btn-playlist-cover-header');
-    this.btnHeaderDelete = document.getElementById('btn-playlist-delete-header');
+    this.btnHeaderEdit = document.getElementById('btn-playlist-edit-header');
+    this.modalEdit = document.getElementById('edit-playlist-modal');
+    this.btnSaveEdit = document.getElementById('btn-save-edit-playlist');
+    this.btnCancelEdit = document.getElementById('btn-cancel-edit-playlist');
+    this.btnEditChangeCover = document.getElementById('btn-edit-playlist-change-cover');
+    this.editCoverContainer = document.getElementById('edit-playlist-cover-preview-container');
+    this.btnEditTriggerDelete = document.getElementById('btn-edit-playlist-trigger-delete');
+    this.inputEditName = document.getElementById('input-edit-playlist-name');
 
     this.submenu = document.getElementById('playlist-submenu');
     this.ctxAddToPlaylist = document.getElementById('ctx-add-to-playlist');
@@ -82,12 +87,6 @@ class PlaylistManager {
             }
             coverEl.src = svgContent;
           }
-
-          // System Playlists vs Custom Playlists Action Locks
-          const isSystem = (state.playlistId === 'all' || state.playlistId === 'favorites');
-          if (this.btnHeaderRename) this.btnHeaderRename.style.display = isSystem ? 'none' : 'flex';
-          if (this.btnHeaderDelete) this.btnHeaderDelete.style.display = isSystem ? 'none' : 'flex';
-          if (this.btnHeaderCover) this.btnHeaderCover.style.display = 'flex';
         }
       } else {
         header.classList.add('hidden');
@@ -132,6 +131,62 @@ class PlaylistManager {
 
     this.inputName?.addEventListener('keyup', (e) => {
       if (e.key === 'Enter') this.btnSave.click();
+    });
+
+    // Single Gear Icon Button on Header -> Opens Edit Playlist Modal
+    this.btnHeaderEdit?.addEventListener('click', () => {
+      if (this.currentPlaylistId) {
+        this.showEditModal(this.currentPlaylistId);
+      }
+    });
+
+    // Edit Playlist Modal Events
+    this.btnCancelEdit?.addEventListener('click', () => {
+      this.modalEdit?.classList.add('hidden');
+    });
+
+    this.btnSaveEdit?.addEventListener('click', async () => {
+      const isSystem = (this.targetPlaylistId === 'all' || this.targetPlaylistId === 'favorites');
+      if (!isSystem && this.inputEditName && this.targetPlaylistId) {
+        const newName = this.inputEditName.value.trim();
+        if (newName) {
+          await window.api.renamePlaylist(this.targetPlaylistId, newName);
+        }
+      }
+      this.modalEdit?.classList.add('hidden');
+      await this.loadPlaylists();
+      if (String(this.currentPlaylistId) === String(this.targetPlaylistId)) {
+        this.openPlaylist(this.targetPlaylistId);
+      }
+    });
+
+    this.inputEditName?.addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') this.btnSaveEdit?.click();
+    });
+
+    const triggerCoverChange = async () => {
+      if (this.targetPlaylistId) {
+        await this.changeCover(this.targetPlaylistId);
+        // Refresh preview image inside edit modal
+        const previewImg = document.getElementById('edit-playlist-cover-preview');
+        if (previewImg) {
+          let p = this.playlists.find(x => String(x.id) === String(this.targetPlaylistId));
+          if (this.targetPlaylistId === 'all') p = { cover_url: this.systemCovers.all };
+          if (this.targetPlaylistId === 'favorites') p = { cover_url: this.systemCovers.favorites };
+          if (p && p.cover_url) previewImg.src = p.cover_url;
+        }
+      }
+    };
+
+    this.btnEditChangeCover?.addEventListener('click', triggerCoverChange);
+    this.editCoverContainer?.addEventListener('click', triggerCoverChange);
+
+    this.btnEditTriggerDelete?.addEventListener('click', () => {
+      if (this.targetPlaylistId && this.targetPlaylistId !== 'all' && this.targetPlaylistId !== 'favorites') {
+        const p = this.playlists.find(x => String(x.id) === String(this.targetPlaylistId));
+        this.modalEdit?.classList.add('hidden');
+        this.showDeleteModal(this.targetPlaylistId, p ? p.name : '');
+      }
     });
 
     // Rename Playlist Modal
@@ -296,6 +351,57 @@ class PlaylistManager {
     this.submenu?.addEventListener('mouseleave', () => {
       this.submenu.classList.add('hidden');
     });
+  }
+
+  showEditModal(playlistId) {
+    this.targetPlaylistId = playlistId;
+    const isSystem = (playlistId === 'all' || playlistId === 'favorites');
+    
+    let p = this.playlists.find(x => String(x.id) === String(playlistId));
+    if (playlistId === 'all') {
+      p = { name: 'All Songs', cover_url: this.systemCovers.all };
+    } else if (playlistId === 'favorites') {
+      p = { name: 'Favorite Songs', cover_url: this.systemCovers.favorites };
+    }
+
+    if (!p && !isSystem) return;
+    if (!p) p = { name: 'Playlist', cover_url: null };
+
+    const inputName = document.getElementById('input-edit-playlist-name');
+    const previewImg = document.getElementById('edit-playlist-cover-preview');
+    const nameSection = document.getElementById('edit-playlist-name-section');
+    const deleteSection = document.getElementById('edit-playlist-delete-section');
+
+    if (this.modalEdit) {
+      if (inputName) inputName.value = p.name || '';
+      
+      if (previewImg) {
+        if (p.cover_url) {
+          previewImg.src = p.cover_url;
+        } else {
+          let svgContent = '';
+          if (playlistId === 'all') {
+            svgContent = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><defs><linearGradient id='g1' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%234facfe'/><stop offset='100%' stop-color='%2300f2fe'/></linearGradient></defs><rect width='24' height='24' fill='url(%23g1)'/><path d='M9 18V5l12-2v13 M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M18 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>";
+          } else if (playlistId === 'favorites') {
+            svgContent = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><defs><linearGradient id='g2' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%23ff0844'/><stop offset='100%' stop-color='%23ffb199'/></linearGradient></defs><rect width='24' height='24' fill='url(%23g2)'/><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>";
+          } else {
+            svgContent = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%23282828'/><path d='M9 18V5l12-2v13' stroke='%23888' stroke-width='2' fill='none'/><circle cx='6' cy='18' r='3' stroke='%23888' stroke-width='2' fill='none'/><circle cx='18' cy='16' r='3' stroke='%23888' stroke-width='2' fill='none'/></svg>";
+          }
+          previewImg.src = svgContent;
+        }
+      }
+
+      if (isSystem) {
+        if (nameSection) nameSection.style.display = 'none';
+        if (deleteSection) deleteSection.style.display = 'none';
+      } else {
+        if (nameSection) nameSection.style.display = 'flex';
+        if (deleteSection) deleteSection.style.display = 'flex';
+      }
+
+      this.modalEdit.classList.remove('hidden');
+      if (!isSystem && inputName) inputName.focus();
+    }
   }
 
   showRenameModal(playlistId, currentName) {

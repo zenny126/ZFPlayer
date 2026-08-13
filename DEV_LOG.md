@@ -1,5 +1,21 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T13:34:20.100571
+### Tác vụ thực hiện
+Tối ưu giao diện Playlist Header: Thay thế 3 nút chức năng riêng lẻ bằng 1 Nút Bánh Răng duy nhất mở Modal Popup 'Chỉnh sửa Playlist' hợp nhất.
+
+### Danh sách tệp tin thay đổi
+- rontend/index.html (MODIFIED)
+- rontend/js/playlists.js (MODIFIED)
+- 	ask.md (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Playlist Header (index.html)**: Rút gọn 3 nút riêng biệt (Đổi tên, Đổi ảnh, Xóa) thành 1 nút Bánh Răng duy nhất (#btn-playlist-edit-header, icon ⚙️).
+2. **Edit Playlist Modal (#edit-playlist-modal)**: Tạo view chỉnh sửa tập trung bao gồm Preview Bìa + Nút đổi ảnh bìa, Ô nhập tên Playlist, và Nút màu đỏ Xóa Playlist.
+3. **Logic Handler (playlists.js)**: Nhấp nút Bánh Răng nạp dữ liệu của Playlist hiện tại vào Modal Edit. Xử lý đồng thời cả Đổi tên, Đổi ảnh bìa và Xác nhận xóa trong một giao diện nhất quán.
+
+---
+
 ## Timestamp: 2026-08-13T13:29:08.909114
 ### Tác vụ thực hiện
 Triển khai tính năng quản lý Custom Playlist (Đổi tên, Đổi ảnh đại diện, Xóa Playlist) trên giao diện Header và Sidebar Context Menu.
