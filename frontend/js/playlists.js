@@ -1,7 +1,9 @@
 class PlaylistManager {
   constructor() {
     this.playlists = [];
+    this.systemCovers = { all: null, favorites: null };
     this.currentPlaylistId = null;
+    this.targetPlaylistId = null;
     
     // Elements
     this.container = document.getElementById('playlist-container');
@@ -11,20 +13,38 @@ class PlaylistManager {
     this.inputName = document.getElementById('input-playlist-name');
     this.btnSave = document.getElementById('btn-save-playlist');
     this.btnCancel = document.getElementById('btn-cancel-playlist');
+
+    // Rename Modal Elements
+    this.modalRename = document.getElementById('rename-playlist-modal');
+    this.inputRename = document.getElementById('input-rename-playlist-name');
+    this.btnSaveRename = document.getElementById('btn-save-rename-playlist');
+    this.btnCancelRename = document.getElementById('btn-cancel-rename-playlist');
+
+    // Delete Modal Elements
+    this.modalDelete = document.getElementById('delete-playlist-modal');
+    this.btnConfirmDelete = document.getElementById('btn-confirm-delete-playlist');
+    this.btnCancelDelete = document.getElementById('btn-cancel-delete-playlist');
     
     this.btnImportFolder = document.getElementById('btn-playlist-import-folder');
     this.btnImportFiles = document.getElementById('btn-playlist-import-files');
     this.coverContainer = document.getElementById('playlist-cover-container');
 
+    // Header Action Buttons
+    this.btnHeaderRename = document.getElementById('btn-playlist-rename-header');
+    this.btnHeaderCover = document.getElementById('btn-playlist-cover-header');
+    this.btnHeaderDelete = document.getElementById('btn-playlist-delete-header');
+
     this.submenu = document.getElementById('playlist-submenu');
     this.ctxAddToPlaylist = document.getElementById('ctx-add-to-playlist');
     this.ctxRemoveFromPlaylist = document.getElementById('ctx-remove-from-playlist');
+    this.plContextMenu = document.getElementById('playlist-item-context-menu');
 
     this.init();
   }
 
   async init() {
     await window.api.readyPromise;
+    await this.fetchSystemCovers();
     this.bindEvents();
     this.loadPlaylists();
     
@@ -34,12 +54,13 @@ class PlaylistManager {
       if (!header) return;
       
       if (state.view === 'playlist') {
-        let p = this.playlists.find(x => x.id === state.playlistId);
+        this.currentPlaylistId = state.playlistId;
+        let p = this.playlists.find(x => String(x.id) === String(state.playlistId));
         
         if (state.playlistId === 'all') {
-            p = { name: 'All Songs', track_count: window.libraryManager ? window.libraryManager.totalCount : 0, cover_url: '' };
+            p = { name: 'All Songs', track_count: window.libraryManager ? window.libraryManager.totalCount : 0, cover_url: this.systemCovers.all };
         } else if (state.playlistId === 'favorites') {
-            p = { name: 'Favorite Songs', track_count: window.libraryManager ? window.libraryManager.totalCount : 0, cover_url: '' };
+            p = { name: 'Favorite Songs', track_count: window.libraryManager ? window.libraryManager.totalCount : 0, cover_url: this.systemCovers.favorites };
         }
 
         if (p) {
@@ -61,6 +82,12 @@ class PlaylistManager {
             }
             coverEl.src = svgContent;
           }
+
+          // System Playlists vs Custom Playlists Action Locks
+          const isSystem = (state.playlistId === 'all' || state.playlistId === 'favorites');
+          if (this.btnHeaderRename) this.btnHeaderRename.style.display = isSystem ? 'none' : 'flex';
+          if (this.btnHeaderDelete) this.btnHeaderDelete.style.display = isSystem ? 'none' : 'flex';
+          if (this.btnHeaderCover) this.btnHeaderCover.style.display = 'flex';
         }
       } else {
         header.classList.add('hidden');
@@ -68,7 +95,22 @@ class PlaylistManager {
     });
   }
 
+  async fetchSystemCovers() {
+    if (window.api && window.api.getSystemPlaylistCovers) {
+      try {
+        const res = await window.api.getSystemPlaylistCovers();
+        if (res) {
+          this.systemCovers.all = res.all || null;
+          this.systemCovers.favorites = res.favorites || null;
+        }
+      } catch (e) {
+        console.warn("Could not fetch system playlist covers", e);
+      }
+    }
+  }
+
   bindEvents() {
+    // Create Playlist
     this.btnCreate?.addEventListener('click', () => {
       this.inputName.value = '';
       this.modalCreate.classList.remove('hidden');
@@ -92,12 +134,75 @@ class PlaylistManager {
       if (e.key === 'Enter') this.btnSave.click();
     });
 
+    // Rename Playlist Modal
+    this.btnCancelRename?.addEventListener('click', () => {
+      this.modalRename?.classList.add('hidden');
+    });
+
+    this.btnSaveRename?.addEventListener('click', async () => {
+      const newName = this.inputRename?.value.trim();
+      if (newName && this.targetPlaylistId) {
+        await window.api.renamePlaylist(this.targetPlaylistId, newName);
+        this.modalRename?.classList.add('hidden');
+        await this.loadPlaylists();
+        if (String(this.currentPlaylistId) === String(this.targetPlaylistId)) {
+          this.openPlaylist(this.targetPlaylistId);
+        }
+      }
+    });
+
+    this.inputRename?.addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') this.btnSaveRename?.click();
+    });
+
+    // Delete Playlist Modal
+    this.btnCancelDelete?.addEventListener('click', () => {
+      this.modalDelete?.classList.add('hidden');
+    });
+
+    this.btnConfirmDelete?.addEventListener('click', async () => {
+      if (this.targetPlaylistId) {
+        await window.api.deletePlaylist(this.targetPlaylistId);
+        this.modalDelete?.classList.add('hidden');
+        
+        const deletedId = this.targetPlaylistId;
+        await this.loadPlaylists();
+        
+        // If we just deleted the currently active playlist, switch to 'all'
+        if (String(this.currentPlaylistId) === String(deletedId)) {
+          window.store.setState({ view: 'playlist', playlistId: 'all' });
+        }
+      }
+    });
+
+    // Header Action Buttons
+    this.btnHeaderRename?.addEventListener('click', () => {
+      if (this.currentPlaylistId && this.currentPlaylistId !== 'all' && this.currentPlaylistId !== 'favorites') {
+        const p = this.playlists.find(x => String(x.id) === String(this.currentPlaylistId));
+        this.showRenameModal(this.currentPlaylistId, p ? p.name : '');
+      }
+    });
+
+    this.btnHeaderCover?.addEventListener('click', () => {
+      if (this.currentPlaylistId) {
+        this.changeCover(this.currentPlaylistId);
+      }
+    });
+
+    this.btnHeaderDelete?.addEventListener('click', () => {
+      if (this.currentPlaylistId && this.currentPlaylistId !== 'all' && this.currentPlaylistId !== 'favorites') {
+        const p = this.playlists.find(x => String(x.id) === String(this.currentPlaylistId));
+        this.showDeleteModal(this.currentPlaylistId, p ? p.name : '');
+      }
+    });
+
+    // Imports & Cover click
     this.btnImportFolder?.addEventListener('click', async () => {
       if (!this.currentPlaylistId) return;
       const folderPath = await window.api.selectMusicDir();
       if (folderPath) {
         const originalText = this.btnImportFolder.textContent;
-        this.btnImportFolder.textContent = 'Đang quét thư mục...';
+        this.btnImportFolder.textContent = 'Đang quét...';
         this.btnImportFolder.disabled = true;
         
         await window.api.importFolderToPlaylist(this.currentPlaylistId, folderPath);
@@ -126,18 +231,13 @@ class PlaylistManager {
       }
     });
 
-    this.coverContainer?.addEventListener('click', async () => {
-      if (!this.currentPlaylistId) return;
-      const imagePath = await window.api.selectCoverImage(); 
-      if (imagePath) {
-        const res = await window.api.updatePlaylistCover(this.currentPlaylistId, imagePath);
-        if (res.status === 'success') {
-          this.loadPlaylists();
-          this.openPlaylist(this.currentPlaylistId); 
-        }
+    this.coverContainer?.addEventListener('click', () => {
+      if (this.currentPlaylistId) {
+        this.changeCover(this.currentPlaylistId);
       }
     });
 
+    // Context Menu Event Handlers
     this.ctxRemoveFromPlaylist?.addEventListener('click', async () => {
       const menu = document.getElementById('context-menu');
       const trackPath = menu ? menu.dataset.trackPath : null;
@@ -146,6 +246,40 @@ class PlaylistManager {
         menu.classList.add('hidden');
         if (window.libraryManager) window.libraryManager.reload();
         this.loadPlaylists();
+      }
+    });
+
+    // Sidebar Playlist Context Menu Handlers
+    document.getElementById('ctx-pl-rename')?.addEventListener('click', () => {
+      const plId = this.plContextMenu?.dataset.playlistId;
+      const plName = this.plContextMenu?.dataset.playlistName;
+      if (plId && plId !== 'all' && plId !== 'favorites') {
+        this.showRenameModal(plId, plName);
+      }
+      this.plContextMenu?.classList.add('hidden');
+    });
+
+    document.getElementById('ctx-pl-cover')?.addEventListener('click', () => {
+      const plId = this.plContextMenu?.dataset.playlistId;
+      if (plId) {
+        this.changeCover(plId);
+      }
+      this.plContextMenu?.classList.add('hidden');
+    });
+
+    document.getElementById('ctx-pl-delete')?.addEventListener('click', () => {
+      const plId = this.plContextMenu?.dataset.playlistId;
+      const plName = this.plContextMenu?.dataset.playlistName;
+      if (plId && plId !== 'all' && plId !== 'favorites') {
+        this.showDeleteModal(plId, plName);
+      }
+      this.plContextMenu?.classList.add('hidden');
+    });
+
+    // Hide sidebar playlist context menu on global click
+    document.addEventListener('click', (e) => {
+      if (this.plContextMenu && !this.plContextMenu.contains(e.target)) {
+        this.plContextMenu.classList.add('hidden');
       }
     });
 
@@ -164,10 +298,81 @@ class PlaylistManager {
     });
   }
 
+  showRenameModal(playlistId, currentName) {
+    this.targetPlaylistId = playlistId;
+    if (this.inputRename) this.inputRename.value = currentName || '';
+    if (this.modalRename) {
+      this.modalRename.classList.remove('hidden');
+      if (this.inputRename) this.inputRename.focus();
+    }
+  }
+
+  showDeleteModal(playlistId, playlistName) {
+    this.targetPlaylistId = playlistId;
+    const warning = document.getElementById('delete-playlist-warning-text');
+    if (warning) {
+      warning.textContent = `Bạn có chắc chắn muốn xóa playlist "${playlistName}"? Hành động này không thể hoàn tác.`;
+    }
+    if (this.modalDelete) {
+      this.modalDelete.classList.remove('hidden');
+    }
+  }
+
+  async changeCover(playlistId) {
+    const imagePath = await window.api.selectCoverImage();
+    if (imagePath) {
+      const res = await window.api.updatePlaylistCover(playlistId, imagePath);
+      if (res && res.status === 'success') {
+        if (playlistId === 'all' || playlistId === 'favorites') {
+          if (res.cover_url) {
+            this.systemCovers[playlistId] = res.cover_url;
+          }
+        }
+        await this.loadPlaylists();
+        if (String(this.currentPlaylistId) === String(playlistId)) {
+          this.openPlaylist(playlistId);
+        }
+      }
+    }
+  }
+
+  showSidebarContextMenu(e, playlistId, playlistName, isSystem) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!this.plContextMenu) return;
+
+    this.plContextMenu.dataset.playlistId = playlistId;
+    this.plContextMenu.dataset.playlistName = playlistName;
+
+    const btnRename = document.getElementById('ctx-pl-rename');
+    const btnDelete = document.getElementById('ctx-pl-delete');
+    
+    if (isSystem) {
+      if (btnRename) btnRename.style.display = 'none';
+      if (btnDelete) btnDelete.style.display = 'none';
+    } else {
+      if (btnRename) btnRename.style.display = 'flex';
+      if (btnDelete) btnDelete.style.display = 'flex';
+    }
+
+    // Position menu at cursor
+    let x = e.clientX;
+    let y = e.clientY;
+
+    this.plContextMenu.style.display = 'flex';
+    const rect = this.plContextMenu.getBoundingClientRect();
+    if (x + rect.width > window.innerWidth) x = window.innerWidth - rect.width - 8;
+    if (y + rect.height > window.innerHeight) y = window.innerHeight - rect.height - 8;
+    this.plContextMenu.style.display = '';
+
+    this.plContextMenu.style.left = `${x}px`;
+    this.plContextMenu.style.top = `${y}px`;
+    this.plContextMenu.classList.remove('hidden');
+  }
+
   async showSubmenu(e) {
     if (!this.submenu) return;
     
-    // Always refresh playlists to ensure newly created playlists appear
     this.playlists = await window.api.getPlaylists() || [];
     this.submenu.innerHTML = '';
     
@@ -195,7 +400,6 @@ class PlaylistManager {
       });
     }
 
-    // Temporary unhide to measure dimensions
     this.submenu.style.display = 'flex';
     const subRect = this.submenu.getBoundingClientRect();
     const subWidth = subRect.width || 180;
@@ -204,14 +408,12 @@ class PlaylistManager {
 
     const rect = e.target.getBoundingClientRect();
     
-    // Boundary check X: if overflowing right edge, pop to the LEFT of main menu
     let leftPos = rect.right;
     if (leftPos + subWidth > window.innerWidth) {
       leftPos = rect.left - subWidth;
     }
     if (leftPos < 0) leftPos = 8;
 
-    // Boundary check Y: if overflowing bottom edge, align upward
     let topPos = rect.top;
     if (topPos + subHeight > window.innerHeight) {
       topPos = window.innerHeight - subHeight - 8;
@@ -234,7 +436,8 @@ class PlaylistManager {
     
     // Add All Songs
     const allItem = document.createElement('li');
-    allItem.innerHTML = `<div class="icon-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 22px; height: 22px; color: var(--accent);"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg></div>
+    const allCover = this.systemCovers.all;
+    allItem.innerHTML = `<div class="icon-placeholder">${allCover ? `<img src="${allCover}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">` : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 22px; height: 22px; color: var(--accent);"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>`}</div>
           <div class="library-list-text">
             <div class="library-list-title">All Songs</div>
             <div class="library-list-subtitle">Tất cả bài hát</div>
@@ -244,11 +447,15 @@ class PlaylistManager {
       document.querySelectorAll('.library-list li').forEach(el => el.classList.remove('active'));
       allItem.classList.add('active');
     });
+    allItem.addEventListener('contextmenu', (e) => {
+      this.showSidebarContextMenu(e, 'all', 'All Songs', true);
+    });
     this.container.appendChild(allItem);
 
     // Add Favorites
     const favItem = document.createElement('li');
-    favItem.innerHTML = `<div class="icon-placeholder"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" style="width: 22px; height: 22px; color: #e74c3c;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div>
+    const favCover = this.systemCovers.favorites;
+    favItem.innerHTML = `<div class="icon-placeholder">${favCover ? `<img src="${favCover}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">` : `<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" style="width: 22px; height: 22px; color: #e74c3c;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`}</div>
           <div class="library-list-text">
             <div class="library-list-title">Favorite Songs</div>
             <div class="library-list-subtitle">Bài hát yêu thích</div>
@@ -257,6 +464,9 @@ class PlaylistManager {
       window.store.setState({ view: 'playlist', playlistId: 'favorites' });
       document.querySelectorAll('.library-list li').forEach(el => el.classList.remove('active'));
       favItem.classList.add('active');
+    });
+    favItem.addEventListener('contextmenu', (e) => {
+      this.showSidebarContextMenu(e, 'favorites', 'Favorite Songs', true);
     });
     this.container.appendChild(favItem);
 
@@ -302,6 +512,10 @@ class PlaylistManager {
         this.openPlaylist(p.id);
       });
 
+      li.addEventListener('contextmenu', (e) => {
+        this.showSidebarContextMenu(e, p.id, p.name, false);
+      });
+
       this.container.appendChild(li);
     });
     
@@ -320,9 +534,6 @@ class PlaylistManager {
 
   async openPlaylist(id) {
     this.currentPlaylistId = id;
-    const p = this.playlists.find(x => x.id === id);
-    if (!p) return;
-
     window.store.setState({ view: 'playlist', playlistId: id });
   }
 }

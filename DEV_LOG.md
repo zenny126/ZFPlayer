@@ -1,5 +1,27 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T13:29:08.909114
+### Tác vụ thực hiện
+Triển khai tính năng quản lý Custom Playlist (Đổi tên, Đổi ảnh đại diện, Xóa Playlist) trên giao diện Header và Sidebar Context Menu.
+
+### Danh sách tệp tin thay đổi
+- rontend/index.html (MODIFIED)
+- rontend/css/main.css (MODIFIED)
+- rontend/js/api.js (MODIFIED)
+- rontend/js/playlists.js (MODIFIED)
+- ackend/api/library_api.py (MODIFIED)
+- ackend/services/library_service.py (MODIFIED)
+- 	ask.md (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **HTML & Modals (index.html)**: Thêm các nút thao tác trên Playlist Header (#btn-playlist-rename-header, #btn-playlist-cover-header, #btn-playlist-delete-header), Modal Đổi tên (#rename-playlist-modal), Modal Xác nhận Xóa (#delete-playlist-modal), và Menu chuột phải Sidebar (#playlist-item-context-menu).
+2. **CSS Styles (main.css)**: Thêm kiểu dáng .btn-icon-large và .context-menu-item.danger cho các nút bấm hành động và menu xóa màu đỏ với Bezier Curves.
+3. **Frontend Logic (playlists.js)**: Bắt sự kiện contextmenu trên playlist sidebar item, mở Modal Đổi tên và Modal Cảnh báo Xóa, gọi các API 
+enamePlaylist, deletePlaylist, updatePlaylistCover. Tự động bảo vệ danh sách hệ thống (ll, avorites) chỉ cho đổi ảnh bìa, khóa nút Đổi tên/Xóa.
+4. **Backend API (library_service.py, library_api.py)**: Nâng cấp update_playlist_cover lưu ảnh bìa cho system playlists vào Config và hỗ trợ cả int/str playlist IDs.
+
+---
+
 ## Timestamp: 2026-08-13T13:21:24.617011
 ### Tác vụ thực hiện
 Sửa lỗi hiển thị trào lẹm và xô lệch khung của Sidebar khi thu nhỏ (Collapsed 72px state).

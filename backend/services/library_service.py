@@ -172,7 +172,7 @@ class LibraryService:
     def rename_playlist(self, playlist_id: int, new_name: str):
         self.db.rename_playlist(playlist_id, new_name)
 
-    def update_playlist_cover(self, playlist_id: int, cover_image_path: str) -> Dict[str, Any]:
+    def update_playlist_cover(self, playlist_id: Any, cover_image_path: str) -> Dict[str, Any]:
         if not cover_image_path or not os.path.exists(cover_image_path):
             return {'status': 'error', 'message': 'Cover image not found'}
         try:
@@ -183,12 +183,27 @@ class LibraryService:
                 cover_hash = hashlib.sha256(image_bytes).hexdigest()
                 self.cache.save_cover(image_bytes, cover_hash)
                 self.cache.save_thumbnail(image_bytes, cover_hash)
-                self.db.update_playlist_cover(playlist_id, cover_hash)
-                return {'status': 'success', 'cover_hash': cover_hash}
+                cover_url = f"/api/covers/{cover_hash}_thumb.jpg"
+                pid_str = str(playlist_id)
+                if pid_str in ['all', 'favorites']:
+                    from storage.config import Config
+                    Config().set(f"cover_{pid_str}", cover_url)
+                    return {'status': 'success', 'cover_hash': cover_hash, 'cover_url': cover_url}
+                elif pid_str.isdigit():
+                    self.db.update_playlist_cover(int(pid_str), cover_hash)
+                    return {'status': 'success', 'cover_hash': cover_hash, 'cover_url': cover_url}
         except Exception as e:
             logger.error(f"Error updating playlist cover: {e}")
             return {'status': 'error', 'message': str(e)}
-        return {'status': 'error', 'message': 'Unknown error'}
+        return {'status': 'error', 'message': 'Invalid playlist id'}
+
+    def get_system_playlist_covers(self) -> Dict[str, Any]:
+        from storage.config import Config
+        cfg = Config()
+        return {
+            'all': cfg.get('cover_all'),
+            'favorites': cfg.get('cover_favorites')
+        }
 
     def get_playlists(self) -> List[Dict[str, Any]]:
         playlists = self.db.get_playlists()

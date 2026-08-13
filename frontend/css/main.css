@@ -246,6 +246,43 @@ h1, h2, h3, h4, h5, h6 {
 .btn-icon:active { transform: scale(0.88); }
 .btn-icon.active { color: var(--accent); text-shadow: 0 0 12px rgba(255,255,255,0.6); }
 
+.btn-icon-large {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; width: 44px; height: 44px;
+  transition: transform var(--transition-spring), background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.btn-icon-large:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.2);
+}
+.btn-icon-large:active {
+  transform: scale(0.92);
+}
+.btn-icon-large.danger {
+  background: rgba(226, 33, 52, 0.15);
+  border-color: rgba(226, 33, 52, 0.3);
+  color: #e22134;
+}
+.btn-icon-large.danger:hover {
+  background: rgba(226, 33, 52, 0.28);
+  border-color: #e22134;
+  box-shadow: 0 0 14px rgba(226, 33, 52, 0.4);
+}
+
+.context-menu-item.danger {
+  color: #e22134 !important;
+}
+.context-menu-item.danger:hover {
+  background: rgba(226, 33, 52, 0.2) !important;
+  color: #ff4d4f !important;
+}
+
 .icon { width: 20px; height: 20px; display: block; flex-shrink: 0; }
 
 input[type="range"] {

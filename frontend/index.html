@@ -124,12 +124,21 @@
                 <div class="playlist-meta" style="margin-bottom: 24px;">
                   <span id="playlist-detail-count">0 tracks</span>
                 </div>
-                <div class="playlist-actions" style="display: flex; align-items: center; gap: 24px;">
-                  <button id="btn-playlist-play" class="btn-play-large">
+                <div class="playlist-actions" style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                  <button id="btn-playlist-play" class="btn-play-large" title="Phát playlist">
                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 6v12l10-6z"></path></svg>
                   </button>
                   <button id="btn-playlist-import-folder" class="btn-outline">Import Folder</button>
                   <button id="btn-playlist-import-files" class="btn-outline">Select Files</button>
+                  <button id="btn-playlist-rename-header" class="btn-icon-large" title="Đổi tên Playlist">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  </button>
+                  <button id="btn-playlist-cover-header" class="btn-icon-large" title="Đổi ảnh đại diện">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                  </button>
+                  <button id="btn-playlist-delete-header" class="btn-icon-large danger" title="Xóa Playlist">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
                 </div>
               </div>
             </div>
@@ -265,7 +274,29 @@
     </div>
   </div>
 
+  <div id="rename-playlist-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Đổi tên Playlist</h2>
+      <div class="setting-row" style="margin-top: 24px;">
+        <input type="text" id="input-rename-playlist-name" placeholder="Tên Playlist mới" class="text-input" autofocus>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:16px; margin-top:32px;">
+        <button id="btn-cancel-rename-playlist" class="btn-ghost">Hủy</button>
+        <button id="btn-save-rename-playlist" class="btn-primary">Lưu</button>
+      </div>
+    </div>
+  </div>
 
+  <div id="delete-playlist-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2 style="color: #e22134;">Xác nhận Xóa Playlist</h2>
+      <p style="margin-top: 16px; color: var(--text-secondary); line-height: 1.5;" id="delete-playlist-warning-text">Bạn có chắc chắn muốn xóa playlist này? Hành động này không thể hoàn tác.</p>
+      <div style="display:flex; justify-content:flex-end; gap:16px; margin-top:32px;">
+        <button id="btn-cancel-delete-playlist" class="btn-ghost">Hủy</button>
+        <button id="btn-confirm-delete-playlist" class="btn-primary" style="background: #e22134; color: white;">Xóa Playlist</button>
+      </div>
+    </div>
+  </div>
 
   <div id="context-menu" class="context-menu hidden">
     <div class="context-menu-item" id="ctx-play-next">Play Next</div>
@@ -276,6 +307,22 @@
     <div class="context-menu-divider"></div>
     <div class="context-menu-item" id="ctx-go-album">Go to Album</div>
     <div class="context-menu-item" id="ctx-go-artist">Go to Artist</div>
+  </div>
+
+  <div id="playlist-item-context-menu" class="context-menu hidden">
+    <div class="context-menu-item" id="ctx-pl-rename">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon" style="margin-right: 8px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+      Đổi tên Playlist
+    </div>
+    <div class="context-menu-item" id="ctx-pl-cover">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon" style="margin-right: 8px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+      Đổi ảnh đại diện
+    </div>
+    <div class="context-menu-divider"></div>
+    <div class="context-menu-item danger" id="ctx-pl-delete" style="color: #e22134;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon" style="margin-right: 8px; stroke: #e22134;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+      Xóa Playlist
+    </div>
   </div>
 
   <div id="playlist-submenu" class="context-menu hidden">

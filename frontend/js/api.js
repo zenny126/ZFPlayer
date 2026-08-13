@@ -69,6 +69,7 @@ class ApiWrapper {
   importFolderToPlaylist(playlistId, folderPath) { return this.call('import_folder_to_playlist', playlistId, folderPath); }
   importFilesToPlaylist(playlistId, filePaths) { return this.call('import_files_to_playlist', playlistId, filePaths); }
   updatePlaylistCover(playlistId, coverImagePath) { return this.call('update_playlist_cover', playlistId, coverImagePath); }
+  getSystemPlaylistCovers() { return this.call('get_system_playlist_covers'); }
   selectMusicFiles() { return this.call('select_music_files'); }
   setActivePlaylist(playlistId) { return this.call('set_active_playlist', playlistId); }
   set_active_playlist(playlistId) { return this.call('set_active_playlist', playlistId); }

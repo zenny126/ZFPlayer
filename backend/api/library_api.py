@@ -79,4 +79,7 @@ class LibraryAPI:
         return self.library_service.import_files_to_playlist(int(playlist_id), file_paths)
 
     def update_playlist_cover(self, playlist_id, cover_image_path):
-        return self.library_service.update_playlist_cover(int(playlist_id), cover_image_path)
+        return self.library_service.update_playlist_cover(playlist_id, cover_image_path)
+
+    def get_system_playlist_covers(self):
+        return self.library_service.get_system_playlist_covers()
