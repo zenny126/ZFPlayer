@@ -1,4 +1,56 @@
-# DEV LOG
+﻿# DEV LOG
+
+## Timestamp: 2026-08-14T01:56:00
+### Tác vụ thực hiện
+Làm rõ ý nghĩa và cách sử dụng tính năng cấu hình Bit-Perfect.
+
+### Danh sách tệp tin thay đổi
+- README.md – Chỉnh sửa mục Hướng dẫn Sử dụng Nhanh.
+
+### Mô tả chi tiết kỹ thuật
+- Giải thích chi tiết các ưu/nhược điểm và use-case của hai chế độ âm thanh:
+  - Exclusive Mode (Bit-Perfect 100%): Dành cho audiophile, chặn các luồng âm thanh khác để đảm bảo tín hiệu sạch tới DAC.
+  - Shared Mode: Cho trải nghiệm linh hoạt, có thể vừa nghe nhạc vừa nhận các âm thanh hệ thống khác.
+## Timestamp: 2026-08-14T01:53:00
+### Tác vụ thực hiện
+Bổ sung hướng dẫn cấu hình Bit-Perfect / Shared Mode.
+
+### Danh sách tệp tin thay đổi
+- README.md – Chỉnh sửa mục Hướng dẫn Sử dụng Nhanh.
+
+### Mô tả chi tiết kỹ thuật
+- Thêm bước hướng dẫn cấu hình chất lượng âm thanh (Bit-perfect Exclusive Mode hoặc Shared Mode) bằng cách click vào biểu tượng Cài đặt ở góc trái theo yêu cầu của người dùng.
+## Timestamp: 2026-08-14T01:52:00
+### Tác vụ thực hiện
+Cập nhật hướng dẫn sử dụng "Thêm Nhạc" trong README.md.
+
+### Danh sách tệp tin thay đổi
+- README.md – Chỉnh sửa mục Hướng dẫn Sử dụng Nhanh.
+
+### Mô tả chi tiết kỹ thuật
+- Rà soát mã nguồn Frontend (\playlists.js\ và \index.html\) và nhận thấy cơ chế import nhạc đã chuyển từ Settings sang trực tiếp bên trong Playlist (nút Import Folder / Select Files).
+- Chỉnh sửa văn bản hướng dẫn cho phù hợp với cơ chế thực tế hiện hành của phần mềm.
+## Timestamp: 2026-08-14T01:51:00
+### Tác vụ thực hiện
+Cập nhật nội dung README.md theo hướng tinh gọn và dễ dùng.
+
+### Danh sách tệp tin thay đổi
+- README.md – Chỉnh sửa phần Giới thiệu và Tính năng nổi bật.
+
+### Mô tả chi tiết kỹ thuật
+- Viết lại câu giới thiệu để làm nổi bật "ứng dụng trực quan dễ dùng và tinh gọn tính năng".
+- Lược bớt các thuật ngữ kỹ thuật sâu trong phần tính năng, chuyển trọng tâm sang trải nghiệm người dùng (Thiết kế tối giản, Không gian sống động, Lời bài hát tự động).
+## Timestamp: 2026-08-14T01:50:00
+### Tác vụ thực hiện
+Viết lại và nâng cấp tệp README.md chuyên nghiệp hơn.
+
+### Danh sách tệp tin thay đổi
+- README.md – Cấu trúc lại toàn bộ và chuẩn hóa từ ngữ chuyên ngành.
+
+### Mô tả chi tiết kỹ thuật
+- Thay thế toàn bộ nội dung cũ bằng cấu trúc mới với các phần: Hero section, Tính năng, Cấu trúc dự án.
+- Loại bỏ từ khóa 'Apple Music' thay bằng 'hiện đại chuẩn công nghiệp'.
+- Cập nhật formatting với shield badges và emoji.
 
 ## Timestamp: 2026-08-13T23:43:00
 ### Tác vụ thực hiện
@@ -1398,34 +1450,34 @@ gba(255,255,255,0.15)). Replaced hardcoded occurrences in library.css and main.c
 - **Files modified:** ackend/app.py
 - **Details:** Di chuyển đoạn lệnh kiểm tra và bổ sung PROJECT_ROOT vào sys.path lên đầu ackend/app.py trước khi import ackend.*. Giúp khởi chạy python backend/app.py thành công từ bất kỳ thư mục làm việc nào.
 ## [2026-08-13T23:58:00+07:00] Fix P0/P1 Critical Bugs (Startup Crash, OOM, Thread-Safety)
-- **T�c v? th?c hi?n**: Kh?c ph?c l?i crash ?ng d?ng khi kh?i d?ng, l?i tr�n RAM khi t?i file nh?c l?n, v� l?i Race Condition.
-- **Danh s�ch t?p tin thay d?i**:
+- **T�c v? th?c hi?n**: Kh?c ph?c l?i crash ?ng d?ng khi kh?i d?ng, l?i tr�n RAM khi t?i file nh?c l?n, v� l?i Race Condition.
+- **Danh s�ch t?p tin thay d?i**:
   - ackend/services/library_service.py
   - ackend/app.py
   - ackend/audio/engine.py
   - ackend/audio/decoder.py
   - ackend/storage/database.py
   - ackend/storage/config.py
-- **M� t? chi ti?t k? thu?t**:
-  1. **Startup Crash**: X�a m� g?i h�m th?a self.db.update_track() trong library_service.py n?m ngo�i method g�y l?i NameError. B? sung tham s? config v�o __init__ d? tr�nh l?i AttributeError khi scan thu vi?n.
-  2. **OOM Audio (T?i uu RAM)**: T�ch h?p StreamingDecoder v� AudioRingBuffer v�o AudioEngine. Thay v� d?c to�n b? file loat32 v�o RAM (chi?m h�ng GB v?i file l?n), AudioEngine hi?n t?i buffer v� stream li�n t?c t? file d? d?m b?o an to�n b? nh?. S?a class StreamingDecoder d? lu�n tr? v? loat32 tuong th�ch v?i co ch? Volume DSP c?a Engine.
-  3. **Thread-Safety & Race Condition**: C?u tr�c l?i phuong th?c kh?i t?o Singleton __new__ cho Database v� Config d? ngan ch?n Race Condition. Th�m 	hreading.Lock v�o thao t�c d?c/ghi trong Config d? ngan ng?a l?i ghi d� v� RuntimeError: dictionary changed size during iteration.
+- **M� t? chi ti?t k? thu?t**:
+  1. **Startup Crash**: X�a m� g?i h�m th?a self.db.update_track() trong library_service.py n?m ngo�i method g�y l?i NameError. B? sung tham s? config v�o __init__ d? tr�nh l?i AttributeError khi scan thu vi?n.
+  2. **OOM Audio (T?i uu RAM)**: T�ch h?p StreamingDecoder v� AudioRingBuffer v�o AudioEngine. Thay v� d?c to�n b? file loat32 v�o RAM (chi?m h�ng GB v?i file l?n), AudioEngine hi?n t?i buffer v� stream li�n t?c t? file d? d?m b?o an to�n b? nh?. S?a class StreamingDecoder d? lu�n tr? v? loat32 tuong th�ch v?i co ch? Volume DSP c?a Engine.
+  3. **Thread-Safety & Race Condition**: C?u tr�c l?i phuong th?c kh?i t?o Singleton __new__ cho Database v� Config d? ngan ch?n Race Condition. Th�m 	hreading.Lock v�o thao t�c d?c/ghi trong Config d? ngan ng?a l?i ghi d� v� RuntimeError: dictionary changed size during iteration.
 
 ## [2026-08-14T00:04:00+07:00] Fix Audio Mode Change Crash
-- **T�c v? th?c hi?n**: S?a l?i crash (deadlock) khi thay d?i Audio Mode trong l�c dang ph�t nh?c.
-- **Danh s�ch t?p tin thay d?i**:
+- **T�c v? th?c hi?n**: S?a l?i crash (deadlock) khi thay d?i Audio Mode trong l�c dang ph�t nh?c.
+- **Danh s�ch t?p tin thay d?i**:
   - ackend/audio/engine.py
-- **M� t? chi ti?t k? thu?t**: H�m set_audio_mode g?i self.stream.stop() b�n trong self._lock. Khi nh?c dang ph�t, PortAudio s? ch? cho callback hi?n t?i ho�n th�nh tru?c khi stop stream. Tuy nhi�n callback _audio_callback l?i c?n acquire self._lock (dang b? gi? b?i set_audio_mode), g�y ra Deadlock l�m ?ng d?ng treo v� crash. �� dua logic stop/close stream ra ngo�i block with self._lock: tuong t? nhu stop_immediate(), v� th�m micro-fade-in sau khi kh?i t?o l?i stream d? ch?ng ti?ng n? (pop/click).
+- **M� t? chi ti?t k? thu?t**: H�m set_audio_mode g?i self.stream.stop() b�n trong self._lock. Khi nh?c dang ph�t, PortAudio s? ch? cho callback hi?n t?i ho�n th�nh tru?c khi stop stream. Tuy nhi�n callback _audio_callback l?i c?n acquire self._lock (dang b? gi? b?i set_audio_mode), g�y ra Deadlock l�m ?ng d?ng treo v� crash. �� dua logic stop/close stream ra ngo�i block with self._lock: tuong t? nhu stop_immediate(), v� th�m micro-fade-in sau khi kh?i t?o l?i stream d? ch?ng ti?ng n? (pop/click).
 
 ## [2026-08-14T00:13:00+07:00] Fix UX and Logic Bugs (Play Next, Rapid Skip, UI Polling)
-- **T�c v? th?c hi?n**: S?a 3 l?i uu ti�n cao ?nh hu?ng d?n UX v� logic lu?ng ph�t.
-- **Danh s�ch t?p tin thay d?i**:
+- **T�c v? th?c hi?n**: S?a 3 l?i uu ti�n cao ?nh hu?ng d?n UX v� logic lu?ng ph�t.
+- **Danh s�ch t?p tin thay d?i**:
   - ackend/services/player_service.py
   - rontend/js/player.js
-- **M� t? chi ti?t k? thu?t**:
-  1. **Play Next Array Shift**: S?a h�m insert_play_next trong player_service.py. N?u track d�ch d� c� s?n trong danh s�ch, ph?i ti?n h�nh emove track d� kh?i danh s�ch TRU?C, r?i m?i l?y index c?a track hi?n t?i d? insert track d�ch v�o. �?o ngu?c logic cu v?n d? g�y ch?ch index.
-  2. **Race Condition Rapid Skip**: B? sung co ch? self._load_token v�o h�m play(). M?i khi b?m Next/Prev/Play, token du?c sinh m?i. Trong lu?ng do_load background, th?c hi?n validate token 2 l?n (tru?c khi load v� sau khi load). N?u token d� cu (do user b?m n�t qu� nhanh g?i lu?ng kh�c), lu?ng s? t? h?y v� gi?i ph�ng engine thay v� ti?p t?c play v� d� l�n lu?ng m?i.
-  3. **Polling Request Pile-up**: S?a h�m startSyncLoop trong player.js. Thay th? setInterval 500ms b?ng m� h�nh setTimeout d? quy k?t h?p v?i flag 	his._isPolling = false. �i?u n�y d?m b?o m?i tick polling (bao g?m fetch API) ph?i ho�n t?t to�n b? (ho?c throw error) th� m?i du?c h?n gi? 500ms sau g?i l?i, ch?ng k?t ngh?n h�ng d?i HTTP request l�m lag UI.
+- **M� t? chi ti?t k? thu?t**:
+  1. **Play Next Array Shift**: S?a h�m insert_play_next trong player_service.py. N?u track d�ch d� c� s?n trong danh s�ch, ph?i ti?n h�nh emove track d� kh?i danh s�ch TRU?C, r?i m?i l?y index c?a track hi?n t?i d? insert track d�ch v�o. �?o ngu?c logic cu v?n d? g�y ch?ch index.
+  2. **Race Condition Rapid Skip**: B? sung co ch? self._load_token v�o h�m play(). M?i khi b?m Next/Prev/Play, token du?c sinh m?i. Trong lu?ng do_load background, th?c hi?n validate token 2 l?n (tru?c khi load v� sau khi load). N?u token d� cu (do user b?m n�t qu� nhanh g?i lu?ng kh�c), lu?ng s? t? h?y v� gi?i ph�ng engine thay v� ti?p t?c play v� d� l�n lu?ng m?i.
+  3. **Polling Request Pile-up**: S?a h�m startSyncLoop trong player.js. Thay th? setInterval 500ms b?ng m� h�nh setTimeout d? quy k?t h?p v?i flag 	his._isPolling = false. �i?u n�y d?m b?o m?i tick polling (bao g?m fetch API) ph?i ho�n t?t to�n b? (ho?c throw error) th� m?i du?c h?n gi? 500ms sau g?i l?i, ch?ng k?t ngh?n h�ng d?i HTTP request l�m lag UI.
 
 
 ## [2026-08-14T00:41:00+07:00] Thêm Giấy phép Apache 2.0
@@ -1440,9 +1492,14 @@ gba(255,255,255,0.15)). Replaced hardcoded occurrences in library.css and main.c
   - LICENSE (Sửa đổi)
 - **Mô tả chi tiết kỹ thuật**: Thay thế thông tin bản quyền chung bằng năm 2026 và tên chủ sở hữu Zenny126 ở cuối tệp LICENSE.
 ## [2026-08-14T01:43:00+07:00] Fix Audio Speedup on Resume
-- **T�c v? th?c hi?n**: S?a l?i nh?c b? tua nhanh (speedup) khi ?n Play sau khi d� Pause m?t th?i gian.
-- **Danh s�ch t?p tin thay d?i**:
+- **T�c v? th?c hi?n**: S?a l?i nh?c b? tua nhanh (speedup) khi ?n Play sau khi d� Pause m?t th?i gian.
+- **Danh s�ch t?p tin thay d?i**:
   - ackend/audio/engine.py
-- **M� t? chi ti?t k? thu?t**:
-  S?a l?i h�m play() g?i _create_stream() t?o ra m?t stream WASAPI ho�n to�n m?i d� l�n stream cu chua du?c gi?i ph�ng sau khi pause(). Khi c� 2 stream c�ng k�o d? li?u t? m?t AudioRingBuffer duy nh?t, t?c d? tr�ch xu?t d? li?u tang g?p d�i, l�m gi?m 1 n?a frame v� g�y ra hi?n tu?ng tua nhanh. �� b? sung c? ki?m tra if self.stream is None: tru?c khi t?o stream m?i.
+- **M� t? chi ti?t k? thu?t**:
+  S?a l?i h�m play() g?i _create_stream() t?o ra m?t stream WASAPI ho�n to�n m?i d� l�n stream cu chua du?c gi?i ph�ng sau khi pause(). Khi c� 2 stream c�ng k�o d? li?u t? m?t AudioRingBuffer duy nh?t, t?c d? tr�ch xu?t d? li?u tang g?p d�i, l�m gi?m 1 n?a frame v� g�y ra hi?n tu?ng tua nhanh. �� b? sung c? ki?m tra if self.stream is None: tru?c khi t?o stream m?i.
+
+
+
+
+
 
