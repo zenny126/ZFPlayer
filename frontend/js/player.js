@@ -247,14 +247,25 @@ class PlayerController {
         if (this.seekBar) this.seekBar.max = state.currentTrack.duration || 100;
         const lSeekBar = document.getElementById('lyrics-seek-bar');
         if (lSeekBar) lSeekBar.max = state.currentTrack.duration || 100;
+        let imageUrl = 'none';
         if (state.currentTrack.cover_hash) {
            const url = `/api/covers/${state.currentTrack.cover_hash}.jpg`;
            document.getElementById('player-cover').src = url;
-           document.getElementById('app').style.setProperty('--global-cover', `url('${url}')`);
+           imageUrl = `url('${url}')`;
+           document.getElementById('app').style.setProperty('--global-cover', imageUrl);
         } else {
            document.getElementById('player-cover').src = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%23282828'/><path d='M9 18V5l12-2v13' stroke='%23888' stroke-width='2' fill='none'/><circle cx='6' cy='18' r='3' stroke='%23888' stroke-width='2' fill='none'/><circle cx='18' cy='16' r='3' stroke='%23888' stroke-width='2' fill='none'/></svg>";
            document.getElementById('app').style.setProperty('--global-cover', 'none');
         }
+        
+        if (window.extractDominantColors && this.lastCoverUrl !== imageUrl) {
+            this.lastCoverUrl = imageUrl;
+            window.extractDominantColors(imageUrl, (colors) => {
+              if (window.updateFluidColors) {
+                window.updateFluidColors(colors);
+              }
+            });
+         }
         // Update like button in player bar and lyrics view
         const likeBtn = document.getElementById('player-like-btn');
         const lyricsLikeBtnSync = document.getElementById('lyrics-like-btn');

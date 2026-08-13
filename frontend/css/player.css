@@ -6,6 +6,7 @@
   padding: 0 16px;
   background: transparent;
   height: 100%;
+  transition: opacity 0.4s var(--ease-out-expo);
 }
 
 .player-left {

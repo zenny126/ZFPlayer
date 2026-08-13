@@ -1,6 +1,49 @@
 # DEV LOG
 
-## Timestamp: 2026-08-13T22:03:00
+## Timestamp: 2026-08-13T22:13:30
+### Tác vụ thực hiện
+Khắc phục lỗi tiếng xì/nổ lách tách (Audio Clicks & Pops) khi Play/Pause/Seek bài hát bằng cơ chế Micro Fade-In/Out Ramp (20ms/15ms) và đồng bộ mã nguồn đẩy lên GitHub.
+
+### Danh sách tệp tin tạo mới & thay đổi
+- `backend/audio/engine.py` (MODIFIED)
+- `backend/app.py` (MODIFIED)
+- `frontend/css/main.css` (MODIFIED)
+- `frontend/css/player.css` (MODIFIED)
+- `frontend/js/lyrics.js` (MODIFIED)
+- `frontend/js/player.js` (MODIFIED)
+- `frontend/js/ui.js` (MODIFIED)
+- `config/config.json` (MODIFIED)
+- `DEV_LOG.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Chống tiếng nổ/xì lách tách (Anti-Pop Micro Ramps)**:
+   - Thêm cơ chế Micro Fade-In Ramp 20ms khi bấm Play/Resume và Micro Fade-Out Ramp 15ms khi bấm Pause/Stop.
+   - Thêm Micro Ramp 15ms khi tua bài hát (Seek) để làm mượt biên độ sóng âm tại thời điểm chuyển đổi dữ liệu Audio Buffer.
+   - Chuyển định dạng stream sounddevice WASAPI sang `float32` với `latency='high'` trong Shared Mode giúp loại bỏ nhiễu buffer nổ lách tách.
+2. **Khóa luồng an toàn (`self._lock`)**:
+   - Thêm `threading.Lock()` bảo vệ biến vị trí `self.play_pos` và trạng thái stream giữa luồng GUI và luồng Audio Callback.
+
+---
+
+## Timestamp: 2026-08-13T22:07:00
+### Tác vụ thực hiện
+Tối ưu hóa triệt để thuật toán bốc màu và vòng lặp UI, sửa dứt điểm lỗi ứng dụng bị "đơ/khựng" khi người dùng bấm Next bài hát liên tục.
+
+### Danh sách tệp tin thay đổi
+- `frontend/js/ui.js` (MODIFIED)
+- `frontend/js/player.js` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- **Phát hiện nguyên nhân gây đơ UI**:
+  1. Mỗi lần bấm Next, thuộc tính `currentTrack` thay đổi khiến hàm `syncUI` chạy nhiều lần. Trước đó, mỗi lần `syncUI` chạy nó đều tạo mới một thẻ `new Image()` và vẽ lên `<canvas>` để đọc `getImageData()`. Khi bấm Next liên tục, hàng chục yêu cầu đọc dữ liệu điểm ảnh (Canvas Rasterization) diễn ra đồng thời làm tắc nghẽn (pipeline stall) luồng xử lý chính của Electron/Chromium, gây đơ giao diện và chậm phát nhạc.
+  2. Các hình ảnh chưa kịp tải xong của bài trước vẫn tiếp tục chạy lệnh tính toán màu khi tải xong, gây xung đột và lãng phí tài nguyên CPU/GPU.
+- **Giải pháp tối ưu hóa**:
+  1. **Bộ nhớ tạm (Color Cache)**: Thêm `colorCache` (Map). Nếu ảnh bìa bài hát đã được tính toán màu trước đó, màu sắc sẽ được trả về ngay lập tức (0ms) mà không cần nạp ảnh hay xử lý canvas.
+  2. **Hủy yêu cầu cũ (Abort/Cancel pending requests)**: Thêm cơ chế hủy `currentExtractImg.onload = null`. Nếu người dùng bấm Next sang bài khác khi bài cũ chưa đọc xong màu, tác vụ của bài cũ sẽ bị hủy ngay lập tức.
+  3. **Tái sử dụng Canvas đơn & `willReadFrequently`**: Khai báo duy nhất 1 thẻ `<canvas>` dùng chung và bật cờ `willReadFrequently: true` giúp Chromium tối ưu hóa việc đọc dữ liệu điểm ảnh trực tiếp từ bộ nhớ RAM thay vì ép GPU làm việc.
+  4. **Chống gọi trùng lặp (`lastCoverUrl`)**: Thêm kiểm tra `this.lastCoverUrl !== imageUrl` trong `player.js` để tránh gọi hàm bốc màu nhiều lần khi cùng 1 bài hát thay đổi trạng thái (Play/Pause/Like).
+
+---## Timestamp: 2026-08-13T22:03:00
 ### Tác vụ thực hiện
 Sửa dứt điểm nguyên nhân tiêu đề bài hát dài có dấu ba chấm `...` tự động làm phóng to khung giao diện và ảnh bìa.
 

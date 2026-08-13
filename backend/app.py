@@ -8,12 +8,16 @@ from socketserver import ThreadingMixIn
 from wsgiref.simple_server import make_server, WSGIServer
 from bottle import Bottle, static_file, request, response
 
-from backend.utils.path_utils import get_bundle_dir
-
 # Ensure project root is in sys.path when run directly
-PROJECT_ROOT = get_bundle_dir()
+if getattr(sys, 'frozen', False):
+    PROJECT_ROOT = Path(getattr(sys, '_MEIPASS', sys.executable)).resolve()
+else:
+    PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+
+from backend.utils.path_utils import get_bundle_dir
 
 from backend.storage.database import Database
 from backend.storage.config import Config

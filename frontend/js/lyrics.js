@@ -30,6 +30,14 @@ class LyricsRenderer {
 
   async show() {
     this.overlay.classList.remove('hidden');
+    // Hide main app components to reveal global WebGL background, without hiding lyrics-overlay which is inside #app
+    document.getElementById('top-bar').style.opacity = '0';
+    document.getElementById('top-bar').style.pointerEvents = 'none';
+    document.querySelector('.workspace').style.opacity = '0';
+    document.querySelector('.workspace').style.pointerEvents = 'none';
+    document.getElementById('player-bar').style.opacity = '0';
+    document.getElementById('player-bar').style.pointerEvents = 'none';
+    
     const track = window.store.getState().currentTrack;
     const defaultCover = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1NiIgaGVpZ2h0PSI1NiI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iIzMzMyIvPjwvc3ZnPg==';
     
@@ -73,6 +81,13 @@ class LyricsRenderer {
 
   hide() {
     this.overlay.classList.add('hidden');
+    // Restore main app components
+    document.getElementById('top-bar').style.opacity = '1';
+    document.getElementById('top-bar').style.pointerEvents = 'auto';
+    document.querySelector('.workspace').style.opacity = '1';
+    document.querySelector('.workspace').style.pointerEvents = 'auto';
+    document.getElementById('player-bar').style.opacity = '1';
+    document.getElementById('player-bar').style.pointerEvents = 'auto';
   }
 
   parseLRC(lrcText) {

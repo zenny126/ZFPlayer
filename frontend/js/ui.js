@@ -260,3 +260,123 @@ class UIController {
 }
 
 window.UIController = UIController;
+
+// Color Extraction for Fluid Background with Caching and Cancellation
+const colorCache = new Map();
+let currentExtractImg = null;
+let sharedCanvas = null;
+let sharedCtx = null;
+
+function extractDominantColors(imageUrl, callback) {
+  const defaultPalette = ['#000000', '#8a2be2', '#00d2ff', '#ff007f'];
+  
+  if (!imageUrl || imageUrl === 'none') {
+    callback(defaultPalette);
+    return;
+  }
+  
+  let finalUrl = imageUrl;
+  if (imageUrl.startsWith('url(')) {
+    finalUrl = imageUrl.slice(4, -1).replace(/['"]/g, '');
+  }
+  
+  // 1. Fast path: Return cached result immediately if available
+  if (colorCache.has(finalUrl)) {
+    callback(colorCache.get(finalUrl));
+    return;
+  }
+  
+  // 2. Abort previous pending image loading to prevent wasted GPU/CPU processing
+  if (currentExtractImg) {
+    currentExtractImg.onload = null;
+    currentExtractImg.onerror = null;
+    currentExtractImg = null;
+  }
+  
+  const img = new Image();
+  img.crossOrigin = "Anonymous";
+  currentExtractImg = img;
+  
+  img.onload = () => {
+    if (currentExtractImg !== img) return; // Discard if aborted by newer request
+    
+    // Reuse single offscreen canvas
+    if (!sharedCanvas) {
+      sharedCanvas = document.createElement('canvas');
+      sharedCanvas.width = 64;
+      sharedCanvas.height = 64;
+      sharedCtx = sharedCanvas.getContext('2d', { willReadFrequently: true });
+    }
+    
+    sharedCtx.drawImage(img, 0, 0, 64, 64);
+    const imageData = sharedCtx.getImageData(0, 0, 64, 64).data;
+    const colors = [];
+    
+    // Sample pixels for bubble candidates
+    for (let i = 0; i < imageData.length; i += 4 * 16) {
+      const r = imageData[i];
+      const g = imageData[i+1];
+      const b = imageData[i+2];
+      
+      const maxC = Math.max(r, g, b);
+      const minC = Math.min(r, g, b);
+      const saturation = maxC - minC;
+      
+      if (maxC >= 50 && maxC <= 215 && saturation >= 45) {
+        colors.push({r, g, b, saturation, maxC});
+      }
+    }
+    
+    const selectedColorsRgb = [{r: 0, g: 0, b: 0}];
+    
+    if (colors.length > 0) {
+      colors.sort((c1, c2) => c2.saturation - c1.saturation);
+      for (let i = 0; i < colors.length; i++) {
+        let c = colors[i];
+        let isDistinct = true;
+        for (let j = 1; j < selectedColorsRgb.length; j++) {
+          let existing = selectedColorsRgb[j];
+          let dist = Math.sqrt(Math.pow(c.r - existing.r, 2) + Math.pow(c.g - existing.g, 2) + Math.pow(c.b - existing.b, 2));
+          if (dist < 50) {
+            isDistinct = false;
+            break;
+          }
+        }
+        if (isDistinct) selectedColorsRgb.push(c);
+        if (selectedColorsRgb.length === 4) break;
+      }
+    }
+    
+    const fallbackVibrant = [
+      {r: 138, g: 43, b: 226},
+      {r: 0, g: 210, b: 255},
+      {r: 255, g: 0, b: 127}
+    ];
+    let fallbackIdx = 0;
+    while (selectedColorsRgb.length < 4 && fallbackIdx < fallbackVibrant.length) {
+      selectedColorsRgb.push(fallbackVibrant[fallbackIdx++]);
+    }
+    
+    const selectedColors = selectedColorsRgb.map(c => 
+      `#${c.r.toString(16).padStart(2,'0')}${c.g.toString(16).padStart(2,'0')}${c.b.toString(16).padStart(2,'0')}`
+    );
+    
+    // Save to cache for instant future retrieval (up to 100 entries)
+    if (colorCache.size > 100) {
+      const firstKey = colorCache.keys().next().value;
+      colorCache.delete(firstKey);
+    }
+    colorCache.set(finalUrl, selectedColors);
+    
+    currentExtractImg = null;
+    callback(selectedColors);
+  };
+  
+  img.onerror = () => {
+    if (currentExtractImg === img) currentExtractImg = null;
+    callback(defaultPalette);
+  };
+  
+  img.src = finalUrl;
+}
+window.extractDominantColors = extractDominantColors;
