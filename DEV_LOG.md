@@ -1,5 +1,53 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T21:01:00
+### Tác vụ thực hiện
+Tinh chỉnh lại thời lượng Khúc Phát Sáng xuống 800ms theo phản hồi người dùng.
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/lyrics.css` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- Giảm thời gian chuyển động cho `Khúc Phát Sáng (.active)` từ 1000ms xuống **800ms**.
+- Giữ nguyên Khúc Tối Trên (`1000ms`) và Khúc Tối Dưới (`1800ms`).
+
+---
+
+## Timestamp: 2026-08-13T20:54:00
+### Tác vụ thực hiện
+Đồng bộ nền chuyển động chất lỏng (fluid background) cho cả giao diện Lyrics.
+
+### Danh sách tệp tin thay đổi
+- `frontend/index.html` (MODIFIED)
+- `frontend/css/lyrics.css` (MODIFIED)
+- `frontend/js/player.js` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- Nhân bản thẻ `fluid-background` vào bên trong màn hình `lyrics-overlay`.
+- Đặt `background-color: transparent` cho `lyrics-overlay` và xóa bỏ pseudo-element `::before` chứa nền tĩnh cũ.
+- Tùy chỉnh `player.js` để áp dụng màu sắc trích xuất được từ ảnh bìa lên cả hai nền fluid (`#fluid-bg` và `#lyrics-fluid-bg`) đồng thời.
+
+---
+
+## Timestamp: 2026-08-13T20:49:00
+### Tác vụ thực hiện
+Thay đổi nền tĩnh (static blur) thành nền chuyển động chất lỏng (fluid gradient background) tự động lấy màu từ ảnh bìa bài hát.
+
+### Danh sách tệp tin thay đổi
+- `frontend/index.html` (MODIFIED)
+- `frontend/css/main.css` (MODIFIED)
+- `frontend/js/ui.js` (MODIFIED)
+- `frontend/js/player.js` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- Thêm cấu trúc HTML `<div class="fluid-background">` với 4 thẻ `blob` bên trong.
+- Cấu hình CSS `@keyframes` để tạo hoạt ảnh nổi vòng tròn kết hợp thay đổi tỷ lệ (scale) cho các bong bóng màu, đồng thời thêm độ mờ `blur(100px)` và hòa trộn.
+- Viết hàm `extractDominantColors` dùng HTML5 Canvas để lấy mẫu ngẫu nhiên các màu sắc từ ảnh bìa album, loại bỏ các dải màu quá tối hoặc quá sáng.
+- Tích hợp hàm lấy màu vào logic chuyển bài (`player.js`), truyền các màu trích xuất được vào các biến CSS `--color-X` để nền tự động cập nhật khi đổi bài hát.
+
+---
+
 ## Timestamp: 2026-08-13T20:39:00
 ### Tác vụ thực hiện
 Áp dụng thông số thời gian cá nhân hóa của người dùng (1000ms, 1000ms, 1800ms) để đẩy tối đa hiệu ứng hãm phanh mượt mà của Spring Physics.
