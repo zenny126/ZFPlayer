@@ -1,5 +1,29 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T19:49:00
+### Tác vụ thực hiện
+Nâng cấp hiệu ứng cuộn và chuyển dòng Lyric mềm mại, mượt mà chuẩn phong cách Apple Music bằng đường cong Bezier hãm quán tính chuyên dụng (`cubic-bezier(0.25, 1, 0.35, 1)`).
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/main.css` (MODIFIED)
+- `frontend/css/lyrics.css` (MODIFIED)
+- `frontend/js/lyrics.js` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+- `task.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Bổ Sung Token Bezier Apple Music (`main.css`)**:
+   - Thêm `--ease-apple-lyrics: cubic-bezier(0.25, 1, 0.35, 1)` (đường cong hãm quán tính siêu mượt chuẩn iOS) và token `--transition-lyrics-scroll: 650ms`.
+2. **Cấu Hình Chuyển Động Khung & Dòng Hát (`lyrics.css`)**:
+   - `#lyrics-content`: Cập nhật `transition: transform 650ms var(--ease-apple-lyrics)` giúp toàn bộ khung chữ trôi lên êm ái, bám theo nhịp bài hát.
+   - `.lyrics-line`: Cập nhật chuyển đổi đồng bộ 600ms cho `color`, `transform`, `filter`, `text-shadow`, và `opacity`.
+   - `.active`: Zoom mượt `scale(1.06)`, tỏa quầng sáng dịu mắt `text-shadow`, và xóa nhòe `blur(0)`.
+   - `.passed` & dòng sắp tới: Giảm độ sáng nhẹ nhàng, nhòe mượt `blur(1.2px)`.
+3. **Điều Khiển Nhảy Dòng Thông Minh (`lyrics.js`)**:
+   - Phân biệt giữa chuyển dòng phát nhạc tuần tự (dùng 650ms curve siêu mềm) và click seek nhảy xa >3 câu (áp dụng 450ms curve để giao diện phản hồi nhanh không bị trễ).
+
+---
+
 ## Timestamp: 2026-08-13T17:53:30
 ### Tác vụ thực hiện
 Cập nhật `.gitignore` để loại bỏ các tệp build tạm (`build/`, `dist/`) và tiến hành đồng bộ / push mã nguồn lên kho lưu trữ từ xa (GitHub).
@@ -718,19 +742,6 @@ Xây dựng kiến trúc "RAM Playback" (Memory Playback) và Tối ưu hóa WAS
 - `backend/audio/engine.py` (MODIFIED)
 - `backend/audio/decoder.py` (MODIFIED)
 - `backend/storage/config.py` (MODIFIED)
-- `config/config.json` (MODIFIED)
-
-### Mô tả chi tiết kỹ thuật
-1. **Kiến trúc RAM Playback (`engine.py`)**: Thay thế hoàn toàn mô hình giải mã Streaming đọc ổ cứng trực tiếp trong lúc phát. Khi nạp bài hát, toàn bộ file FLAC được giải mã và lưu 100% vào bộ nhớ RAM chỉ trong ~0.05s. Trong suốt quá trình phát nhạc, ổ cứng/SSD đạt mức 0% I/O, loại bỏ hoàn toàn hiện tượng trễ đọc đĩa (Disk I/O Jitter) và xung đột luồng GIL trong Python.
-2. **Bit-Padding chuẩn MSB (`decoder.py`)**: Tự động dịch trái dữ liệu `int16` sang dạng `int32` MSB (`data << 16`) trên bộ nhớ RAM. Đảm bảo dữ liệu phát ra chuẩn định dạng `int32` mà chip phần cứng USB XMOS của DAC Topping TP35 Pro yêu cầu natively, loại bỏ hoàn toàn các lỗi lệch bit và tiếng sạn pop ở tầng PortAudio C.
-3. **Khóa cứng WASAPI Shared Mode & Loại bỏ nút chuyển**: Khóa cố định chế độ WASAPI Shared Mode trong `engine.py`, loại bỏ hoàn toàn nút bật/tắt WASAPI Exclusive khỏi bảng Settings (`index.html` và `ui.js`). Hệ thống vận hành cố định trên nền tảng WASAPI High-Fidelity + RAM Playback, mang lại trải nghiệm phát nhạc mượt mà 100% không còn giật lag hay vấp tiếng.
-4. **Sửa lỗi lẹm Menu "Add to Playlist" (`playlists.js`)**: Bổ sung thuật toán kiểm tra tràn viền màn hình (Window Boundary Check). Khi menu chuột phải nằm ở mép phải màn hình, sub-menu danh sách playlist sẽ tự động lật sang bên trái (`rect.left - subWidth`) và điều chỉnh chiều cao (`z-index: 99999`), đảm bảo danh sách Playlist luôn hiển thị 100% đầy đủ, không bị khuất hay tràn khỏi viền ứng dụng. Đồng thời tự động đồng bộ danh sách playlist mới nhất mỗi khi di chuột qua.
-
----
-
-## Timestamp: 2026-08-12T23:59:00+07:00
-### Tác vụ thực hiện
-Khoanh vùng danh sách phát (Queue Scope) chỉ chạy duy nhất trong Playlist/Danh sách đang được chọn.
 
 ### Danh sách tệp tin thay đổi
 - `backend/services/player_service.py` (MODIFIED)
@@ -743,21 +754,6 @@ Khoanh vùng danh sách phát (Queue Scope) chỉ chạy duy nhất trong Playli
 2. **Hành vi Next / Prev / Auto-Next / Shuffle**:
    - Khi phát trong Playlist (ví dụ "Charlie Puth" gồm 7 bài), các thao tác chuyển bài tiếp theo / lùi lại / xáo trộn / tự động chuyển bài khi hết nhạc đều được khoanh vùng trong 7 bài của "Charlie Puth".
    - Khi `repeat: 'off'`, sau khi hát xong bài cuối cùng của Playlist, trình phát tự động dừng (`audio_engine.stop()`), không nhảy sang nhạc của Playlist khác.
-3. **Đồng bộ Frontend & Sửa lỗi `resume()` (`player_service.py`, `player.js`, `library.js`)**:
-   - Khắc phục triệt để điểm hở: Trong phương thức `resume()`, trước đây ứng dụng gọi `play(current_path)` mà quên không truyền `current_playlist_id`, khiến hệ thống bị fallback về toàn bộ thư viện nhạc (`all`).
-   - Giờ đây `current_playlist_id` được lưu trữ kiên cố vào `config.json` (`last_playlist_id`) và duy trì liên tục qua các thao tác Tạm dừng (Pause), Phát tiếp (Resume), Khởi động lại app hay Chuyển bài (Next/Prev).
-4. **Cập nhật phạm vi khi chuyển Playlist (`player_service.py`, `player_api.py`, `ui.js`)**:
-   - Thêm phương thức `set_active_playlist(playlist_id)` vào Backend API.
-   - Khi người dùng click chọn chuyển sang xem một Playlist mới trên Sidebar (ví dụ: chuyển từ "Charlie Puth" sang "Maroon 5"), giao diện sẽ tự động thông báo xuống Backend cập nhật ngay phạm vi phát (`current_playlist_id = 13`). Nếu bấm **Next** hay **Prev**, trình phát lập tức chuyển sang bài hát của Playlist mới chọn ("Maroon 5") thay vì bị kẹt ở Playlist cũ.
-
-## [2026-08-12] Fix setActivePlaylist API binding for Playlist Scope
-- **Files modified:** ackend/api/player_api.py, rontend/js/ui.js`n- **Details:** Fixed an issue where PyWebView silently failed to expose or bind the setActivePlaylist method in the frontend due to snake_case to camelCase conversion quirks. Explicitly added a setActivePlaylist wrapper in Python and a set_active_playlist fallback in JavaScript to guarantee that navigating to a different playlist in the sidebar strictly locks the playback queue (Next/Prev/Auto-Next) to the newly opened view.
-## [2026-08-13] Fix ApiWrapper to expose setActivePlaylist and pass playlistId to play()
-- **Files modified:** rontend/js/api.js`n- **Details:** Found the true root cause of the playlist scoping bug. The frontend uses an explicit ApiWrapper class in pi.js which did not define setActivePlaylist, causing silent failures when the sidebar was clicked. Furthermore, ApiWrapper.play was only accepting the path argument and dropping playlistId, causing the backend to receive playlist_id=None when tracks were manually played. Added the missing wrapper definitions.
-## [2026-08-13] Implement Playback Debounce for RAM Playback
-- **Files modified:** ackend/services/player_service.py`n- **Details:** Implemented a 0.3s debounce timer in PlayerService.play() to prevent WASAPI crashing and OOM errors when users rapidly spam the Next/Prev buttons. The UI updates instantly via get_state(), while the heavy 70MB+ FLAC RAM loading is safely deferred and cancelled if redundant.
-## [2026-08-13] Polished UI and fixed patchy styling
-- **Files modified:** rontend/index.html, rontend/css/main.css, rontend/css/library.css, rontend/js/library.js`n- **Details:** Polished the Playlist Header to match modern Spotify design. Added a giant Play button. Styled the previously ugly HTML buttons with .btn-outline. Fixed the faint table headers. Themed the ugly Windows scrollbar to match the dark mode. Wired up the 'Import Folder' button which was missing an event listener.
 ## [2026-08-13] Bust PyWebView Cache
 - **Files modified:** rontend/index.html`n- **Details:** Added ?v=2 query parameters to all CSS and JS imports to prevent Chromium/PyWebView from caching older versions of styles and scripts. This ensures the UI aesthetic updates and Play button logic from the previous patch are actually loaded.
 ## [2026-08-13] Fixed Playlist State Bug

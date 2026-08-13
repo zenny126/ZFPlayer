@@ -24,6 +24,7 @@
   --ease-spring: cubic-bezier(0.2, 0.9, 0.3, 1);
   --ease-spring-soft: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out-smooth: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-apple-lyrics: cubic-bezier(0.25, 1, 0.35, 1);
 
   /* Modern Curve Transitions */
   --transition-fast: 150ms var(--ease-out-expo);
@@ -31,6 +32,8 @@
   --transition-slow: 400ms var(--ease-out-expo);
   --transition-spring: 220ms var(--ease-spring);
   --transition-spring-soft: 200ms var(--ease-spring-soft);
+  --transition-lyrics-scroll: 650ms var(--ease-apple-lyrics);
+  --transition-lyrics-focus: 600ms var(--ease-apple-lyrics);
 }
 
 * {
