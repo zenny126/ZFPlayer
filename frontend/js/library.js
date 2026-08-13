@@ -123,13 +123,29 @@ class LibraryManager {
       });
     }
     
-    document.getElementById('search-input').addEventListener('input', (e) => {
-      clearTimeout(this.searchTimeout);
-      this.searchTimeout = setTimeout(() => {
-        this.searchQuery = e.target.value;
-        this.reload();
-      }, 300);
-    });
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        clearTimeout(this.searchTimeout);
+        this.searchTimeout = setTimeout(() => {
+          const currentView = window.store.getState().view;
+          if (currentView === 'home' || currentView === 'albums') {
+            this.currentPlaylistId = 'all';
+            window.store.setState({ view: 'songs' });
+          }
+          this.searchQuery = e.target.value;
+          this.reload();
+        }, 300);
+      });
+
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          e.target.value = '';
+          this.searchQuery = '';
+          this.reload();
+        }
+      });
+    }
     
     window.store.subscribe('currentTrack', () => this.vList.refresh());
 

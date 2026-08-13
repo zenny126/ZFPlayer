@@ -52,6 +52,9 @@ class UIController {
       if (state.view === 'home') {
         homeView?.classList.remove('hidden');
         homeView?.classList.add('active');
+        const searchInput = document.getElementById('search-input');
+        if (searchInput) searchInput.value = '';
+        if (window.libraryManager) window.libraryManager.searchQuery = '';
         if (window.homeManager) window.homeManager.loadHome();
       } else if (state.view === 'songs') {
         libraryView?.classList.remove('hidden');

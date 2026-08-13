@@ -1,12 +1,7 @@
-# Danh Sách Nhiệm Vụ: Dọn Sạch Cơ Sở Dữ Liệu (`library.db`) Để Thử Lại
+# Tasks - Fix Search on Homepage
 
-- [x] **1. Kế Hoạch & Phê Duyệt (Planning)** <!-- id: 0 -->
-    - [x] Kiểm tra hiện trạng các bảng trong `library.db` <!-- id: 1 -->
-    - [x] Tạo `implementation_plan.md` & `task.md` <!-- id: 2 -->
-    - [x] Chờ User phê duyệt kế hoạch xóa dữ liệu DB <!-- id: 3 -->
-
-- [x] **2. Thực Thi & Kiểm Thu (Execution & QA)** <!-- id: 4 -->
-    - [x] Xóa toàn bộ bản ghi các bảng `tracks`, `playlists`, `playlist_tracks`, `lyrics_cache` <!-- id: 5 -->
-    - [x] Chạy lệnh `VACUUM` tối ưu dung lượng tệp DB <!-- id: 6 -->
-    - [x] Xác minh số lượng bản ghi = 0 <!-- id: 7 -->
-    - [x] Cập nhật `DEV_LOG.md` & `walkthrough.md` <!-- id: 8 -->
+- [x] Phân tích nguyên nhân và thiết lập Kế hoạch triển khai <!-- id: 0 -->
+- [x] Cập nhật `frontend/js/library.js` để tự động chuyển sang Songs view khi tìm kiếm từ Trang chủ <!-- id: 1 -->
+- [x] Cập nhật `frontend/js/ui.js` để tự động làm sạch ô tìm kiếm khi quay lại Trang chủ <!-- id: 2 -->
+- [x] Kiểm chứng trực tiếp tính năng tìm kiếm trên Trang chủ và trong từng Playlist riêng lẻ <!-- id: 3 -->
+- [x] Ghi nhận vào `DEV_LOG.md` và `walkthrough.md` <!-- id: 4 -->

@@ -1,5 +1,20 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T15:32:00
+### Tác vụ thực hiện
+Sửa lỗi tính năng tìm kiếm (Search) ở Trang chủ (Home View) không hoạt động.
+
+### Danh sách tệp tin thay đổi
+- `frontend/js/library.js` (MODIFIED)
+- `frontend/js/ui.js` (MODIFIED)
+- `task.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Chuyển View Tự Động Khi Tìm Kiếm (`library.js`)**: Cập nhật sự kiện `input` trên `#search-input`. Khi người dùng gõ từ khóa tìm kiếm trong khi đang ở Trang chủ (`view === 'home'`) hoặc Albums View (`view === 'albums'`), ứng dụng tự động chuyển view sang `'songs'` (`playlistId = 'all'`) và tiến hành lọc danh sách toàn bộ bài hát theo từ khóa tìm kiếm. Hỗ trợ thêm phím `Escape` để xóa nhanh từ khóa.
+2. **Làm Sạch Tìm Kiếm Khi Quay Về Trang Chủ (`ui.js`)**: Khi người dùng bấm về Trang chủ (`view === 'home'`), ô tìm kiếm `#search-input` và biến `searchQuery` sẽ tự động xóa sạch từ khóa cũ để sẵn sàng cho lần tìm kiếm mới.
+
+---
+
 ## Timestamp: 2026-08-13T14:23:20
 ### Tác vụ thực hiện
 Cập nhật văn bản mô tả Audio Engine trong Settings Modal thành WASAPI Shared Mode.
