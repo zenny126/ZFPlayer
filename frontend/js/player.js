@@ -405,33 +405,44 @@ class PlayerController {
   }
 
   startSyncLoop() {
-    setInterval(async () => {
-      // Skip background polling override if user seeked recently (within last 1500ms)
-      if (this.lastSeekTime && Date.now() - this.lastSeekTime < 1500) {
-        return;
-      }
-      
-      const state = await window.api.getPlayerState();
-      if (state) {
-        const storeState = window.store.getState();
-        const pos = state.position_seconds !== undefined ? state.position_seconds : state.position;
-        
-        // Auto-next or external track change
-        if (state.track && (!storeState.currentTrack || state.track.path !== storeState.currentTrack.path)) {
-          window.store.setState({ currentTrack: state.track, isPlaying: state.is_playing });
-          this.ticker.sync(pos, state.duration, state.is_playing);
-          return;
-        }
+    this._isPolling = false;
+    
+    const poll = async () => {
+      if (this._isPolling) return;
+      this._isPolling = true;
 
-        if (!this.isDraggingSeek && Math.abs(this.ticker.position - pos) > 2) {
-           this.ticker.sync(pos, state.duration, state.is_playing);
+      try {
+        // Skip background polling override if user seeked recently (within last 1500ms)
+        if (!this.lastSeekTime || Date.now() - this.lastSeekTime >= 1500) {
+          const state = await window.api.getPlayerState();
+          if (state) {
+            const storeState = window.store.getState();
+            const pos = state.position_seconds !== undefined ? state.position_seconds : state.position;
+            
+            // Auto-next or external track change
+            if (state.track && (!storeState.currentTrack || state.track.path !== storeState.currentTrack.path)) {
+              window.store.setState({ currentTrack: state.track, isPlaying: state.is_playing });
+              this.ticker.sync(pos, state.duration, state.is_playing);
+            } else {
+              if (!this.isDraggingSeek && Math.abs(this.ticker.position - pos) > 2) {
+                 this.ticker.sync(pos, state.duration, state.is_playing);
+              }
+              if (state.is_playing !== storeState.isPlaying) {
+                window.store.setState({ isPlaying: state.is_playing });
+                this.ticker.sync(pos, state.duration, state.is_playing);
+              }
+            }
+          }
         }
-        if (state.is_playing !== storeState.isPlaying) {
-          window.store.setState({ isPlaying: state.is_playing });
-          this.ticker.sync(pos, state.duration, state.is_playing);
-        }
+      } catch (e) {
+        console.warn("Polling error:", e);
+      } finally {
+        this._isPolling = false;
+        setTimeout(poll, 500);
       }
-    }, 500);
+    };
+
+    setTimeout(poll, 500);
   }
 }
 

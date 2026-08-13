@@ -12,7 +12,7 @@
 ## 1. Tính Năng Nổi Bật
 
 ### 1.1 Động Cơ Âm Thanh Hi-Res & WASAPI Shared Mode
-- **Zero-Latency RAM Caching:** Tải nguyên bản toàn bộ dữ liệu PCM của bản nhạc vào bộ nhớ RAM (`NumPy Array`) khi phát, giúp chuyển bài, tua nhạc (Seek) và lặp bài (Loop) diễn ra tức thì với độ trễ 0ms, loại bỏ hoàn toàn hiện tượng nghẽn I/O đĩa.
+- **Streaming Audio Engine & Ring Buffer:** Giải mã và đọc luồng âm thanh theo từng khối nhỏ (chunk) thông qua C-Decoder thay vì nạp toàn bộ vào RAM. Dữ liệu PCM được đệm liên tục vào một Ring Buffer khép kín, giúp triệt tiêu hiện tượng tràn RAM (OOM) khi phát các file nhạc Lossless dung lượng siêu lớn, trong khi vẫn giữ nguyên độ trễ 0ms khi tua nhạc (Seek) hay chuyển bài.
 - **Windows WASAPI Shared Mode Driver:** Tối ưu hóa giao tiếp âm thanh qua `sounddevice` (PortAudio C-wrapper), tự động giữ nguyên tần số lấy mẫu (Sample Rate 44.1kHz – 192kHz) và căn chỉnh Bit-Depth (16-bit / 24-bit PCM / 32-bit Float) sắc nét.
 - **Xử lý Bit-Depth chuẩn xác:** Tự động mở rộng dải động bài hát 24-bit (`raw_data << 8`) để truyền trọn vẹn tín hiệu âm thanh nguyên bản đến DAC cứng.
 
@@ -45,7 +45,7 @@
 - **PyWebView / Edge Chromium (WebView2):** Cầu nối giao diện Desktop Windows nguyên bản và Web Frontend.
 - **Bottle WSGI Web Server:** HTTP REST API Server đa luồng (Threaded WSGI) cực nhẹ.
 - **SoundFile (`libsndfile` C-Decoder) & SoundDevice (PortAudio WASAPI):** Động cơ phát âm thanh C-level nguyên bản.
-- **NumPy:** Đệm dữ liệu PCM nguyên bản dạng RAM Buffer C-contiguous.
+- **NumPy:** Đệm dữ liệu PCM nguyên bản trong Ring Buffer C-contiguous siêu tốc.
 - **SQLite3 (WAL Mode & FTS5):** Cơ sở dữ liệu lưu trữ Metadata, chỉ mục tìm kiếm và bộ nhớ đệm lời bài hát.
 - **Mutagen & Syncedlyrics:** Đọc thẻ bài hát Hi-Res và tải lời bài hát đồng bộ.
 

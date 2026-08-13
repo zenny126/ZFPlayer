@@ -6,11 +6,12 @@ from typing import Dict, List, Optional, Any
 logger = logging.getLogger(__name__)
 
 class LibraryService:
-    def __init__(self, database, cache_manager, scanner, lyrics_worker=None):
+    def __init__(self, database, cache_manager, scanner, lyrics_worker=None, config=None):
         self.db = database
         self.cache = cache_manager
         self.scanner = scanner
         self.lyrics_worker = lyrics_worker
+        self.config = config
         
         self._scan_state = {
             'is_scanning': False,
@@ -30,9 +31,6 @@ class LibraryService:
 
     def get_track_count(self, search: str = '', is_favorites: bool = False, playlist_id: Optional[int] = None) -> int:
         return self.db.get_track_count(search, is_favorites, playlist_id)
-
-
-        self.db.update_track(path, track_dict)
 
     def get_track_info(self, path: str) -> Optional[Dict[str, Any]]:
         track = self.db.get_track_by_path(path)

@@ -5,6 +5,8 @@ import numpy as np
 import sounddevice as sd
 import soundfile as sf
 from backend.storage.config import Config
+from backend.audio.buffer import AudioRingBuffer
+from backend.audio.decoder import StreamingDecoder
 
 # Default to WASAPI Shared Mode for stability
 try:
@@ -31,8 +33,9 @@ class AudioEngine:
         self.on_track_end = None
         self.audio_mode = Config().get('audio_mode', 'shared')
         
-        self.audio_data = None      # Full audio loaded into RAM (numpy float32 array)
-        self.play_pos = 0          # Frame offset in audio_data
+        self.ring_buffer = None     # Replaces audio_data
+        self.decoder = None         # Streaming decoder instance
+        self.play_pos = 0          # Frame offset
         self.total_frames = 0
         self.duration = 0.0
         self._current_samplerate = 44100
@@ -62,6 +65,7 @@ class AudioEngine:
         elif mode != 'shared':
             mode = 'shared'
             
+        stream_to_close = None
         with self._lock:
             if getattr(self, 'audio_mode', 'shared') == mode:
                 return mode
@@ -72,15 +76,24 @@ class AudioEngine:
 
             is_playing = (self.state == AudioState.PLAYING)
             if self.stream is not None:
-                try:
-                    self.stream.stop()
-                    self.stream.close()
-                except Exception:
-                    pass
+                stream_to_close = self.stream
                 self.stream = None
 
-            if is_playing:
+        if stream_to_close is not None:
+            try:
+                if stream_to_close.active:
+                    stream_to_close.stop()
+                stream_to_close.close()
+            except Exception:
+                pass
+
+        if is_playing:
+            with self._lock:
                 self._create_stream()
+                fade_samples = int(self._current_samplerate * 0.020)
+                self._fade_in_total = max(1, fade_samples)
+                self._fade_in_remaining = self._fade_in_total
+                self._fade_out_remaining = 0
 
         return mode
 
@@ -89,31 +102,37 @@ class AudioEngine:
         self.state = AudioState.LOADING
         
         try:
-            # Read ENTIRE file into RAM via libsndfile (C speed) as float32 normalized [-1.0, 1.0]
+            # Just read metadata
             sf_file = sf.SoundFile(file_path)
             sr = sf_file.samplerate
             ch = sf_file.channels
-            
-            raw_data = sf_file.read(dtype='float32', always_2d=True)
+            total_frames = len(sf_file)
             sf_file.close()
 
+            # Create ring buffer for 2 seconds of audio
+            capacity = int(sr * 2.0)
+            ring_buffer = AudioRingBuffer(capacity, ch, dtype=np.float32)
+            decoder = StreamingDecoder(ring_buffer)
+            decoder.load(file_path)
+            
             with self._lock:
-                self.audio_data = raw_data
+                self.ring_buffer = ring_buffer
+                self.decoder = decoder
                 self.play_pos = 0
-                self.total_frames = raw_data.shape[0]
+                self.total_frames = total_frames
                 self.duration = self.total_frames / sr if sr else 0.0
                 self._current_samplerate = sr
                 self._current_channels = ch
                 self._sd_dtype = 'float32'
 
-            ram_mb = raw_data.nbytes / (1024 * 1024)
+            self.decoder.start()
             logger.info(
-                f"[RAM PLAYBACK] Loaded 100% to RAM: {file_path} | "
-                f"{self.duration:.2f}s ({ram_mb:.1f} MB) | {sr}Hz / {ch}ch / float32"
+                f"[STREAM PLAYBACK] Loaded via StreamingDecoder: {file_path} | "
+                f"{self.duration:.2f}s | {sr}Hz / {ch}ch / float32"
             )
             self.state = AudioState.STOPPED
         except Exception as e:
-            logger.error(f"Failed to load audio into RAM: {e}")
+            logger.error(f"Failed to load audio for streaming: {e}")
             self.state = AudioState.IDLE
             raise e
 
@@ -212,17 +231,28 @@ class AudioEngine:
 
     def stop_immediate(self):
         """Stop playback and close the hardware stream.
-        Stream close is done OUTSIDE self._lock to prevent deadlock
-        with PortAudio callback thread."""
+        Stream close and decoder stop are done OUTSIDE self._lock
+        to prevent deadlock with PortAudio callback thread."""
         stream_to_close = None
+        decoder_to_stop = None
         with self._lock:
             self.state = AudioState.STOPPED
             self._fade_in_remaining = 0
             self._fade_out_remaining = 0
-            self.play_pos = 0
+            
+            if self.decoder:
+                decoder_to_stop = self.decoder
+                self.decoder = None
+            if self.ring_buffer:
+                self.ring_buffer.clear()
+                self.ring_buffer = None
+            
             if self.stream is not None:
                 stream_to_close = self.stream
                 self.stream = None
+
+        if decoder_to_stop is not None:
+            decoder_to_stop.stop()
 
         if stream_to_close is not None:
             try:
@@ -236,6 +266,11 @@ class AudioEngine:
         with self._lock:
             frame = int(seconds * self._current_samplerate)
             self.play_pos = max(0, min(frame, self.total_frames))
+            
+            if self.decoder:
+                self.decoder.seek(self.play_pos)
+                self.ring_buffer.clear()
+
             # 15ms anti-pop micro ramp after seek
             fade_samples = int(self._current_samplerate * 0.015)
             self._fade_in_total = max(1, fade_samples)
@@ -266,11 +301,11 @@ class AudioEngine:
                 remaining = self.total_frames - self.play_pos
                 frames_to_copy = min(fade_len, max(0, remaining))
 
-                if self.audio_data is not None and frames_to_copy > 0:
-                    outdata[:frames_to_copy] = self.audio_data[self.play_pos : self.play_pos + frames_to_copy]
-                    self.play_pos += frames_to_copy
-                    if frames_to_copy < fade_len:
-                        outdata[frames_to_copy:fade_len].fill(0)
+                if self.ring_buffer is not None and frames_to_copy > 0:
+                    read_frames = self.ring_buffer.read_into(outdata[:frames_to_copy])
+                    self.play_pos += read_frames
+                    if read_frames < fade_len:
+                        outdata[read_frames:fade_len].fill(0)
                 else:
                     outdata[:fade_len].fill(0)
 
@@ -290,7 +325,7 @@ class AudioEngine:
                     self.state = self._target_state_after_fade or AudioState.STOPPED
                 return
 
-            if self.audio_data is None or self.state != AudioState.PLAYING:
+            if self.ring_buffer is None or self.state != AudioState.PLAYING:
                 outdata.fill(0)
                 return
 
@@ -303,10 +338,13 @@ class AudioEngine:
                 return
 
             frames_to_copy = min(frames, remaining)
-            outdata[:frames_to_copy] = self.audio_data[self.play_pos : self.play_pos + frames_to_copy]
+            read_frames = 0
+            if frames_to_copy > 0:
+                read_frames = self.ring_buffer.read_into(outdata[:frames_to_copy])
+                self.play_pos += read_frames
 
-            if frames_to_copy < frames:
-                outdata[frames_to_copy:].fill(0)
+            if read_frames < frames:
+                outdata[read_frames:].fill(0)
 
             # Handle Micro Fade-In phase when starting/seeking
             if self._fade_in_remaining > 0:
@@ -320,6 +358,3 @@ class AudioEngine:
 
             if self.volume != 1.0:
                 outdata *= self.volume
-
-            self.play_pos += frames_to_copy
-

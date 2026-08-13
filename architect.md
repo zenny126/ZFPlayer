@@ -54,10 +54,10 @@ graph TD
 - **Thư viện C & Python:** `soundfile` (`libsndfile` C-Decoder), `sounddevice` (PortAudio C-wrapper cho WASAPI), `numpy` C-contiguous array buffer.
 
 #### Quy trình xử lý từng bước:
-1. Khi người dùng yêu cầu phát một bài hát (`path`), `AudioDecoder` dùng `soundfile.read()` đọc toàn bộ tệp âm thanh (FLAC, WAV, MP3, M4A, OGG) và giải mã PCM thô trực tiếp vào bộ nhớ RAM dưới dạng `numpy.ndarray`.
+1. Khi người dùng yêu cầu phát một bài hát (`path`), `StreamingDecoder` mở luồng đọc dữ liệu âm thanh (FLAC, WAV, MP3, M4A, OGG) theo từng khối (chunk) thông qua `soundfile.blocks()` thay vì nạp toàn bộ vào RAM, truyền dữ liệu giải mã dạng `float32` vào bộ đệm vòng (`AudioRingBuffer`) giúp chống tràn bộ nhớ (OOM) tuyệt đối.
 2. **Căn chỉnh Bit-depth:**
-   - *16-bit PCM:* Đọc dạng `int16`, truyền trực tiếp vào stream buffer.
-   - *24-bit PCM:* Đọc dạng `int32`, tự động dịch bít `raw_data = raw_data << 8` để giữ trọn vẹn dải động 24-bit gốc cho buffer WASAPI 32-bit.
+   - Dữ liệu âm thanh gốc 16-bit, 24-bit hay 32-bit đều được tự động giải mã và quy chuẩn (normalize) về định dạng `float32` PCM.
+   - Điều này giúp `AudioEngine` thực hiện xử lý âm lượng (Volume scaling) và mờ dần (Fade in/out) mượt mà không làm vỡ tiếng trước khi đẩy xuống WASAPI.
    - *32-bit Float / PCM:* Đọc dạng `float32` truyền thẳng tới DAC.
 3. **Phát âm thanh ngầm & Chế độ WASAPI Dual-Engine (Non-blocking Audio Stream Callback):**
    - Hỗ trợ 2 chế độ truyền dữ liệu WASAPI tùy chọn trong Settings: **WASAPI Shared Mode** (`sd.WasapiSettings(exclusive=False)`) và **WASAPI Exclusive Mode - Push Driven** (`sd.WasapiSettings(exclusive=True)` kết hợp cờ `paWinWasapiPolling`).

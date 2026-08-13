@@ -1397,3 +1397,33 @@ gba(255,255,255,0.15)). Replaced hardcoded occurrences in library.css and main.c
 ## [2026-08-13] Sá»­a Lá»—i Bootstrap sys.path Khi Cháº¡y Python Direct
 - **Files modified:** ackend/app.py
 - **Details:** Di chuyá»ƒn Ä‘oáº¡n lá»‡nh kiá»ƒm tra vÃ  bá»• sung PROJECT_ROOT vÃ o sys.path lÃªn Ä‘áº§u ackend/app.py trÆ°á»›c khi import ackend.*. GiÃºp khá»Ÿi cháº¡y python backend/app.py thÃ nh cÃ´ng tá»« báº¥t ká»³ thÆ° má»¥c lÃ m viá»‡c nÃ o.
+## [2026-08-13T23:58:00+07:00] Fix P0/P1 Critical Bugs (Startup Crash, OOM, Thread-Safety)
+- **Tác v? th?c hi?n**: Kh?c ph?c l?i crash ?ng d?ng khi kh?i d?ng, l?i tràn RAM khi t?i file nh?c l?n, và l?i Race Condition.
+- **Danh sách t?p tin thay d?i**:
+  - ackend/services/library_service.py
+  - ackend/app.py
+  - ackend/audio/engine.py
+  - ackend/audio/decoder.py
+  - ackend/storage/database.py
+  - ackend/storage/config.py
+- **Mô t? chi ti?t k? thu?t**:
+  1. **Startup Crash**: Xóa mã g?i hàm th?a self.db.update_track() trong library_service.py n?m ngoài method gây l?i NameError. B? sung tham s? config vào __init__ d? tránh l?i AttributeError khi scan thu vi?n.
+  2. **OOM Audio (T?i uu RAM)**: Tích h?p StreamingDecoder và AudioRingBuffer vào AudioEngine. Thay vì d?c toàn b? file loat32 vào RAM (chi?m hàng GB v?i file l?n), AudioEngine hi?n t?i buffer và stream liên t?c t? file d? d?m b?o an toàn b? nh?. S?a class StreamingDecoder d? luôn tr? v? loat32 tuong thích v?i co ch? Volume DSP c?a Engine.
+  3. **Thread-Safety & Race Condition**: C?u trúc l?i phuong th?c kh?i t?o Singleton __new__ cho Database và Config d? ngan ch?n Race Condition. Thêm 	hreading.Lock vào thao tác d?c/ghi trong Config d? ngan ng?a l?i ghi dè và RuntimeError: dictionary changed size during iteration.
+
+## [2026-08-14T00:04:00+07:00] Fix Audio Mode Change Crash
+- **Tác v? th?c hi?n**: S?a l?i crash (deadlock) khi thay d?i Audio Mode trong lúc dang phát nh?c.
+- **Danh sách t?p tin thay d?i**:
+  - ackend/audio/engine.py
+- **Mô t? chi ti?t k? thu?t**: Hàm set_audio_mode g?i self.stream.stop() bên trong self._lock. Khi nh?c dang phát, PortAudio s? ch? cho callback hi?n t?i hoàn thành tru?c khi stop stream. Tuy nhiên callback _audio_callback l?i c?n acquire self._lock (dang b? gi? b?i set_audio_mode), gây ra Deadlock làm ?ng d?ng treo và crash. Ðã dua logic stop/close stream ra ngoài block with self._lock: tuong t? nhu stop_immediate(), và thêm micro-fade-in sau khi kh?i t?o l?i stream d? ch?ng ti?ng n? (pop/click).
+
+## [2026-08-14T00:13:00+07:00] Fix UX and Logic Bugs (Play Next, Rapid Skip, UI Polling)
+- **Tác v? th?c hi?n**: S?a 3 l?i uu tiên cao ?nh hu?ng d?n UX và logic lu?ng phát.
+- **Danh sách t?p tin thay d?i**:
+  - ackend/services/player_service.py
+  - rontend/js/player.js
+- **Mô t? chi ti?t k? thu?t**:
+  1. **Play Next Array Shift**: S?a hàm insert_play_next trong player_service.py. N?u track dích dã có s?n trong danh sách, ph?i ti?n hành emove track dó kh?i danh sách TRU?C, r?i m?i l?y index c?a track hi?n t?i d? insert track dích vào. Ð?o ngu?c logic cu v?n d? gây ch?ch index.
+  2. **Race Condition Rapid Skip**: B? sung co ch? self._load_token vào hàm play(). M?i khi b?m Next/Prev/Play, token du?c sinh m?i. Trong lu?ng do_load background, th?c hi?n validate token 2 l?n (tru?c khi load và sau khi load). N?u token dã cu (do user b?m nút quá nhanh g?i lu?ng khác), lu?ng s? t? h?y và gi?i phóng engine thay vì ti?p t?c play và dè lên lu?ng m?i.
+  3. **Polling Request Pile-up**: S?a hàm startSyncLoop trong player.js. Thay th? setInterval 500ms b?ng mô hình setTimeout d? quy k?t h?p v?i flag 	his._isPolling = false. Ði?u này d?m b?o m?i tick polling (bao g?m fetch API) ph?i hoàn t?t toàn b? (ho?c throw error) thì m?i du?c h?n gi? 500ms sau g?i l?i, ch?ng k?t ngh?n hàng d?i HTTP request làm lag UI.
+

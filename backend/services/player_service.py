@@ -16,6 +16,7 @@ class PlayerService:
         self.normal_playlist = []
         self.shuffled_playlist = []
         self.current_playlist_id = self.config.get('last_playlist_id', 'all')
+        self._load_token = 0
         
         # Restore saved volume level
         saved_vol = self.config.get('volume', 0.8)
@@ -122,14 +123,21 @@ class PlayerService:
         # Stop current playback immediately
         self.audio_engine.stop()
 
-        def do_load(target_path: str):
+        self._load_token += 1
+        current_token = self._load_token
+
+        def do_load(target_path: str, token: int):
             try:
+                # Abort if the token is stale
+                if token != self._load_token:
+                    return
                 # Abort if the user skipped again while waiting
                 if self.current_path != target_path:
                     return
                 self.audio_engine.load(target_path)
-                # Double check after loading (which can take 200ms)
-                if self.current_path != target_path:
+                
+                # Double check after loading (which can take some time)
+                if token != self._load_token or self.current_path != target_path:
                     self.audio_engine.stop()
                     return
                 self.audio_engine.play()
@@ -141,10 +149,10 @@ class PlayerService:
 
         if immediate:
             # Auto-advance: load directly, no debounce needed
-            do_load(path)
+            do_load(path, current_token)
         else:
             # User-initiated: 0.3s debounce for rapid clicking
-            self._load_timer = threading.Timer(0.3, do_load, args=(path,))
+            self._load_timer = threading.Timer(0.3, do_load, args=(path, current_token))
             self._load_timer.start()
         
         return self.get_state()
@@ -185,24 +193,22 @@ class PlayerService:
         self._sync_playlists_and_index(self.current_path or '', self.current_playlist_id)
 
         # Insert after current_path in normal_playlist
+        if path in self.normal_playlist:
+            self.normal_playlist.remove(path)
         if self.current_path and self.current_path in self.normal_playlist:
             idx = self.normal_playlist.index(self.current_path)
-            if path in self.normal_playlist:
-                self.normal_playlist.remove(path)
             self.normal_playlist.insert(idx + 1, path)
         else:
-            if path not in self.normal_playlist:
-                self.normal_playlist.insert(0, path)
+            self.normal_playlist.insert(0, path)
 
         # Insert after current_path in shuffled_playlist
+        if path in self.shuffled_playlist:
+            self.shuffled_playlist.remove(path)
         if self.current_path and self.current_path in self.shuffled_playlist:
             idx = self.shuffled_playlist.index(self.current_path)
-            if path in self.shuffled_playlist:
-                self.shuffled_playlist.remove(path)
             self.shuffled_playlist.insert(idx + 1, path)
         else:
-            if path not in self.shuffled_playlist:
-                self.shuffled_playlist.insert(0, path)
+            self.shuffled_playlist.insert(0, path)
 
         return {"status": "success", "message": "Track queued as next"}
 

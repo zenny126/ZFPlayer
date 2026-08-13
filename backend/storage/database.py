@@ -13,9 +13,13 @@ class Database:
         with cls._lock:
             if not cls._instance:
                 cls._instance = super(Database, cls).__new__(cls)
+                cls._instance._init(*args, **kwargs)
             return cls._instance
 
-    def __init__(self, db_path: str = None):
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def _init(self, db_path: str = None):
         if not hasattr(self, 'initialized'):
             self.db_path = db_path or get_db_path()
             os.makedirs(os.path.dirname(self.db_path), exist_ok=True)

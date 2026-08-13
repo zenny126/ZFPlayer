@@ -8,11 +8,11 @@
     "D:\\Music\\Maroon 5"
   ],
   "volume": 1,
-  "repeat": "one",
+  "repeat": "all",
   "shuffle": true,
   "theme": "dark",
   "last_track": "C:\\Users\\Zenny\\Downloads\\Altare - bye (slowed).flac",
   "last_position": 0,
   "audio_mode": "exclusive",
-  "last_playlist_id": "all"
+  "last_playlist_id": "favorites"
 }

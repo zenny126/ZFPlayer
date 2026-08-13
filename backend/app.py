@@ -86,7 +86,7 @@ def main():
     scanner = LibraryScanner(database, cache_manager, lyrics_worker)
 
     # 3. Initialize Services
-    library_service = LibraryService(database, cache_manager, scanner, lyrics_worker)
+    library_service = LibraryService(database, cache_manager, scanner, lyrics_worker, config)
     player_service = PlayerService(audio_engine, library_service, config, lyrics_worker)
 
     # 4. Initialize Unified API

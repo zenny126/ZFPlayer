@@ -7,15 +7,15 @@ from backend.audio.buffer import AudioRingBuffer
 
 logger = logging.getLogger(__name__)
 
-# Map soundfile subtypes to best matching read dtype and output bit depth
+# All subtypes read as float32 to support volume and fade DSP
 _SUBTYPE_MAP = {
-    'PCM_16': {'dtype': 'int16',   'bit_depth': 16},
-    'PCM_24': {'dtype': 'int32',   'bit_depth': 24},
-    'PCM_32': {'dtype': 'int32',   'bit_depth': 32},
+    'PCM_16': {'dtype': 'float32', 'bit_depth': 16},
+    'PCM_24': {'dtype': 'float32', 'bit_depth': 24},
+    'PCM_32': {'dtype': 'float32', 'bit_depth': 32},
     'FLOAT':  {'dtype': 'float32', 'bit_depth': 32},
     'DOUBLE': {'dtype': 'float32', 'bit_depth': 64},
-    'PCM_U8': {'dtype': 'int16',   'bit_depth': 8},
-    'PCM_S8': {'dtype': 'int16',   'bit_depth': 8},
+    'PCM_U8': {'dtype': 'float32', 'bit_depth': 8},
+    'PCM_S8': {'dtype': 'float32', 'bit_depth': 8},
 }
 
 class StreamingDecoder:
@@ -49,7 +49,7 @@ class StreamingDecoder:
                 'subtype': subtype,
                 'bit_depth': fmt['bit_depth'],
                 'read_dtype': self._read_dtype,
-                'out_dtype': 'int32',
+                'out_dtype': 'float32',
             }
             self.eof_reached = False
             
@@ -122,11 +122,7 @@ class StreamingDecoder:
             if len(data.shape) == 1:
                 data = data.reshape(-1, 1)
 
-            # Bit-perfect MSB alignment to 32-bit integer container for XMOS WASAPI Exclusive
-            if self._read_dtype == 'int16':
-                data = (data.astype(np.int32)) << 16
-            elif self._read_dtype == 'int32' and self.info.get('bit_depth') == 24:
-                data = data << 8
+            # (Removed int32 MSB alignment as engine needs float32 for DSP)
 
             written = 0
             while written < len(data) and not self.stop_event.is_set():
