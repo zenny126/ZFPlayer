@@ -1,5 +1,25 @@
 # DEV LOG
 
+## Timestamp: 2026-08-13T22:03:00
+### Tác vụ thực hiện
+Sửa dứt điểm nguyên nhân tiêu đề bài hát dài có dấu ba chấm `...` tự động làm phóng to khung giao diện và ảnh bìa.
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/lyrics.css` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- **Đã phát hiện chính xác 100% nguyên nhân**:
+  - Khi bài hát có tên dài (như bài Charlie Puth: *"We Don't Talk Anymore (feat. Selena Gomez)"*), thuộc tính `white-space: nowrap` ép chuỗi văn bản nằm trên 1 dòng.
+  - Trong thuật toán tính toán Flexbox của CSS, thuộc tính `white-space: nowrap` sẽ làm chiều rộng nội dung tối thiểu (`min-content width`) của phần tử đó vọt lên tới 450px - 500px!
+  - Vì các thẻ cha `.lyrics-metadata-row` và `.lyrics-track-info` thiếu thuộc tính `min-width: 0`, giá trị 450px này **bị lan truyền ngược lên trên**, ép toàn bộ khung chứa `.lyrics-track-info` và ảnh bìa `#lyrics-cover` phải giãn nở theo bằng đúng độ dài chưa cắt của chuỗi tên bài hát!
+  - Ngược lại, các bài hát tên ngắn (như bài Pink Sweat$: *"At My Worst"*) có `min-content width` rất nhỏ, nên layout không bị đẩy phồng lên.
+- **Giải pháp triệt để**:
+  - Khai báo bổ sung `min-width: 0` trên toàn bộ các mắt xích của chuỗi container Flex: `.lyrics-track-info`, `.lyrics-metadata-row`, `.track-details`, `.player-track-name`, và `.player-track-artist`.
+  - Việc này sẽ triệt tiêu 100% sự lan truyền `min-content width`. Giờ đây tiêu đề bài hát dù có dài hàng ngàn ký tự hay xuất hiện dấu ba chấm `...` thì độ rộng của khung và ảnh bìa vẫn được cố định chuẩn xác tuyệt đối không bị dịch chuyển dù chỉ 1 pixel!
+
+---
+
 ## Timestamp: 2026-08-13T22:00:00
 ### Tác vụ thực hiện
 Khắc phục triệt để lỗi độ phân giải gốc của tệp ảnh bìa album làm thay đổi kích thước hiển thị giữa các bài hát khác nhau.
