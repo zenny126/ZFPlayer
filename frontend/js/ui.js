@@ -24,16 +24,79 @@ class UIController {
       });
     }
 
-    // Settings
-    document.getElementById('btn-settings').addEventListener('click', () => {
-      document.getElementById('settings-modal').classList.remove('hidden');
-    });
+    // Settings Modal
+    const audioModeDetails = {
+      shared: `
+        <div><span class="info-tag info-pro">PROS</span> High stability, allows multi-application background audio simultaneously.</div>
+        <div style="margin-top: 4px;"><span class="info-tag info-con">CONS</span> Audio is resampled and software-mixed by Windows System Mixer.</div>
+        <div style="margin-top: 4px;"><span class="info-tag info-req">BEST FOR</span> Daily casual listening, web browsing & background music.</div>
+      `,
+      exclusive: `
+        <div><span class="info-tag info-pro">PROS</span> Bit-perfect 1:1 direct hardware playback, bypasses Windows OS mixer completely.</div>
+        <div style="margin-top: 4px;"><span class="info-tag info-con">CONS</span> Mutes audio from all other Windows applications during playback.</div>
+        <div style="margin-top: 4px;"><span class="info-tag info-req">BEST FOR</span> USB DACs, soundcards & Hi-Res Audiophile listening.</div>
+      `
+    };
+    audioModeDetails.exclusive_push = audioModeDetails.exclusive;
 
-    document.getElementById('btn-close-settings').addEventListener('click', () => {
-      document.getElementById('settings-modal').classList.add('hidden');
-    });
-    document.addEventListener('click', (e) => {
-    });
+    const updateAudioModeInfo = (mode) => {
+      const infoCard = document.getElementById('audio-mode-info');
+      const targetMode = (mode === 'exclusive_push' || mode === 'exclusive_event') ? 'exclusive' : mode;
+      if (infoCard && audioModeDetails[targetMode]) {
+        infoCard.innerHTML = audioModeDetails[targetMode];
+      }
+    };
+
+    const btnSettings = document.getElementById('btn-settings');
+    if (btnSettings) {
+      btnSettings.addEventListener('click', async () => {
+        const selectMode = document.getElementById('select-audio-mode');
+        if (selectMode && window.api) {
+          try {
+            const config = await window.api.getConfig();
+            let currentMode = (config && config.audio_mode) ? config.audio_mode : 'shared';
+            if (currentMode === 'exclusive_push' || currentMode === 'exclusive_event') currentMode = 'exclusive';
+            selectMode.value = currentMode;
+            updateAudioModeInfo(currentMode);
+          } catch (e) {
+            console.error('Failed to load audio_mode config:', e);
+          }
+        }
+        document.getElementById('settings-modal').classList.remove('hidden');
+      });
+    }
+
+    const selectMode = document.getElementById('select-audio-mode');
+    if (selectMode) {
+      selectMode.addEventListener('change', async (e) => {
+        const selectedMode = e.target.value;
+        updateAudioModeInfo(selectedMode);
+        if (window.api) {
+          try {
+            if (window.api.setAudioMode) {
+              await window.api.setAudioMode(selectedMode);
+            } else if (window.api.setConfig) {
+              await window.api.setConfig('audio_mode', selectedMode);
+            }
+            const modeLabels = {
+              shared: 'WASAPI Shared Mode',
+              exclusive: 'WASAPI Exclusive Mode (Push Driven)'
+            };
+            this.showToast(`Audio mode set to: ${modeLabels[selectedMode] || selectedMode}`);
+          } catch (err) {
+            console.error('Failed to update audio mode:', err);
+            this.showToast('Failed to switch WASAPI audio mode');
+          }
+        }
+      });
+    }
+
+    const btnCloseSettings = document.getElementById('btn-close-settings');
+    if (btnCloseSettings) {
+      btnCloseSettings.addEventListener('click', () => {
+        document.getElementById('settings-modal').classList.add('hidden');
+      });
+    }
 
     window.store.subscribe(['view', 'playlistId'], (state) => {
       // Sync nav items visually

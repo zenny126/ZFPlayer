@@ -52,11 +52,11 @@ def make_threaded_server(host, port, app):
 
 # --- Unified API Class ---
 class ZFPlayerAPI(PlayerAPI, LibraryAPI, LyricsAPI, ConfigAPI):
-    def __init__(self, player_service, library_service, lyrics_worker, config):
+    def __init__(self, player_service, library_service, lyrics_worker, config, audio_engine):
         PlayerAPI.__init__(self, player_service)
         LibraryAPI.__init__(self, library_service, config)
         LyricsAPI.__init__(self, lyrics_worker)
-        ConfigAPI.__init__(self, config)
+        ConfigAPI.__init__(self, config, audio_engine)
 
     def toggle_fullscreen(self):
         import webview
@@ -72,7 +72,7 @@ def get_free_port():
     return port
 
 def main():
-    logger.info("Starting ZeroFLAC Player Backend...")
+    logger.info("Starting ZennyFLAC Player Backend...")
 
     # 1. Initialize Core Infrastructure
     database = Database()
@@ -90,7 +90,7 @@ def main():
     player_service = PlayerService(audio_engine, library_service, config, lyrics_worker)
 
     # 4. Initialize Unified API
-    api = ZFPlayerAPI(player_service, library_service, lyrics_worker, config)
+    api = ZFPlayerAPI(player_service, library_service, lyrics_worker, config, audio_engine)
 
     # 5. Setup Bottle Server
     app = Bottle()
@@ -118,6 +118,10 @@ def main():
     def serve_covers(filename):
         return static_file(filename, root=str(covers_dir))
 
+    @app.route('/favicon.ico')
+    def serve_favicon():
+        return static_file('favicon.ico', root=str(frontend_dir))
+
     # Start Bottle Server in background thread
     port = get_free_port()
     server = make_threaded_server('127.0.0.1', port, app)
@@ -128,7 +132,7 @@ def main():
 
     # 6. PyWebView Window setup
     window = webview.create_window(
-        'ZeroFLAC Player',
+        'ZennyFLAC Player',
         url=f'http://127.0.0.1:{port}',
         js_api=api,
         width=1280,

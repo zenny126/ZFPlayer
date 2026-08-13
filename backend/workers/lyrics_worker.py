@@ -194,7 +194,7 @@ class LyricsWorker:
                     try:
                         params = urllib.parse.urlencode({'track_name': title, 'artist_name': artist})
                         url = f'https://lrclib.net/api/search?{params}'
-                        req = urllib.request.Request(url, headers={'User-Agent': 'ZeroFLACPlayer/2.0'})
+                        req = urllib.request.Request(url, headers={'User-Agent': 'ZennyFLACPlayer/2.0'})
                         with urllib.request.urlopen(req, timeout=3) as resp:
                             api_reached = True
                             results = json.loads(resp.read().decode('utf-8'))

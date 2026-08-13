@@ -1,11 +1,11 @@
-# ZeroFLAC Player (ZFPlayer)
+# ZennyFLAC Player (ZFPlayer)
 
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
 [![Audio Engine](https://img.shields.io/badge/Audio-WASAPI%20Shared%20Mode-success.svg)]()
 [![UI Design](https://img.shields.io/badge/UI-Apple%20Music%20Glassmorphism-purple.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-green.svg)]()
 
-**ZeroFLAC Player (ZFPlayer)** là ứng dụng nghe nhạc Hi-Res Audio chuyên nghiệp chuẩn mã nguồn mở dành cho hệ điều hành Windows. Ứng dụng kết hợp kiến trúc xử lý âm thanh tốc độ C trễ bằng 0 (Zero-Latency RAM Caching & WASAPI Shared Mode) với ngôn ngữ thiết kế kính mờ sang trọng Apple Music Glassmorphic UI, mang lại trải nghiệm nghe nhạc đỉnh cao và trực quan nhất.
+**ZennyFLAC Player (ZFPlayer)** là ứng dụng nghe nhạc Hi-Res Audio chuyên nghiệp chuẩn mã nguồn mở dành cho hệ điều hành Windows. Ứng dụng kết hợp kiến trúc xử lý âm thanh tốc độ C trễ bằng 0 (Zero-Latency RAM Caching & WASAPI Shared Mode) với ngôn ngữ thiết kế kính mờ sang trọng Apple Music Glassmorphic UI, mang lại trải nghiệm nghe nhạc đỉnh cao và trực quan nhất.
 
 ---
 

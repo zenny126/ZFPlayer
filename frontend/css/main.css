@@ -373,6 +373,36 @@ input[type="range"]::-webkit-slider-runnable-track {
 .modal-content h2 { margin-bottom: 24px; }
 .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 
+.settings-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px !important;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+.settings-select:hover, .settings-select:focus {
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  background-color: rgba(255, 255, 255, 0.12) !important;
+}
+.settings-select option {
+  background: #18181b;
+  color: #ffffff;
+  padding: 10px;
+}
+.audio-mode-info-card .info-tag {
+  display: inline-block;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.audio-mode-info-card .info-pro { color: #4ade80; }
+.audio-mode-info-card .info-con { color: #f87171; }
+.audio-mode-info-card .info-req { color: #38bdf8; }
+
 .btn-primary {
   background: var(--accent); color: black; padding: 12px 32px; border: none; border-radius: var(--border-radius-full);
   font-weight: 700; cursor: pointer; transition: transform var(--transition-spring), background var(--transition-fast), box-shadow var(--transition-fast);

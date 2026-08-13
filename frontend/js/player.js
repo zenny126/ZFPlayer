@@ -292,7 +292,7 @@ class PlayerController {
             navigator.mediaSession.metadata = new MediaMetadata({
               title: state.currentTrack.title || 'Unknown Title',
               artist: state.currentTrack.artist || 'Unknown Artist',
-              album: state.currentTrack.album || 'ZeroFLAC Player',
+              album: state.currentTrack.album || 'ZennyFLAC Player',
               artwork: coverUrl ? [{ src: coverUrl, sizes: '512x512', type: 'image/jpeg' }] : []
             });
           }

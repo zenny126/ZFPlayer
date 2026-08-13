@@ -75,5 +75,20 @@ def create_zfp_icon(output_path="app_icon.ico"):
     img.save(output_path, format="ICO", sizes=icon_sizes)
     print(f"[+] Successfully generated icon: {output_path}")
 
+    # 4. Save PNG & Favicon for Frontend & PyWebView
+    frontend_dir = os.path.join(os.path.dirname(os.path.abspath(output_path)), "frontend")
+    os.makedirs(frontend_dir, exist_ok=True)
+    
+    png_path = os.path.join(frontend_dir, "app_icon.png")
+    img.save(png_path, format="PNG")
+    print(f"[+] Successfully generated PNG icon: {png_path}")
+
+    fav_path = os.path.join(frontend_dir, "favicon.ico")
+    img.save(fav_path, format="ICO", sizes=[(16, 16), (32, 32), (48, 48)])
+    print(f"[+] Successfully generated favicon: {fav_path}")
+
+    fav_ico_root = os.path.join(frontend_dir, "app_icon.ico")
+    img.save(fav_ico_root, format="ICO", sizes=icon_sizes)
+
 if __name__ == "__main__":
     create_zfp_icon()

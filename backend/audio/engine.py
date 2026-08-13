@@ -29,6 +29,7 @@ class AudioEngine:
         self.stream = None
         self.volume = 1.0
         self.on_track_end = None
+        self.audio_mode = Config().get('audio_mode', 'shared')
         
         self.audio_data = None      # Full audio loaded into RAM (numpy float32 array)
         self.play_pos = 0          # Frame offset in audio_data
@@ -46,8 +47,45 @@ class AudioEngine:
         self._target_state_after_fade = None
         self._lock = threading.Lock()
 
+    def _get_wasapi_device_id(self):
+        try:
+            wasapi_info = next((api for api in sd.query_hostapis() if 'WASAPI' in api['name']), None)
+            if wasapi_info and wasapi_info.get('default_output_device', -1) >= 0:
+                return wasapi_info['default_output_device']
+        except Exception as e:
+            logger.warning(f"Error querying WASAPI output device: {e}")
+        return None
+
+    def set_audio_mode(self, mode: str) -> str:
+        if mode in ('exclusive_push', 'exclusive'):
+            mode = 'exclusive'
+        elif mode != 'shared':
+            mode = 'shared'
+            
+        with self._lock:
+            if getattr(self, 'audio_mode', 'shared') == mode:
+                return mode
+                
+            logger.info(f"Changing WASAPI audio mode from '{getattr(self, 'audio_mode', 'shared')}' to '{mode}'")
+            self.audio_mode = mode
+            Config().set('audio_mode', mode)
+
+            is_playing = (self.state == AudioState.PLAYING)
+            if self.stream is not None:
+                try:
+                    self.stream.stop()
+                    self.stream.close()
+                except Exception:
+                    pass
+                self.stream = None
+
+            if is_playing:
+                self._create_stream()
+
+        return mode
+
     def load(self, file_path: str):
-        self.stop_immediate()
+        self.stop_immediate(close_hardware=False)
         self.state = AudioState.LOADING
         
         try:
@@ -59,6 +97,7 @@ class AudioEngine:
             raw_data = sf_file.read(dtype='float32', always_2d=True)
             sf_file.close()
 
+            stream_to_close = None
             with self._lock:
                 self.audio_data = raw_data
                 self.play_pos = 0
@@ -70,14 +109,17 @@ class AudioEngine:
                 self._current_channels = ch
                 self._sd_dtype = 'float32'
 
-                # Re-create stream only if audio format/channels changed
+                # Close stream ONLY if audio format/channels changed
                 if samplerate_changed and self.stream is not None:
-                    try:
-                        self.stream.stop()
-                        self.stream.close()
-                    except Exception:
-                        pass
+                    stream_to_close = self.stream
                     self.stream = None
+
+            if stream_to_close is not None:
+                try:
+                    stream_to_close.stop()
+                    stream_to_close.close()
+                except Exception:
+                    pass
 
             ram_mb = raw_data.nbytes / (1024 * 1024)
             logger.info(
@@ -93,16 +135,46 @@ class AudioEngine:
     def _create_stream(self):
         sr = self._current_samplerate
         ch = self._current_channels
+        mode = getattr(self, 'audio_mode', 'shared')
+        dev_id = self._get_wasapi_device_id()
         
-        logger.info(f"Opening WASAPI Shared RAM stream (sr={sr}, dtype=float32)")
-        self.stream = sd.OutputStream(
-            samplerate=sr,
-            channels=ch,
-            dtype='float32',
-            latency='high',  # Use 'high' latency to prevent crackling in Shared Mode
-            callback=self._audio_callback,
-        )
-        self.stream.start()
+        logger.info(f"Opening WASAPI stream (mode={mode}, device={dev_id}, sr={sr}, dtype=float32)")
+
+        if mode in ('exclusive', 'exclusive_push', 'exclusive_event'):
+            wasapi_settings = sd.WasapiSettings(exclusive=True)
+            try:
+                wasapi_settings._streaminfo.flags |= sd._lib.paWinWasapiPolling
+            except Exception as e:
+                logger.warning(f"Failed to set paWinWasapiPolling flag: {e}")
+            latency_setting = 'low'
+        else: # 'shared'
+            wasapi_settings = sd.WasapiSettings(exclusive=False)
+            latency_setting = 'high'
+
+        try:
+            kwargs = {
+                'samplerate': sr,
+                'channels': ch,
+                'dtype': 'float32',
+                'latency': latency_setting,
+                'extra_settings': wasapi_settings,
+                'callback': self._audio_callback,
+            }
+            if dev_id is not None:
+                kwargs['device'] = dev_id
+
+            self.stream = sd.OutputStream(**kwargs)
+            self.stream.start()
+        except Exception as e:
+            if mode != 'shared':
+                logger.warning(f"Failed to open WASAPI mode '{mode}' ({e}). Falling back to WASAPI Shared Mode.")
+                wasapi_settings = sd.WasapiSettings(exclusive=False)
+                kwargs['latency'] = 'high'
+                kwargs['extra_settings'] = wasapi_settings
+                self.stream = sd.OutputStream(**kwargs)
+                self.stream.start()
+            else:
+                raise e
 
     def play(self):
         if self.state in (AudioState.PLAYING, AudioState.LOADING):
@@ -111,8 +183,12 @@ class AudioEngine:
         with self._lock:
             if not self.stream:
                 self._create_stream()
-            elif not self.stream.active:
-                self.stream.start()
+            else:
+                try:
+                    if not self.stream.active:
+                        self.stream.start()
+                except Exception:
+                    self._create_stream()
 
             # Trigger 20ms micro fade-in ramp to eliminate start pops/clicks
             fade_samples = int(self._current_samplerate * 0.020)
@@ -134,11 +210,8 @@ class AudioEngine:
             threading.Event().wait(0.020)
             
             with self._lock:
-                if self.state == AudioState.PAUSED and self.stream:
-                    try:
-                        self.stream.stop()
-                    except Exception:
-                        pass
+                if self.state == AudioState.PAUSED:
+                    self.state = AudioState.PAUSED
 
     def resume(self):
         if self.state == AudioState.PAUSED:
@@ -155,21 +228,25 @@ class AudioEngine:
             # Short wait for callback to render smooth fade-out
             threading.Event().wait(0.020)
             
-        self.stop_immediate()
+        self.stop_immediate(close_hardware=False)
 
-    def stop_immediate(self):
+    def stop_immediate(self, close_hardware: bool = False):
+        stream_to_close = None
         with self._lock:
             self.state = AudioState.STOPPED
             self._fade_in_remaining = 0
             self._fade_out_remaining = 0
-            if self.stream:
-                try:
-                    self.stream.stop()
-                    self.stream.close()
-                except Exception:
-                    pass
-                self.stream = None
             self.play_pos = 0
+            if close_hardware and self.stream is not None:
+                stream_to_close = self.stream
+                self.stream = None
+
+        if stream_to_close is not None:
+            try:
+                stream_to_close.stop()
+                stream_to_close.close()
+            except Exception:
+                pass
 
     def seek(self, seconds: float):
         with self._lock:
@@ -190,7 +267,8 @@ class AudioEngine:
             'position_seconds': pos_sec,
             'duration': self.duration,
             'volume': self.volume,
-            'is_playing': self.state == AudioState.PLAYING
+            'is_playing': self.state == AudioState.PLAYING,
+            'audio_mode': getattr(self, 'audio_mode', 'shared')
         }
 
     def _audio_callback(self, outdata, frames, time_info, status):

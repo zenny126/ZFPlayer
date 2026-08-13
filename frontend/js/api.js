@@ -53,6 +53,7 @@ class ApiWrapper {
   getLyrics(artist, title, album, duration, path) { return this.call('get_lyrics', artist, title, album, duration, path); }
   getConfig() { return this.call('get_config'); }
   setConfig(key, value) { return this.call('set_config', key, value); }
+  setAudioMode(mode) { return this.call('set_audio_mode', mode); }
   selectMusicDir() { return this.call('select_music_dir'); }
   selectMusicFile() { return this.call('select_music_file'); }
   selectCoverImage() { return this.call('select_cover_image'); }

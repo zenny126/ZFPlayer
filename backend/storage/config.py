@@ -31,7 +31,8 @@ class Config:
             "shuffle": False,
             "theme": "dark",
             "last_track": None,
-            "last_position": 0
+            "last_position": 0,
+            "audio_mode": "shared"
         }
         
         if os.path.exists(self.config_path):

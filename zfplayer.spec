@@ -6,9 +6,10 @@ from PyInstaller.utils.hooks import collect_data_files
 
 block_cipher = None
 
-# Bundle frontend assets and static files
+# Bundle frontend assets, static files and icons
 datas = [
     ('frontend', 'frontend'),
+    ('app_icon.ico', '.'),
 ]
 
 # Collect soundfile DLLs if present

@@ -24,6 +24,14 @@ def main():
         print(f"[!] Error: {spec_file} not found!")
         sys.exit(1)
 
+    # 2. Generate/Ensure all icon files exist
+    try:
+        sys.path.insert(0, str(project_root))
+        from generate_icon import create_zfp_icon
+        create_zfp_icon()
+    except Exception as e:
+        print(f"[!] Warning generating icons: {e}")
+
     # Clean previous build file if unlocked
     old_exe = project_root / "dist" / "ZFPlayer.exe"
     if old_exe.exists():
@@ -50,12 +58,12 @@ def main():
             exe_path = project_root / "dist" / "ZFPlayer" / "ZFPlayer.exe"
 
         if exe_path.exists():
-            v11_exe = project_root / "dist" / "ZFPlayer_v1.1.exe"
+            zenny_exe = project_root / "dist" / "ZennyFLAC_Player.exe"
             try:
-                shutil.copy2(exe_path, v11_exe)
-                print(f"[+] Updated fresh icon copy: {v11_exe}")
+                shutil.copy2(exe_path, zenny_exe)
+                print(f"[+] Created branded executable: {zenny_exe}")
             except Exception as e:
-                print(f"[!] Warning: Could not update {v11_exe}: {e}")
+                print(f"[!] Warning: Could not create {zenny_exe}: {e}")
 
             print("\n" + "=" * 60)
             print("  BUILD SUCCESSFUL!")
