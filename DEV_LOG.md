@@ -1,5 +1,24 @@
 # DEV LOG
 
+## Timestamp: 2026-08-14T12:50:00
+### Tác vụ thực hiện
+Tối ưu UX chuyển cảnh Bật/Tắt Lời bài hát: Triệt tiêu hoàn toàn hiện tượng nhảy dòng và nén chữ thô cứng.
+
+### Danh sách tệp tin thay đổi
+- rontend/css/lyrics.css (MODIFIED)
+- rontend/index.html (MODIFIED)
+- 	ask.md (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- **Nguyên nhân gốc rễ**: Trước đó chuyển động dùng margin-left làm biến dạng độ rộng (Reflow) của .lyrics-container liên tục trong 750ms, ép văn bản phải ngắt dòng lại nhiều lần tạo cảm giác giật cục và nhảy chữ.
+- **Giải pháp xử lý**:
+  - Chuyển sang sử dụng position: relative; left: calc(50% - (var(--max-cover-size) / 2)); với will-change: left. Cơ chế này chỉ dịch chuyển hộp render của cụm điều khiển mà **không hề làm thay đổi kích thước layout** của khung lời bài hát kế bên.
+  - Tách biệt timing:
+    - Khi tắt lyric: Lời bài hát mờ dần cực nhanh và êm trong **300ms** (opacity: 0, transform: translateX(30px)). Các dòng chữ đứng yên hoàn toàn không nhảy dòng.
+    - Khi bật lyric: Lời bài hát hiện rõ êm dịu trong **450ms** và cụm điều khiển lướt về trong **700ms**.
+
+---
+
 ## Timestamp: 2026-08-14T12:41:00
 ### Tác vụ thực hiện
 Thêm nút Bật/Tắt Lời bài hát (Lyrics Toggle) và hiệu ứng chuyển động về giữa màn hình (Center Album Art Mode) chuẩn Apple Music.

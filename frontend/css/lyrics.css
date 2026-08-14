@@ -107,13 +107,15 @@
   width: var(--max-cover-size); /* Cố định chính xác độ rộng theo kích thước tính toán */
   max-width: var(--max-cover-size);
   min-width: 0; /* Quan trọng: Ngăn chặn chuỗi text white-space: nowrap đẩy phồng chiều rộng flex item */
-  margin-left: 0;
-  transition: margin-left 750ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1));
+  position: relative;
+  left: 0;
+  transition: left 700ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1));
+  will-change: left;
 }
 
-/* Center Mode: Glides track info & album cover smoothly to the exact center */
+/* Center Mode: Glides track info & album cover smoothly to the exact center without altering siblings' flex layout */
 .lyrics-overlay-container.center-mode .lyrics-track-info {
-  margin-left: calc(50% - (var(--max-cover-size) / 2));
+  left: calc(50% - (var(--max-cover-size) / 2));
 }
 
 #lyrics-cover {
@@ -290,16 +292,20 @@
   opacity: 1;
   transform: translateX(0);
   visibility: visible;
-  transition: opacity 550ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)), 
-              transform 650ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)),
-              visibility 550ms;
+  transition: opacity 450ms ease-out, 
+              transform 500ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)),
+              visibility 450ms;
+  will-change: opacity, transform;
 }
 
 .lyrics-overlay-container.center-mode .lyrics-container {
   opacity: 0;
-  transform: translateX(36px);
+  transform: translateX(30px);
   pointer-events: none;
   visibility: hidden;
+  transition: opacity 300ms ease-out, 
+              transform 350ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)),
+              visibility 300ms;
 }
 
 #lyrics-content {
