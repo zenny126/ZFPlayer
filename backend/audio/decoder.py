@@ -66,8 +66,10 @@ class StreamingDecoder:
 
     def stop(self):
         self.stop_event.set()
+        if self.ring_buffer:
+            self.ring_buffer.wake_up()
         if self.thread and self.thread.is_alive():
-            self.thread.join()
+            self.thread.join(timeout=0.5)
         with self.lock:
             if self.sf_file:
                 self.sf_file.close()
@@ -78,6 +80,8 @@ class StreamingDecoder:
             if self.sf_file:
                 self.sf_file.seek(frame)
                 self.eof_reached = False
+        if self.ring_buffer:
+            self.ring_buffer.wake_up()
 
     def get_position(self) -> int:
         with self.lock:
@@ -99,11 +103,11 @@ class StreamingDecoder:
                 time.sleep(0.01)
                 continue
 
-            space = self.ring_buffer.space()
-            if space < self.chunk_size:
-                time.sleep(0.005)
+            # Wait for buffer space using event-driven Condition variable instead of busy-wait polling
+            if not self.ring_buffer.wait_for_space(self.chunk_size, timeout=0.05):
                 continue
 
+            space = self.ring_buffer.space()
             frames_to_read = min(self.chunk_size, space)
             
             with self.lock:
@@ -129,4 +133,5 @@ class StreamingDecoder:
                 w = self.ring_buffer.write(data[written:])
                 written += w
                 if w == 0:
-                    time.sleep(0.001)
+                    if not self.ring_buffer.wait_for_space(1, timeout=0.02):
+                        time.sleep(0.001)

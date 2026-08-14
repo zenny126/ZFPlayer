@@ -29,9 +29,13 @@ class Database:
 
     def _get_conn(self) -> sqlite3.Connection:
         if not hasattr(self._local, 'conn'):
-            self._local.conn = sqlite3.connect(self.db_path, check_same_thread=False)
-            self._local.conn.row_factory = sqlite3.Row
-            self._local.conn.execute('PRAGMA journal_mode=WAL')
+            conn = sqlite3.connect(self.db_path, check_same_thread=False)
+            conn.row_factory = sqlite3.Row
+            conn.execute('PRAGMA journal_mode=WAL')
+            conn.execute('PRAGMA synchronous=NORMAL')
+            conn.execute('PRAGMA cache_size=-64000')  # 64MB memory cache
+            conn.execute('PRAGMA temp_store=MEMORY')
+            self._local.conn = conn
         return self._local.conn
 
     def init(self):
@@ -100,6 +104,11 @@ class Database:
             cursor.execute('ALTER TABLE tracks ADD COLUMN is_liked INTEGER DEFAULT 0')
         if 'last_played' not in columns:
             cursor.execute('ALTER TABLE tracks ADD COLUMN last_played TIMESTAMP')
+            
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_tracks_is_liked ON tracks(is_liked)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_tracks_last_played ON tracks(last_played)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_tracks_album_artist ON tracks(album, artist)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_playlist_tracks_pos ON playlist_tracks(playlist_id, position)')
             
         cursor.execute("PRAGMA table_info(playlists)")
         playlist_cols = [col['name'] for col in cursor.fetchall()]

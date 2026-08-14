@@ -119,7 +119,7 @@ class HomeManager {
           row.classList.add('active');
         }
         
-        let coverUrl = track.cover_hash ? `/api/covers/${track.cover_hash}.jpg` : 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1NiIgaGVpZ2h0PSI1NiI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iIzMzMyIvPjwvc3ZnPg==';
+        let coverUrl = track.cover_hash ? `/api/covers/${track.cover_hash}_thumb.jpg` : 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1NiIgaGVpZ2h0PSI1NiI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iIzMzMyIvPjwvc3ZnPg==';
         
         const dateStr = track.mtime ? new Date(track.mtime * 1000).toLocaleDateString() : '';
         const isLiked = track.is_liked === 1;
@@ -129,11 +129,13 @@ class HomeManager {
         const playIcon = `<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon" style="width: 14px; height: 14px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
         const moreIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon" style="width: 18px; height: 18px;"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>`;
 
+        const fallbackAttr = track.cover_hash ? `onerror="this.onerror=null;this.src='/api/covers/${track.cover_hash}.jpg';"` : '';
+
         row.innerHTML = `
           <div class="track-number">${index + 1}</div>
           <div class="play-icon">${playIcon}</div>
           <div class="track-title">
-             <img src="${coverUrl}" class="track-thumbnail" alt="">
+             <img src="${coverUrl}" class="track-thumbnail" alt="" ${fallbackAttr}>
              <div class="track-title-text">
                <div class="track-title-name">${track.title || 'Unknown Title'}</div>
                <div class="track-title-artist">${track.artist || 'Unknown Artist'}</div>

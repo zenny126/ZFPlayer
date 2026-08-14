@@ -36,8 +36,9 @@ from backend.api.lyrics_api import LyricsAPI
 from backend.api.config_api import ConfigAPI
 
 # Setup Logging
+_is_debug = "--debug" in sys.argv or os.environ.get("ZFPLAYER_DEBUG") == "1"
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.DEBUG if _is_debug else logging.INFO,
     format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
     handlers=[logging.StreamHandler()]
 )

@@ -201,9 +201,25 @@
 
   let startTime = Date.now();
   let lastFrameTime = Date.now();
+  let isRunning = false;
+  let rafId = null;
+  const targetFps = 45;
+  const frameInterval = 1000 / targetFps;
+  let lastRenderTime = 0;
 
   function render() {
+    if (!isRunning) return;
+
+    rafId = requestAnimationFrame(render);
+
     const now = Date.now();
+    const elapsed = now - lastRenderTime;
+
+    if (elapsed < frameInterval) {
+      return; // Throttle to target FPS
+    }
+
+    lastRenderTime = now - (elapsed % frameInterval);
     const dt = now - lastFrameTime;
     lastFrameTime = now;
     
@@ -232,8 +248,32 @@
     gl.uniform3fv(c4Loc, c4);
 
     gl.drawArrays(gl.TRIANGLES, 0, 6);
-    requestAnimationFrame(render);
   }
 
-  requestAnimationFrame(render);
+  function startLoop() {
+    if (!isRunning) {
+      isRunning = true;
+      lastFrameTime = Date.now();
+      lastRenderTime = Date.now();
+      rafId = requestAnimationFrame(render);
+    }
+  }
+
+  function stopLoop() {
+    isRunning = false;
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      stopLoop();
+    } else {
+      startLoop();
+    }
+  });
+
+  startLoop();
 })();

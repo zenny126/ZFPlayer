@@ -404,9 +404,16 @@ class PlayerController {
     if (this.seekBar) this.seekBar.value = pos;
     const lSeekBar = document.getElementById('lyrics-seek-bar');
     if (lSeekBar) lSeekBar.value = pos;
-    if (this.timeCurrent) this.timeCurrent.textContent = this.formatTime(pos);
-    const lTimeCurrent = document.getElementById('lyrics-seek-time-current');
-    if (lTimeCurrent) lTimeCurrent.textContent = this.formatTime(pos);
+
+    // Cache current second integer to avoid redundant DOM textContent writes on every 60/144Hz frame
+    const currentSec = Math.floor(pos || 0);
+    if (currentSec !== this._lastDisplaySec) {
+      this._lastDisplaySec = currentSec;
+      const formatted = this.formatTime(pos);
+      if (this.timeCurrent) this.timeCurrent.textContent = formatted;
+      const lTimeCurrent = document.getElementById('lyrics-seek-time-current');
+      if (lTimeCurrent) lTimeCurrent.textContent = formatted;
+    }
     
     const pct = dur > 0 ? (pos / dur) * 100 : 0;
     if (this.seekBar) this.seekBar.style.setProperty('--progress', `${pct}%`);
@@ -428,6 +435,7 @@ class PlayerController {
     const poll = async () => {
       if (this._isPolling) return;
       this._isPolling = true;
+      let nextInterval = 1000;
 
       try {
         // Skip background polling override if user seeked recently (within last 1500ms)
@@ -437,6 +445,10 @@ class PlayerController {
             const storeState = window.store.getState();
             const pos = state.position_seconds !== undefined ? state.position_seconds : state.position;
             
+            // Adjust polling interval dynamically: 1s when playing, 2s when paused/stopped
+            nextInterval = state.is_playing ? 1000 : 2000;
+            if (document.hidden) nextInterval = 3000;
+
             // Auto-next or external track change
             if (state.track && (!storeState.currentTrack || state.track.path !== storeState.currentTrack.path)) {
               window.store.setState({ currentTrack: state.track, isPlaying: state.is_playing });
@@ -456,11 +468,11 @@ class PlayerController {
         console.warn("Polling error:", e);
       } finally {
         this._isPolling = false;
-        setTimeout(poll, 500);
+        setTimeout(poll, nextInterval);
       }
     };
 
-    setTimeout(poll, 500);
+    setTimeout(poll, 1000);
   }
 }
 

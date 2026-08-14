@@ -11,6 +11,7 @@ class AudioRingBuffer:
         self.read_idx = 0
         self.size = 0
         self.lock = threading.Lock()
+        self.has_space_cond = threading.Condition(self.lock)
 
     def write(self, data: np.ndarray) -> int:
         frames_to_write = data.shape[0]
@@ -50,11 +51,23 @@ class AudioRingBuffer:
                     
                 self.read_idx = (self.read_idx + frames_to_read) % self.capacity
                 self.size -= frames_to_read
+                self.has_space_cond.notify_all()
                 
             if frames_to_read < frames:
                 outdata[frames_to_read:] = 0
                 
         return frames_to_read
+
+    def wait_for_space(self, min_space: int = 1, timeout: float = 0.05) -> bool:
+        with self.lock:
+            if (self.capacity - self.size) >= min_space:
+                return True
+            self.has_space_cond.wait(timeout=timeout)
+            return (self.capacity - self.size) >= min_space
+
+    def wake_up(self):
+        with self.lock:
+            self.has_space_cond.notify_all()
 
     def available(self) -> int:
         with self.lock:
@@ -69,4 +82,5 @@ class AudioRingBuffer:
             self.write_idx = 0
             self.read_idx = 0
             self.size = 0
+            self.has_space_cond.notify_all()
 
