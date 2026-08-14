@@ -287,14 +287,14 @@
   position: relative;
   padding-left: 32px; /* Balanced left/right safe padding */
   padding-right: 32px; /* Expanded right boundary for perfect symmetry */
-  mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 22%, black 85%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 22%, black 85%, transparent 100%);
   opacity: 1;
   transform: translateX(0);
   visibility: visible;
-  transition: opacity 400ms ease-out, 
-              transform 500ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)),
-              visibility 400ms;
+  transition: opacity 550ms ease-out, 
+              transform 650ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)),
+              visibility 550ms;
   will-change: opacity, transform;
 }
 
@@ -312,15 +312,15 @@
 #lyrics-content {
   display: flex;
   flex-direction: column;
-  padding: 35vh 0;
+  padding: 25vh 0 50vh 0; /* Neo 35% ở trên thông thoáng, cuộn đáy 50vh thoải mái */
   /* Removed transition: transform... to stop moving the container itself */
   will-change: auto;
   width: 100%;
 }
 
-/* Staggered Waterfall Spring Animation: Lướt so le từng câu từ phải vào khi mở lại lời bài hát */
+/* Staggered Waterfall Spring Animation: Lướt so le từng câu từ phải vào với tốc độ 800ms chậm rãi êm ái */
 #lyrics-content.stagger-in .lyrics-line {
-  animation: lyricWaterfallIn 650ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)) backwards;
+  animation: lyricWaterfallIn 800ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)) backwards;
   animation-delay: var(--stagger-delay, 0ms);
 }
 

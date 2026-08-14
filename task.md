@@ -1,7 +1,7 @@
-# Tasks - Hoạt Cảnh Opposite Slide & Lò Xo Thác Đổ (Staggered Waterfall Spring)
+# Tasks - Nâng Vị Trí Lời Đang Phát Lên Cao (35% Anchor)
 
-- [x] Cấu hình CSS cho hiệu ứng Slide-out dạt sang phải (120px, 300ms) trong `lyrics.css` <!-- id: 0 -->
-- [x] Xây dựng CSS hoạt ảnh Waterfall Spring `@keyframes lyricWaterfallIn` cho `.lyrics-line` trong `lyrics.css` <!-- id: 1 -->
-- [x] Cập nhật `lyrics.js` gán `--stagger-delay` và kích hoạt `.stagger-in` khi bung mở lại lời bài hát <!-- id: 2 -->
-- [x] Tăng cache-buster version và kiểm thử hoạt cảnh hai chiều <!-- id: 3 -->
+- [x] Cập nhật công thức tính cuộn neo dọc 35% trong `lyrics.js` (`scrollToLine`) <!-- id: 0 -->
+- [x] Cập nhật `mask-image` và padding dọc cho `#lyrics-content` trong `lyrics.css` <!-- id: 1 -->
+- [x] Làm chậm tốc độ trượt vào khi mở lời bài hát (800ms, stagger step 45ms) <!-- id: 2 -->
+- [x] Tăng cache-buster version và kiểm thử cuộn lời bài hát <!-- id: 3 -->
 - [x] Ghi nhật ký phát triển `DEV_LOG.md` và `walkthrough.md` <!-- id: 4 -->

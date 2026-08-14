@@ -1,5 +1,22 @@
 # DEV LOG
 
+## Timestamp: 2026-08-14T13:12:00
+### Tác vụ thực hiện
+Nâng mốc neo câu hát đang phát (Active Line) lên 35% từ đỉnh xuống và làm chậm tốc độ trượt vào của lời bài hát khi mở.
+
+### Danh sách tệp tin thay đổi
+- rontend/js/lyrics.js (MODIFIED)
+- rontend/css/lyrics.css (MODIFIED)
+- rontend/index.html (MODIFIED)
+- 	ask.md (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- **Vị trí neo Active Line 35%**: Thay đổi công thức tính cuộn trong scrollToLine: const targetAnchor = containerHeight * 0.35;. Dòng đang phát sáng chuyển lên nằm ở vị trí 35% từ đỉnh khung hình (ngang tầm nửa trên ảnh bìa album), phía trên chỉ hiển thị 1-2 câu vừa hát qua, mở rộng tối đa tầm nhìn 4-5 câu sắp hát phía dưới.
+- **Dải mờ đỉnh (Top Fade Mask)**: Cập nhật mask-image: linear-gradient(to bottom, transparent 0%, black 22%, black 85%, transparent 100%) để các câu đã hát qua mờ dần êm ái vào bóng tối phía trên.
+- **Tốc độ trượt vào êm và chậm rãi**: Tăng thời lượng hoạt ảnh thác đổ @keyframes lyricWaterfallIn lên **800ms** (stagger delay step 45ms), giúp lời bài hát bung nở lướt vào từ tốn, mượt mà và sang trọng hơn.
+
+---
+
 ## Timestamp: 2026-08-14T13:03:00
 ### Tác vụ thực hiện
 Triển khai hoạt cảnh chuyển đổi Opposite Slide-out (120px, 300ms) và Lò xo thác đổ (Staggered Waterfall Spring) khi Bật/Tắt Lời bài hát.

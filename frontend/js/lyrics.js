@@ -37,10 +37,10 @@ class LyricsRenderer {
   applyLyricsViewState(showLyrics) {
     if (showLyrics) {
       if (this.container && this.container.children.length > 0) {
-        const baseIdx = Math.max(0, this.activeIndex >= 0 ? this.activeIndex - 2 : 0);
+        const baseIdx = Math.max(0, this.activeIndex >= 0 ? this.activeIndex - 1 : 0);
         Array.from(this.container.children).forEach((child, idx) => {
           const dist = Math.max(0, idx - baseIdx);
-          child.style.setProperty('--stagger-delay', `${Math.min(dist * 35, 400)}ms`);
+          child.style.setProperty('--stagger-delay', `${Math.min(dist * 45, 550)}ms`);
         });
         this.container.classList.remove('stagger-in');
         void this.container.offsetWidth; // Trigger reflow to restart animation cleanly
@@ -48,7 +48,7 @@ class LyricsRenderer {
         if (this._staggerTimer) clearTimeout(this._staggerTimer);
         this._staggerTimer = setTimeout(() => {
           this.container?.classList.remove('stagger-in');
-        }, 1100);
+        }, 1400);
       }
       this.overlayContainer?.classList.remove('center-mode');
       this.toggleLyricsBtn?.classList.add('active');
@@ -207,7 +207,7 @@ class LyricsRenderer {
       el.className = 'lyrics-line';
       el.textContent = line.text;
       el.dataset.index = idx;
-      el.style.setProperty('--stagger-delay', `${Math.min(idx * 35, 450)}ms`);
+      el.style.setProperty('--stagger-delay', `${Math.min(idx * 45, 550)}ms`);
       el.addEventListener('click', () => {
         if (window.playerController && line.time >= 0) {
           // Immediately highlight & scroll to selected lyric line before seek IPC responds
@@ -264,8 +264,9 @@ class LyricsRenderer {
 
     const containerHeight = this.container.parentElement.clientHeight;
     const offsetTop = lineEl.offsetTop;
-    const halfHeight = containerHeight / 2;
-    const scrollAmount = halfHeight - offsetTop - (lineEl.clientHeight / 2);
+    // Neo ở vị trí 35% từ đỉnh xuống thay vì giữa 50%
+    const targetAnchor = containerHeight * 0.35;
+    const scrollAmount = targetAnchor - offsetTop - (lineEl.clientHeight / 2);
     
     // Set variable for individual child transforms (True staggered parallax)
     this.container.style.setProperty('--scroll-y', `${scrollAmount}px`);
