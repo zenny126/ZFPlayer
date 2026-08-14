@@ -265,7 +265,7 @@ class PlaylistManager {
         this.btnImportFolder.textContent = 'Scanning...';
         this.btnImportFolder.disabled = true;
         
-        this.showImportProgressModal('Đang nhập thư mục bài hát...');
+        this.showImportProgressModal('Importing music folder...');
         this.startProgressPolling();
 
         try {
@@ -282,7 +282,7 @@ class PlaylistManager {
 
           if (res && res.status === 'success') {
             if (window.uiController && window.uiController.showToast) {
-              window.uiController.showToast(res.message || 'Đã nhập bài hát thành công!');
+              window.uiController.showToast(res.message || 'Successfully imported tracks!');
             }
           }
         } catch (err) {
@@ -308,7 +308,7 @@ class PlaylistManager {
         this.btnImportFiles.textContent = 'Processing...';
         this.btnImportFiles.disabled = true;
         
-        this.showImportProgressModal('Đang nhập tệp bài hát...');
+        this.showImportProgressModal('Importing audio files...');
         this.startProgressPolling();
 
         try {
@@ -325,7 +325,7 @@ class PlaylistManager {
 
           if (res && res.status === 'success') {
             if (window.uiController && window.uiController.showToast) {
-              window.uiController.showToast(res.message || 'Đã nhập bài hát thành công!');
+              window.uiController.showToast(res.message || 'Successfully imported tracks!');
             }
           }
         } catch (err) {
@@ -699,8 +699,8 @@ class PlaylistManager {
   showImportProgressModal(title) {
     const modal = document.getElementById('import-progress-modal');
     if (!modal) return;
-    document.getElementById('import-progress-title').textContent = title || 'Đang nhập bài hát...';
-    document.getElementById('import-progress-file').textContent = 'Đang chuẩn bị...';
+    document.getElementById('import-progress-title').textContent = title || 'Importing tracks...';
+    document.getElementById('import-progress-file').textContent = 'Preparing...';
     document.getElementById('import-progress-fill').style.width = '0%';
     document.getElementById('import-progress-status').textContent = '0 / 0';
     document.getElementById('import-progress-percent').textContent = '0%';
@@ -725,7 +725,7 @@ class PlaylistManager {
           
           if (fileEl && progress.current_file) {
             const fileName = progress.current_file.split(/[/\\]/).pop();
-            fileEl.textContent = fileName ? `Đang xử lý: ${fileName}` : progress.current_file;
+            fileEl.textContent = fileName ? `Processing: ${fileName}` : progress.current_file;
           }
 
           if (progress.total > 0) {
@@ -735,7 +735,7 @@ class PlaylistManager {
             if (percentEl) percentEl.textContent = `${percent}%`;
           } else if (progress.scanned > 0) {
             if (fill) fill.style.width = `50%`;
-            if (statusEl) statusEl.textContent = `Đã quét ${progress.scanned} tệp`;
+            if (statusEl) statusEl.textContent = `Scanned ${progress.scanned} files`;
             if (percentEl) percentEl.textContent = `...`;
           }
         }

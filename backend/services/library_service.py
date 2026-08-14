@@ -234,7 +234,7 @@ class LibraryService:
             # 3. Trigger async lyrics prefetch
             threading.Thread(target=self._prefetch_all_lyrics, daemon=True).start()
             
-            return {'status': 'success', 'message': f'Đã nhập thành công {added_count} bài hát', 'added_count': added_count}
+            return {'status': 'success', 'message': f'Successfully imported {added_count} tracks', 'added_count': added_count}
         except Exception as e:
             logger.error(f"Error importing folder to playlist: {e}")
             return {'status': 'error', 'message': str(e)}
@@ -267,7 +267,7 @@ class LibraryService:
             # Trigger async lyrics prefetch
             threading.Thread(target=self._prefetch_all_lyrics, daemon=True).start()
             
-            return {'status': 'success', 'message': f'Đã nhập thành công {added_count} bài hát', 'added_count': added_count}
+            return {'status': 'success', 'message': f'Successfully imported {added_count} tracks', 'added_count': added_count}
         except Exception as e:
             logger.error(f"Error importing files to playlist: {e}")
             return {'status': 'error', 'message': str(e)}

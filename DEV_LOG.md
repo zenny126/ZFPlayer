@@ -1,5 +1,24 @@
 # DEV LOG
 
+## Timestamp: 2026-08-14T14:05:00
+### Tác vụ thực hiện
+Chuẩn hóa ngôn ngữ hiển thị tiếng Anh cho các thông báo Import Modal/Toast notification và tiến hành đồng bộ / push mã nguồn lên kho lưu trữ từ xa (GitHub).
+
+### Danh sách tệp tin tạo mới & thay đổi
+- `backend/services/library_service.py` (MODIFIED)
+- `frontend/js/playlists.js` (MODIFIED)
+- `config/config.json` (MODIFIED)
+- `DEV_LOG.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Chuẩn hóa Thông báo Import**:
+   - Chuyển đổi các chuỗi thông báo kết quả import trong `library_service.py` và giao diện modal `playlists.js` từ tiếng Việt sang tiếng Anh chuẩn để đồng bộ toàn hệ thống.
+2. **Đồng bộ mã nguồn Git**:
+   - Stage toàn bộ mã nguồn mới (gồm Cinema Idle, Kinetic Momentum Lyrics Scroll, Apple Lyrics mode, và Localization).
+   - Thực hiện `git commit` và `git push` theo yêu cầu từ người dùng.
+
+---
+
 ## Timestamp: 2026-08-14T13:59:00
 ### Tác vụ thực hiện
 Sửa lỗi không tự ẩn Cinema Idle khi con trỏ chuột đặt trên cột lời bài hát (Coordinate Delta Filtering).
