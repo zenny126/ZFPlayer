@@ -1,3 +1,18 @@
+const KEY_SYMBOLS = {
+  Space: 'Space',
+  ArrowLeft: '←',
+  ArrowRight: '→',
+  ArrowUp: '↑',
+  ArrowDown: '↓'
+};
+
+function formatKeyLabel(key) {
+  if (KEY_SYMBOLS[key]) return KEY_SYMBOLS[key];
+  if (key.startsWith('Key')) return key.slice(3);
+  if (key.startsWith('Digit')) return key.slice(5);
+  return key;
+}
+
 /**
  * ShortcutsManager - Comprehensive Keyboard Shortcut & Combination Manager for ZFPlayer
  * Supports single keys, multi-modifier combinations, live key recording, persistence & reset.
@@ -106,33 +121,22 @@ class ShortcutsManager {
     if (e.metaKey) modifiers.push('Meta');
 
     const key = e.key;
-    const isModifierKey = ['Control', 'Shift', 'Alt', 'Meta', 'AltGraph'].includes(key);
-    
-    if (isModifierKey) {
+    if (['Control', 'Shift', 'Alt', 'Meta', 'AltGraph'].includes(key)) {
       return { isModifierOnly: true, modifiers, primary: '', combo: '' };
     }
 
     let primary = e.code || e.key;
-
-    // Standardize primary key representation
     if (primary === 'Space' || key === ' ') primary = 'Space';
-    else if (primary.startsWith('Key')) primary = primary; // keep KeyA, KeyM, etc.
-    else if (primary.startsWith('Digit')) primary = primary; // keep Digit0..Digit9
-    else if (key.startsWith('Arrow')) primary = key; // ArrowUp, ArrowDown, etc.
-    else if (/^F\d{1,2}$/i.test(key)) primary = key.toUpperCase(); // F1..F12
-    else if (primary === 'Escape') primary = 'Escape';
-    else if (primary === 'Backspace') primary = 'Backspace';
-    else if (primary === 'Delete') primary = 'Delete';
+    else if (/^F\d{1,2}$/i.test(key)) primary = key.toUpperCase();
+    else if (key.startsWith('Arrow')) primary = key;
 
     const parts = [...modifiers];
     if (primary) parts.push(primary);
-    const combo = parts.join('+');
-
     return {
       isModifierOnly: false,
       modifiers,
       primary,
-      combo
+      combo: parts.join('+')
     };
   }
 
@@ -141,19 +145,7 @@ class ShortcutsManager {
    */
   formatComboHTML(combo) {
     if (!combo) return '<span class="shortcut-unassigned">None</span>';
-    
-    const parts = combo.split('+');
-    return parts.map(part => {
-      let label = part;
-      if (part === 'Space') label = 'Space';
-      else if (part === 'ArrowLeft') label = '←';
-      else if (part === 'ArrowRight') label = '→';
-      else if (part === 'ArrowUp') label = '↑';
-      else if (part === 'ArrowDown') label = '↓';
-      else if (part.startsWith('Key')) label = part.replace('Key', '');
-      else if (part.startsWith('Digit')) label = part.replace('Digit', '');
-      return `<kbd class="shortcut-key">${label}</kbd>`;
-    }).join('<span class="shortcut-plus">+</span>');
+    return combo.split('+').map(part => `<kbd class="shortcut-key">${formatKeyLabel(part)}</kbd>`).join('<span class="shortcut-plus">+</span>');
   }
 
   /**
@@ -161,17 +153,7 @@ class ShortcutsManager {
    */
   formatComboText(combo) {
     if (!combo) return 'None';
-    const parts = combo.split('+');
-    return parts.map(part => {
-      if (part === 'Space') return 'Space';
-      if (part === 'ArrowLeft') return '←';
-      if (part === 'ArrowRight') return '→';
-      if (part === 'ArrowUp') return '↑';
-      if (part === 'ArrowDown') return '↓';
-      if (part.startsWith('Key')) return part.replace('Key', '');
-      if (part.startsWith('Digit')) return part.replace('Digit', '');
-      return part;
-    }).join(' + ');
+    return combo.split('+').map(formatKeyLabel).join(' + ');
   }
 
   /**
@@ -180,16 +162,14 @@ class ShortcutsManager {
   matchesEvent(configuredCombo, e) {
     if (!configuredCombo) return false;
     
-    const { isModifierOnly, combo, primary, modifiers } = this.parseKeyEvent(e);
+    const { isModifierOnly, combo, modifiers } = this.parseKeyEvent(e);
     if (isModifierOnly) return false;
-
-    // Direct combo match
     if (configuredCombo === combo) return true;
 
     // Fallback loose match for single letter keys (e.g. 'KeyM' vs 'm' / 'M' without modifiers)
     if (modifiers.length === 0 && !configuredCombo.includes('+')) {
-      if (configuredCombo === `Key${e.key.toUpperCase()}`) return true;
-      if (configuredCombo === e.key || configuredCombo === e.key.toUpperCase() || configuredCombo === e.code) return true;
+      const upper = e.key.toUpperCase();
+      return configuredCombo === `Key${upper}` || configuredCombo === upper || configuredCombo === e.code;
     }
 
     return false;
@@ -291,7 +271,7 @@ class ShortcutsManager {
       return true;
     }
 
-    const { isModifierOnly, modifiers, combo, primary } = this.parseKeyEvent(e);
+    const { isModifierOnly, modifiers, combo } = this.parseKeyEvent(e);
 
     // If only modifier keys are pressed, update button preview
     if (isModifierOnly) {
@@ -373,58 +353,29 @@ class ShortcutsManager {
       return;
     }
 
-    // 4. Match against configured shortcuts
+    // 4. Dispatch configured shortcut action
     const player = window.playerController;
     const lyrics = window.lyricsRenderer;
+    const actions = {
+      play_pause: () => player?.togglePlay(),
+      prev_track: () => player?.prev(),
+      next_track: () => player?.next(),
+      seek_backward: () => player && player.ticker && player.seek(Math.max(0, (player.ticker.position || 0) - 5)),
+      seek_forward: () => player && player.ticker && player.seek(Math.min(player.ticker.duration || 0, (player.ticker.position || 0) + 5)),
+      volume_up: () => player?.adjustVolume(5),
+      volume_down: () => player?.adjustVolume(-5),
+      toggle_mute: () => player?.toggleMute(),
+      toggle_lyrics: () => lyrics?.toggle(),
+      toggle_shuffle: () => player?.toggleShuffle(),
+      toggle_repeat: () => player?.toggleRepeat(),
+      toggle_fullscreen: () => window.api?.toggleFullscreen?.()
+    };
 
-    if (this.matchesEvent(this.shortcuts.play_pause, e)) {
-      e.preventDefault();
-      if (player) await player.togglePlay();
-    } else if (this.matchesEvent(this.shortcuts.prev_track, e)) {
-      e.preventDefault();
-      if (player) await player.prev();
-    } else if (this.matchesEvent(this.shortcuts.next_track, e)) {
-      e.preventDefault();
-      if (player) await player.next();
-    } else if (this.matchesEvent(this.shortcuts.seek_backward, e)) {
-      e.preventDefault();
-      if (player && player.ticker) {
-        const cur = player.ticker.position || 0;
-        await player.seek(Math.max(0, cur - 5));
-      }
-    } else if (this.matchesEvent(this.shortcuts.seek_forward, e)) {
-      e.preventDefault();
-      if (player && player.ticker) {
-        const cur = player.ticker.position || 0;
-        const dur = player.ticker.duration || 0;
-        await player.seek(Math.min(dur, cur + 5));
-      }
-    } else if (this.matchesEvent(this.shortcuts.volume_up, e)) {
-      e.preventDefault();
-      if (player) await player.adjustVolume(5);
-    } else if (this.matchesEvent(this.shortcuts.volume_down, e)) {
-      e.preventDefault();
-      if (player) await player.adjustVolume(-5);
-    } else if (this.matchesEvent(this.shortcuts.toggle_mute, e)) {
-      e.preventDefault();
-      if (player) await player.toggleMute();
-    } else if (this.matchesEvent(this.shortcuts.toggle_lyrics, e)) {
-      e.preventDefault();
-      if (lyrics) lyrics.toggle();
-    } else if (this.matchesEvent(this.shortcuts.toggle_shuffle, e)) {
-      e.preventDefault();
-      if (player) await player.toggleShuffle();
-    } else if (this.matchesEvent(this.shortcuts.toggle_repeat, e)) {
-      e.preventDefault();
-      if (player) await player.toggleRepeat();
-    } else if (this.matchesEvent(this.shortcuts.toggle_fullscreen, e)) {
-      e.preventDefault();
-      try {
-        if (window.api && window.api.toggleFullscreen) {
-          await window.api.toggleFullscreen();
-        }
-      } catch (err) {
-        console.error('Fullscreen toggle error:', err);
+    for (const [actionId, handler] of Object.entries(actions)) {
+      if (this.matchesEvent(this.shortcuts[actionId], e)) {
+        e.preventDefault();
+        await handler();
+        break;
       }
     }
   }

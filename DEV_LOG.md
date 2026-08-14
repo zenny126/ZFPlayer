@@ -1,5 +1,25 @@
 # DEV LOG
 
+## Timestamp: 2026-08-14T15:16:00
+### Tác vụ thực hiện
+Tinh gọn mã nguồn & Loại bỏ Over-engineering theo phong cách Ponytail (Shortcuts Dispatcher O(1), Key Formatter Consolidation, Tab Switcher Simplification).
+
+### Danh sách tệp tin thay đổi
+- `frontend/js/shortcuts.js` (MODIFIED)
+- `frontend/js/ui.js` (MODIFIED)
+- `DEV_LOG.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Tinh gọn Shortcuts Dispatcher & Key Formatter**:
+   - Chuyển đổi 50 dòng `if-else if` bậc thang trong `handleGlobalKeyDown` sang bảng ánh xạ hành động `actions[actionId]` $O(1)$, giảm 35 dòng boilerplate.
+   - Gộp các vòng lặp định dạng phím mũi tên và phím `Key...` trùng lặp trong `formatComboHTML` và `formatComboText` thành hàm dùng chung `formatKeyLabel()` kết hợp từ điển `KEY_SYMBOLS`.
+   - Xóa bỏ 8 dòng gán danh tính no-op (`primary = primary`, `Escape = Escape`) trong `parseKeyEvent`.
+   - Rút gọn bộ so khớp `matchesEvent` còn 2 dòng sạch sẽ.
+2. **Tinh gọn Logic Chuyển Tab Settings**:
+   - Sử dụng `classList.toggle('active')` và `tab === '...'` trực tiếp trong `ui.js`, rút ngắn 10 dòng mã rườm rà.
+
+---
+
 ## Timestamp: 2026-08-14T15:10:00
 ### Tác vụ thực hiện
 Chuẩn hóa nhãn hiệu & thương hiệu bên thứ ba (Trademarks & Branding Cleanup for Commercialization).

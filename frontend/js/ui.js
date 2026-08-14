@@ -74,22 +74,15 @@ class UIController {
     settingsTabBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         const tab = btn.dataset.tab;
-        settingsTabBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+        settingsTabBtns.forEach(b => b.classList.toggle('active', b === btn));
 
         const audioPane = document.getElementById('settings-tab-audio');
         const shortcutsPane = document.getElementById('settings-tab-shortcuts');
-
-        if (tab === 'audio') {
-          if (audioPane) audioPane.style.display = 'block';
-          if (shortcutsPane) shortcutsPane.style.display = 'none';
-        } else if (tab === 'shortcuts') {
-          if (audioPane) audioPane.style.display = 'none';
-          if (shortcutsPane) {
-            shortcutsPane.style.display = 'flex';
-            if (window.shortcutsManager) {
-              window.shortcutsManager.renderShortcutsUI();
-            }
+        if (audioPane) audioPane.style.display = tab === 'audio' ? 'block' : 'none';
+        if (shortcutsPane) {
+          shortcutsPane.style.display = tab === 'shortcuts' ? 'flex' : 'none';
+          if (tab === 'shortcuts' && window.shortcutsManager) {
+            window.shortcutsManager.renderShortcutsUI();
           }
         }
       });
