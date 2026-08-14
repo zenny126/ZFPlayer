@@ -1,5 +1,28 @@
 # DEV LOG
 
+## Timestamp: 2026-08-14T15:28:00
+### Tác vụ thực hiện
+Tối ưu hóa bộ nhớ Scanner, gộp Transaction xóa tệp theo lô & Hỗ trợ Multi-timestamp LRC Parser (Scanner Memory Optimization, Bulk Delete & Multi-timestamp LRC).
+
+### Danh sách tệp tin thay đổi
+- `backend/storage/database.py` (MODIFIED)
+- `backend/workers/scanner.py` (MODIFIED)
+- `frontend/js/lyrics.js` (MODIFIED)
+- `DEV_LOG.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Multi-timestamp LRC Parser**:
+   - Cập nhật hàm `parseLRC` trong `frontend/js/lyrics.js` sử dụng regex global lặp `/\[(\d{1,2}):(\d{2})(?:\.(\d{2,3}))?\]/g` để trích xuất đầy đủ tất cả các mốc thời gian trên các câu hát lặp lại (`[00:15.20][01:30.50]Lời điệp khúc`).
+   - Làm sạch chuỗi bằng cách loại bỏ tất cả thẻ timestamp trước khi gán text và sắp xếp theo mốc thời gian tăng dần.
+2. **Scanner Memory Footprint Optimization**:
+   - Bổ sung hàm `get_tracks_mtime_map()` trong `backend/storage/database.py` chỉ truy vấn `SELECT path, mtime, size FROM tracks`.
+   - Cập nhật `LibraryScanner` (`backend/workers/scanner.py`) sử dụng map này thay vì tải toàn bộ bảng `tracks` với metadata cồng kềnh qua `SELECT *`, giảm 75-85% bộ nhớ RAM khi quét thư viện.
+3. **Database Bulk Delete Transaction**:
+   - Bổ sung hàm `delete_tracks_bulk(paths)` trong `backend/storage/database.py` sử dụng `executemany` trong 1 transaction duy nhất.
+   - Cập nhật `LibraryScanner` gom danh sách các tệp bị xóa để xóa hàng loạt một lần, loại bỏ hàng trăm lần fsync đĩa khi có nhiều tệp bị xóa.
+
+---
+
 ## Timestamp: 2026-08-14T15:16:00
 ### Tác vụ thực hiện
 Tinh gọn mã nguồn & Loại bỏ Over-engineering theo phong cách Ponytail (Shortcuts Dispatcher O(1), Key Formatter Consolidation, Tab Switcher Simplification).

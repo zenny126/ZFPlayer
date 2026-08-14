@@ -145,6 +145,14 @@ class Database:
         cursor.execute('DELETE FROM tracks WHERE path = ?', (path,))
         conn.commit()
 
+    def delete_tracks_bulk(self, paths: List[str]):
+        if not paths:
+            return
+        conn = self._get_conn()
+        cursor = conn.cursor()
+        cursor.executemany('DELETE FROM tracks WHERE path = ?', [(p,) for p in paths])
+        conn.commit()
+
     def update_last_played(self, path: str):
         conn = self._get_conn()
         cursor = conn.cursor()
@@ -162,6 +170,12 @@ class Database:
         cursor = conn.cursor()
         cursor.execute('SELECT * FROM tracks')
         return [dict(row) for row in cursor.fetchall()]
+
+    def get_tracks_mtime_map(self) -> Dict[str, Dict[str, Any]]:
+        conn = self._get_conn()
+        cursor = conn.cursor()
+        cursor.execute('SELECT path, mtime, size FROM tracks')
+        return {row['path']: {'mtime': row['mtime'], 'size': row['size']} for row in cursor.fetchall()}
 
     def get_all_track_paths(self, is_favorites: bool = False, playlist_id: Optional[int] = None) -> List[str]:
         conn = self._get_conn()

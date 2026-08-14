@@ -329,18 +329,25 @@ class LyricsRenderer {
     if (!lrcText) return [];
     const lines = lrcText.split('\n');
     const result = [];
-    const timeRegex = /\[(\d{1,2}):(\d{2})(?:\.(\d{2,3}))?\]/;
+    const timeRegex = /\[(\d{1,2}):(\d{2})(?:\.(\d{2,3}))?\]/g;
     
     for (const line of lines) {
-      const match = timeRegex.exec(line);
-      if (match) {
-        const m = parseInt(match[1]);
-        const s = parseInt(match[2]);
-        const ms = match[3] ? parseInt(match[3]) : 0;
+      const timestamps = [];
+      let match;
+      timeRegex.lastIndex = 0;
+      while ((match = timeRegex.exec(line)) !== null) {
+        const m = parseInt(match[1], 10);
+        const s = parseInt(match[2], 10);
+        const ms = match[3] ? parseInt(match[3], 10) : 0;
         const time = m * 60 + s + (ms / (match[3] && match[3].length === 2 ? 100 : 1000));
+        timestamps.push(time);
+      }
+      if (timestamps.length > 0) {
         const text = line.replace(timeRegex, '').trim();
         if (text) {
-          result.push({ time, text });
+          for (const time of timestamps) {
+            result.push({ time, text });
+          }
         }
       }
     }
