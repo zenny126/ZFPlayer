@@ -1,5 +1,23 @@
 # DEV LOG
 
+## Timestamp: 2026-08-14T14:55:00
+### Tác vụ thực hiện
+Bảo toàn trạng thái Cinema Idle khi tự động chuyển sang bài hát mới (Cinema Idle Track Change Preservation).
+
+### Danh sách tệp tin thay đổi
+- rontend/js/lyrics.js (MODIFIED)
+- rontend/index.html (MODIFIED)
+- 	ask.md (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- **Nguyên nhân**: Khi currentTrack thay đổi, hàm show() được gọi lại và vô tình xóa class .cinema-idle và reset timer, làm UI hiện lại.
+- **Giải pháp**:
+  - Tách cờ isUserAction trong show(isUserAction = true).
+  - Khi bài hát đổi trong nền (isUserAction = false), hệ thống cập nhật động khoảng cách bù tâm updateCinemaIdleOffset() và nạp metadata bài mới nhưng GIỮ NGUYÊN trạng thái .cinema-idle.
+  - Nhờ đó khi tự động hết bài hoặc bấm Next trong Cinema Idle, ảnh bìa và tên bài mới cập nhật ngay tại vị trí căn giữa màn hình mà UI và con trỏ chuột không bị hiện lại.
+
+---
+
 ## Timestamp: 2026-08-14T14:50:00
 ### Tác vụ thực hiện
 Cô lập phím tắt bàn phím trong chế độ Cinema Idle (Keyboard Background Operation) và Cập nhật toàn diện tài liệu kiến trúc kỹ thuật (rchitect.md & docs/ARCHITECTURE.md).

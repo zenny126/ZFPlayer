@@ -46,9 +46,22 @@ class LyricsRenderer {
     if (window.store) {
       window.store.subscribe('currentTrack', () => {
         if (!this.overlay.classList.contains('hidden')) {
-          this.show();
+          this.show(false);
         }
       });
+    }
+  }
+
+  updateCinemaIdleOffset() {
+    const cover = document.getElementById('lyrics-cover');
+    const meta = this.overlay.querySelector('.lyrics-metadata-row');
+    const container = this.overlay.querySelector('.lyrics-overlay-container');
+    if (cover && meta && container) {
+      const clusterHeight = cover.offsetHeight + meta.offsetHeight + 20; // 20px gap
+      const containerHeight = container.clientHeight;
+      const targetTop = (containerHeight - clusterHeight) / 2;
+      const offset = Math.max(0, targetTop);
+      this.overlay.style.setProperty('--cinema-idle-offset', `${offset.toFixed(1)}px`);
     }
   }
 
@@ -67,17 +80,7 @@ class LyricsRenderer {
                          (window.isFullscreen === true);
 
     if (isFullscreen) {
-      // Calculate dynamic vertical centering offset for album cover & metadata row
-      const cover = document.getElementById('lyrics-cover');
-      const meta = this.overlay.querySelector('.lyrics-metadata-row');
-      const container = this.overlay.querySelector('.lyrics-overlay-container');
-      if (cover && meta && container) {
-        const clusterHeight = cover.offsetHeight + meta.offsetHeight + 20; // 20px gap
-        const containerHeight = container.clientHeight;
-        const targetTop = (containerHeight - clusterHeight) / 2;
-        const offset = Math.max(0, targetTop);
-        this.overlay.style.setProperty('--cinema-idle-offset', `${offset.toFixed(1)}px`);
-      }
+      this.updateCinemaIdleOffset();
 
       this.cinemaIdleTimer = setTimeout(() => {
         if (!this.overlay.classList.contains('hidden')) {
@@ -195,23 +198,33 @@ class LyricsRenderer {
 
   toggle() {
     if (this.overlay.classList.contains('hidden')) {
-      this.show();
+      this.show(true);
     } else {
       this.hide();
     }
   }
 
-  async show() {
+  async show(isUserAction = true) {
     this.overlay.classList.remove('hidden');
-    this.userDisabledLyrics = false;
-    this.resetCinemaIdleTimer();
+    
+    if (isUserAction) {
+      this.userDisabledLyrics = false;
+      this.resetCinemaIdleTimer();
+      // Always open with full lyrics view on user open
+      this.applyLyricsViewState(true);
+    } else {
+      // Auto track change in background while overlay is open:
+      // Update centering offset dynamically without disturbing cinema-idle state
+      this.updateCinemaIdleOffset();
+      if (!this.overlay.classList.contains('cinema-idle')) {
+        this.resetCinemaIdleTimer();
+      }
+    }
+
     if (this.noLyricsTimer) {
       clearTimeout(this.noLyricsTimer);
       this.noLyricsTimer = null;
     }
-
-    // Always open with full lyrics view
-    this.applyLyricsViewState(true);
 
     // Hide main app components to reveal global WebGL background, without hiding lyrics-overlay which is inside #app
     document.getElementById('top-bar').style.opacity = '0';
@@ -251,7 +264,7 @@ class LyricsRenderer {
         const parsed = this.parseLRC(lrcData.synced_lyrics);
         if (parsed && parsed.length > 0) {
           this.setLyrics(parsed);
-          if (!this.userDisabledLyrics) {
+          if (!this.userDisabledLyrics && isUserAction) {
             this.applyLyricsViewState(true);
           }
           if (window.playerController && window.playerController.ticker) {
