@@ -13,6 +13,7 @@ class LyricsRenderer {
     this.currentScrollY = 0;
     this.targetScrollY = 0;
     this.rafId = null;
+    this.cinemaIdleTimer = null;
     this.bindEvents();
   }
 
@@ -25,12 +26,53 @@ class LyricsRenderer {
     const lyricsContainer = this.overlay.querySelector('.lyrics-container');
     lyricsContainer?.addEventListener('wheel', (e) => this.handleWheel(e), { passive: false });
     
+    // Cinema Idle Activity Tracking (Mouse, Touch & Keyboard)
+    ['mousemove', 'mousedown', 'keydown', 'wheel', 'touchstart'].forEach(evt => {
+      window.addEventListener(evt, () => this.resetCinemaIdleTimer(), { passive: true });
+    });
+    window.addEventListener('resize', () => this.resetCinemaIdleTimer(), { passive: true });
+
     if (window.store) {
       window.store.subscribe('currentTrack', () => {
         if (!this.overlay.classList.contains('hidden')) {
           this.show();
         }
       });
+    }
+  }
+
+  resetCinemaIdleTimer() {
+    if (this.overlay.classList.contains('hidden')) return;
+
+    this.overlay.classList.remove('cinema-idle');
+    if (this.cinemaIdleTimer) {
+      clearTimeout(this.cinemaIdleTimer);
+      this.cinemaIdleTimer = null;
+    }
+
+    // Check if in Fullscreen or Maximized screen
+    const isFullscreen = (window.innerHeight >= window.screen.height - 40) ||
+                         (document.fullscreenElement != null) ||
+                         (window.isFullscreen === true);
+
+    if (isFullscreen) {
+      // Calculate dynamic vertical centering offset for album cover & metadata row
+      const cover = document.getElementById('lyrics-cover');
+      const meta = this.overlay.querySelector('.lyrics-metadata-row');
+      const container = this.overlay.querySelector('.lyrics-overlay-container');
+      if (cover && meta && container) {
+        const clusterHeight = cover.offsetHeight + meta.offsetHeight + 20; // 20px gap
+        const containerHeight = container.clientHeight;
+        const targetTop = (containerHeight - clusterHeight) / 2;
+        const offset = Math.max(0, targetTop);
+        this.overlay.style.setProperty('--cinema-idle-offset', `${offset.toFixed(1)}px`);
+      }
+
+      this.cinemaIdleTimer = setTimeout(() => {
+        if (!this.overlay.classList.contains('hidden')) {
+          this.overlay.classList.add('cinema-idle');
+        }
+      }, 3500);
     }
   }
 
@@ -150,6 +192,7 @@ class LyricsRenderer {
 
   async show() {
     this.overlay.classList.remove('hidden');
+    this.resetCinemaIdleTimer();
     if (this.noLyricsTimer) {
       clearTimeout(this.noLyricsTimer);
       this.noLyricsTimer = null;
@@ -243,6 +286,11 @@ class LyricsRenderer {
       clearTimeout(this.userScrollResumeTimer);
       this.userScrollResumeTimer = null;
     }
+    if (this.cinemaIdleTimer) {
+      clearTimeout(this.cinemaIdleTimer);
+      this.cinemaIdleTimer = null;
+    }
+    this.overlay.classList.remove('cinema-idle');
     this.stopScrollPhysicsLoop();
     this.isUserScrolling = false;
     this.container?.classList.remove('manual-scrolling');

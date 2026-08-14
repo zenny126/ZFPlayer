@@ -1,5 +1,26 @@
 # DEV LOG
 
+## Timestamp: 2026-08-14T13:53:00
+### Tác vụ thực hiện
+Triển khai Chế Độ Cinema Idle Toàn Màn Hình F11: Tự động ẩn UI/con trỏ chuột và kích hoạt hoạt cảnh trôi lò xo dọc (Vertical Apple Spring) căn giữa ảnh bìa.
+
+### Danh sách tệp tin thay đổi
+- frontend/js/lyrics.js (MODIFIED)
+- frontend/css/lyrics.css (MODIFIED)
+- frontend/index.html (MODIFIED)
+- task.md (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- **Bộ đếm thời gian Cinema Idle**: Sau 3.5s không di chuyển/bấm chuột khi đang ở chế độ toàn màn hình/maximized trong view lyric, hệ thống tự động kích hoạt class .cinema-idle.
+- **Hoạt cảnh ẩn phần tử phụ**:
+  - Ẩn con trỏ chuột (cursor: none !important).
+  - Ẩn 2 nút trên cùng (800ms fade-out) và cụm thanh tua/điều khiển nhạc phía dưới (600ms fade-out + translateY(16px)).
+- **Lò xo dọc căn giữa cụm ảnh bìa**:
+  - Tính toán động offset tâm --cinema-idle-offset để cụm Ảnh bìa + Tên bài hát lướt êm ái xuống chính giữa trục dọc bằng lò xo Apple 750ms.
+  - Khi có tương tác chuột: cụm ảnh bìa lướt trở lại lên trên và toàn bộ thanh điều khiển hiện lại nhanh chóng trong 250ms.
+
+---
+
 ## Timestamp: 2026-08-14T13:35:00
 ### Tác vụ thực hiện
 Khắc phục triệt để lỗi khựng animation khi giữ chuột hover trên câu hát (Hover Stutter Fix).
