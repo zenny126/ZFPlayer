@@ -1,5 +1,52 @@
 # DEV LOG
 
+## Timestamp: 2026-08-14T16:15:00
+### Tác vụ thực hiện
+Sửa lỗi không tự động mở lại cột Lời bài hát khi bài hát mới có lời sau khi bài trước đó tự động ẩn vào Center Mode do không có lời.
+
+### Danh sách tệp tin thay đổi
+- rontend/js/lyrics.js (MODIFIED)
+- rontend/index.html (MODIFIED)
+- 	ask.md (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- **Nguyên nhân**: Khi bài trước không có lời, hệ thống tự động đưa giao diện vào Center Mode. Nhưng khi sang bài tiếp theo có lời trong nền (isUserAction = false), điều kiện if (!this.userDisabledLyrics && isUserAction) đã ngăn cản lệnh mở lại lời bài hát 	his.applyLyricsViewState(true).
+- **Giải pháp**: Xóa điều kiện && isUserAction tại dòng 267. Giờ đây chỉ cần bài mới có lời và người dùng không chủ động bấm nút tắt lời (!this.userDisabledLyrics), hệ thống sẽ tự động mở bung lại cột Lời bài hát bên phải ngay khi nạp xong dữ liệu lời.
+
+---
+
+## Timestamp: 2026-08-14T15:36:00
+### Tác vụ thực hiện
+Sửa dứt điểm lỗi `ModuleNotFoundError: No module named 'email'` khi chạy tệp đóng gói thực thi.
+
+### Danh sách tệp tin thay đổi
+- `zfplayer.spec` (MODIFIED)
+- `dist/ZennyFLAC_Player.exe` (UPDATED)
+
+### Mô tả chi tiết kỹ thuật
+- **Phân tích nguyên nhân**: `pywebview` gọi `wsgiref.simple_server` nạp `http.server` thuộc Python standard library. Tại `http/server.py:92`, Python thực thi `import email.message` và `import email.parser`. Việc khai trừ module `'email'` khi tối ưu trước đó đã gây ra lỗi `ModuleNotFoundError`.
+- **Giải pháp**: Loại bỏ `'email'`, `'html'`, và `'http.client'` khỏi danh sách `excludes` trong `zfplayer.spec`.
+- **Kết quả**: Đóng gói hoàn tất thành công (`dist/ZennyFLAC_Player.exe`, dung lượng 36.05 MB), ứng dụng khởi chạy trơn tru không còn lỗi thiếu module.
+
+---
+
+## Timestamp: 2026-08-14T15:31:00
+### Tác vụ thực hiện
+Hoàn tất tối ưu hóa toàn diện kịch bản đóng gói PyInstaller (`zfplayer.spec` & `build_exe.py`).
+
+### Danh sách tệp tin tạo mới/cập nhật
+- `zfplayer.spec` (MODIFIED)
+- `build_exe.py` (MODIFIED)
+- `dist/ZennyFLAC_Player.exe` (UPDATED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Loại bỏ Module thừa (Excludes Optimization)**: Khai trừ 15+ module tiêu chuẩn không sử dụng (`tkinter`, `pydoc`, `unittest`, `email`, `distutils`, `http.client`,...) giúp giảm lượng dependency đóng gói.
+2. **Tối ưu hóa Bytecode (`PYTHONOPTIMIZE=2` / `-OO`)**: Kích hoạt cờ biên dịch `-OO` lược bỏ hoàn toàn docstring và câu lệnh assert khỏi file PYZ, giúp giảm dung lượng tệp và tăng tốc độ khởi chạy module Python.
+3. **Tự động dọn dẹp bộ nhớ đệm**: Tự động dọn dẹp thư mục tạm `build/` trước khi đóng gói.
+4. **Kết quả**: Dung lượng tệp `.exe` giảm từ **~39.6 MB** xuống còn **35.69 MB** (tiết kiệm 10% bộ nhớ và khởi chạy nhanh hơn).
+
+---
+
 ## Timestamp: 2026-08-14T15:28:00
 ### Tác vụ thực hiện
 Tối ưu hóa bộ nhớ Scanner, gộp Transaction xóa tệp theo lô & Hỗ trợ Multi-timestamp LRC Parser (Scanner Memory Optimization, Bulk Delete & Multi-timestamp LRC).

@@ -264,7 +264,7 @@ class LyricsRenderer {
         const parsed = this.parseLRC(lrcData.synced_lyrics);
         if (parsed && parsed.length > 0) {
           this.setLyrics(parsed);
-          if (!this.userDisabledLyrics && isUserAction) {
+          if (!this.userDisabledLyrics) {
             this.applyLyricsViewState(true);
           }
           if (window.playerController && window.playerController.ticker) {
