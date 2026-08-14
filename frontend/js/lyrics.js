@@ -36,6 +36,20 @@ class LyricsRenderer {
 
   applyLyricsViewState(showLyrics) {
     if (showLyrics) {
+      if (this.container && this.container.children.length > 0) {
+        const baseIdx = Math.max(0, this.activeIndex >= 0 ? this.activeIndex - 2 : 0);
+        Array.from(this.container.children).forEach((child, idx) => {
+          const dist = Math.max(0, idx - baseIdx);
+          child.style.setProperty('--stagger-delay', `${Math.min(dist * 35, 400)}ms`);
+        });
+        this.container.classList.remove('stagger-in');
+        void this.container.offsetWidth; // Trigger reflow to restart animation cleanly
+        this.container.classList.add('stagger-in');
+        if (this._staggerTimer) clearTimeout(this._staggerTimer);
+        this._staggerTimer = setTimeout(() => {
+          this.container?.classList.remove('stagger-in');
+        }, 1100);
+      }
       this.overlayContainer?.classList.remove('center-mode');
       this.toggleLyricsBtn?.classList.add('active');
       if (this.toggleLyricsBtn) this.toggleLyricsBtn.title = 'Hide Lyrics';
@@ -43,6 +57,7 @@ class LyricsRenderer {
       this.overlayContainer?.classList.add('center-mode');
       this.toggleLyricsBtn?.classList.remove('active');
       if (this.toggleLyricsBtn) this.toggleLyricsBtn.title = 'Show Lyrics';
+      this.container?.classList.remove('stagger-in');
     }
   }
 
@@ -192,6 +207,7 @@ class LyricsRenderer {
       el.className = 'lyrics-line';
       el.textContent = line.text;
       el.dataset.index = idx;
+      el.style.setProperty('--stagger-delay', `${Math.min(idx * 35, 450)}ms`);
       el.addEventListener('click', () => {
         if (window.playerController && line.time >= 0) {
           // Immediately highlight & scroll to selected lyric line before seek IPC responds

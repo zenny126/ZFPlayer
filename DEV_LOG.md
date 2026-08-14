@@ -1,5 +1,25 @@
 # DEV LOG
 
+## Timestamp: 2026-08-14T13:03:00
+### Tác vụ thực hiện
+Triển khai hoạt cảnh chuyển đổi Opposite Slide-out (120px, 300ms) và Lò xo thác đổ (Staggered Waterfall Spring) khi Bật/Tắt Lời bài hát.
+
+### Danh sách tệp tin thay đổi
+- rontend/css/lyrics.css (MODIFIED)
+- rontend/js/lyrics.js (MODIFIED)
+- rontend/index.html (MODIFIED)
+- 	ask.md (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- **Khi Tắt Lyric**:
+  - Áp dụng 	ransform: translateX(120px); opacity: 0; cho .lyrics-container với gia tốc thoát nhanh 300ms cubic-bezier(0.4, 0, 1, 1).
+  - Lời bài hát dạt nhanh sang mép phải và biến mất sạch sẽ trước khi cụm ảnh bìa trôi tới, triệt tiêu 100% cảm giác đâm va thị giác.
+- **Khi Bật Lyric**:
+  - Cụm ảnh bìa lướt về lại bên trái trong 750ms.
+  - Từng câu hát .lyrics-line kích hoạt @keyframes lyricWaterfallIn, lướt từ mép phải vào so le nhau 35ms theo thứ tự (Staggered Waterfall Spring) với lò xo Apple cubic-bezier(0.2, 1, 0.2, 1), tạo cảm giác bung mở không gian hai chiều cực kỳ sống động và nghệ thuật.
+
+---
+
 ## Timestamp: 2026-08-14T12:50:00
 ### Tác vụ thực hiện
 Tối ưu UX chuyển cảnh Bật/Tắt Lời bài hát: Triệt tiêu hoàn toàn hiện tượng nhảy dòng và nén chữ thô cứng.

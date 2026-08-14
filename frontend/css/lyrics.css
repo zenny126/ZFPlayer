@@ -292,19 +292,20 @@
   opacity: 1;
   transform: translateX(0);
   visibility: visible;
-  transition: opacity 450ms ease-out, 
+  transition: opacity 400ms ease-out, 
               transform 500ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)),
-              visibility 450ms;
+              visibility 400ms;
   will-change: opacity, transform;
 }
 
+/* Opposite Slide-out: Lướt nhanh dạt hẳn sang mép phải (120px) và tan biến nhanh trong 300ms */
 .lyrics-overlay-container.center-mode .lyrics-container {
   opacity: 0;
-  transform: translateX(30px);
+  transform: translateX(120px);
   pointer-events: none;
   visibility: hidden;
-  transition: opacity 300ms ease-out, 
-              transform 350ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)),
+  transition: opacity 240ms ease-out, 
+              transform 300ms cubic-bezier(0.4, 0, 1, 1),
               visibility 300ms;
 }
 
@@ -315,6 +316,19 @@
   /* Removed transition: transform... to stop moving the container itself */
   will-change: auto;
   width: 100%;
+}
+
+/* Staggered Waterfall Spring Animation: Lướt so le từng câu từ phải vào khi mở lại lời bài hát */
+#lyrics-content.stagger-in .lyrics-line {
+  animation: lyricWaterfallIn 650ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)) backwards;
+  animation-delay: var(--stagger-delay, 0ms);
+}
+
+@keyframes lyricWaterfallIn {
+  from {
+    opacity: 0;
+    transform: translateY(var(--scroll-y, 0px)) translateX(70px);
+  }
 }
 
 .lyrics-line {
