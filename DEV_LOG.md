@@ -1,5 +1,22 @@
 # DEV LOG
 
+## Timestamp: 2026-08-14T13:30:00
+### Tác vụ thực hiện
+Nâng cấp Động Cơ Vật Lý Quán Tính (Kinetic RAF Momentum & Exponential Spring Lerp) cho trải nghiệm cuộn lời bài hát mượt mà chuẩn 60fps/120fps.
+
+### Danh sách tệp tin thay đổi
+- frontend/js/lyrics.js (MODIFIED)
+- frontend/css/lyrics.css (MODIFIED)
+- frontend/index.html (MODIFIED)
+- task.md (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- Tích hợp vòng lặp requestAnimationFrame với thuật toán Exponential Spring Lerp (diff * 0.14) triệt tiêu hoàn toàn hiện tượng nhảy khấc đơ cứng.
+- Vô hiệu hóa transition CSS transform trong trạng thái .manual-scrolling để RAF điều khiển trực tiếp 60fps/120fps.
+- Chuẩn hóa độ nhạy con lăn chuột Sweet Spot (~90px/khấc).
+
+---
+
 ## Timestamp: 2026-08-14T13:26:00
 ### Tác vụ thực hiện
 Triển khai tính năng Cuộn Lời Bài Hát Tự Do (Manual Scroll & Auto-Resume sau 3.5s) chuẩn Apple Music.

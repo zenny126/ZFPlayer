@@ -331,10 +331,9 @@
   }
 }
 
-/* Interactive Manual Scrolling: Phản hồi con lăn tức thì và mượt mà khi người dùng tự cuộn xem lời */
+/* Interactive Manual Scrolling: 0ms CSS transform lag - chạy trực tiếp trên động cơ RAF Physics 60fps/120fps */
 #lyrics-content.manual-scrolling .lyrics-line {
-  transition: transform 60ms cubic-bezier(0.1, 1, 0.1, 1), 
-              color 600ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)), 
+  transition: color 600ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)), 
               text-shadow 600ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)),
               opacity 600ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)) !important;
 }

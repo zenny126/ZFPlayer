@@ -11,6 +11,8 @@ class LyricsRenderer {
     this.isUserScrolling = false;
     this.userScrollResumeTimer = null;
     this.currentScrollY = 0;
+    this.targetScrollY = 0;
+    this.rafId = null;
     this.bindEvents();
   }
 
@@ -32,6 +34,33 @@ class LyricsRenderer {
     }
   }
 
+  startScrollPhysicsLoop() {
+    if (this.rafId) return;
+    const updatePhysics = () => {
+      if (!this.container) return;
+      const diff = this.targetScrollY - this.currentScrollY;
+      
+      if (Math.abs(diff) > 0.1) {
+        // Exponential spring lerp (60fps/120fps butter smooth inertia)
+        this.currentScrollY += diff * 0.14;
+        this.container.style.setProperty('--scroll-y', `${this.currentScrollY.toFixed(2)}px`);
+        this.rafId = requestAnimationFrame(updatePhysics);
+      } else {
+        this.currentScrollY = this.targetScrollY;
+        this.container.style.setProperty('--scroll-y', `${this.currentScrollY.toFixed(2)}px`);
+        this.rafId = null;
+      }
+    };
+    this.rafId = requestAnimationFrame(updatePhysics);
+  }
+
+  stopScrollPhysicsLoop() {
+    if (this.rafId) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+  }
+
   handleWheel(e) {
     if (!this.lyrics.length || this.overlay.classList.contains('hidden') || this.lyrics.length <= 1) return;
     e.preventDefault();
@@ -39,9 +68,13 @@ class LyricsRenderer {
     this.isUserScrolling = true;
     if (this.userScrollResumeTimer) clearTimeout(this.userScrollResumeTimer);
 
-    // Smooth delta accumulation
-    const delta = e.deltaY;
-    this.currentScrollY -= delta;
+    // Normalize wheel delta across mice & touchpads
+    let delta = e.deltaY;
+    if (e.deltaMode === 1) delta *= 30;
+    else if (e.deltaMode === 2) delta *= 300;
+    delta *= 0.9; // Sweet spot sensitivity
+
+    this.targetScrollY -= delta;
 
     // Boundary protection (clamping)
     const firstLine = this.container.firstElementChild;
@@ -53,17 +86,18 @@ class LyricsRenderer {
       const maxScroll = targetAnchor - firstLine.offsetTop - (firstLine.clientHeight / 2);
       const minScroll = targetAnchor - lastLine.offsetTop - (lastLine.clientHeight / 2);
       
-      const overscroll = 100;
-      this.currentScrollY = Math.max(minScroll - overscroll, Math.min(maxScroll + overscroll, this.currentScrollY));
+      const overscroll = 80;
+      this.targetScrollY = Math.max(minScroll - overscroll, Math.min(maxScroll + overscroll, this.targetScrollY));
     }
 
     this.container.classList.add('manual-scrolling');
-    this.container.style.setProperty('--scroll-y', `${this.currentScrollY}px`);
+    this.startScrollPhysicsLoop();
 
     // Auto-resume after 3.5s of no scroll interaction
     this.userScrollResumeTimer = setTimeout(() => {
       this.isUserScrolling = false;
-      this.container.classList.remove('manual-scrolling');
+      this.stopScrollPhysicsLoop();
+      this.container?.classList.remove('manual-scrolling');
       if (this.activeIndex >= 0) {
         this.scrollToLine(this.activeIndex, false);
       }
@@ -209,6 +243,7 @@ class LyricsRenderer {
       clearTimeout(this.userScrollResumeTimer);
       this.userScrollResumeTimer = null;
     }
+    this.stopScrollPhysicsLoop();
     this.isUserScrolling = false;
     this.container?.classList.remove('manual-scrolling');
 
@@ -250,6 +285,7 @@ class LyricsRenderer {
       clearTimeout(this.userScrollResumeTimer);
       this.userScrollResumeTimer = null;
     }
+    this.stopScrollPhysicsLoop();
     this.isUserScrolling = false;
     if (this.container) {
       this.container.classList.remove('manual-scrolling');
@@ -272,6 +308,7 @@ class LyricsRenderer {
             clearTimeout(this.userScrollResumeTimer);
             this.userScrollResumeTimer = null;
           }
+          this.stopScrollPhysicsLoop();
           this.isUserScrolling = false;
           this.container?.classList.remove('manual-scrolling');
           
@@ -320,6 +357,7 @@ class LyricsRenderer {
   }
 
   scrollToLine(index, isFarJump = false) {
+    this.stopScrollPhysicsLoop();
     const lineEl = this.container.children[index];
     if (!lineEl) return;
 
@@ -336,6 +374,7 @@ class LyricsRenderer {
     const scrollAmount = targetAnchor - offsetTop - (lineEl.clientHeight / 2);
     
     this.currentScrollY = scrollAmount;
+    this.targetScrollY = scrollAmount;
     // Set variable for individual child transforms (True staggered parallax)
     this.container.style.setProperty('--scroll-y', `${scrollAmount}px`);
   }
