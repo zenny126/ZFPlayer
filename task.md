@@ -1,7 +1,6 @@
-# Tasks - Chế Độ Cinema Idle & Trôi Dọc Căn Giữa Cụm Ảnh Bìa (Vertical Apple Spring)
+# Tasks - Sửa Lỗi Không Tự Ẩn Cinema Idle Khi Chuột Đặt Trên Lời Bài Hát
 
-- [x] Bổ sung bộ đếm `resetCinemaIdleTimer` và tính toán offset căn giữa dọc trong `lyrics.js` <!-- id: 0 -->
-- [x] Thêm CSS cho `#lyrics-overlay.cinema-idle` (ẩn con trỏ chuột, 2 nút trên, ẩn cụm điều khiển) trong `lyrics.css` <!-- id: 1 -->
-- [x] Xây dựng hoạt cảnh lò xo dọc `transform: translateY` 750ms cho cụm ảnh bìa + tên bài hát trong `lyrics.css` <!-- id: 2 -->
-- [x] Tăng cache-buster version và kiểm thử chế độ Cinema Idle hai chiều <!-- id: 3 -->
-- [x] Ghi nhật ký phát triển `DEV_LOG.md` và `walkthrough.md` <!-- id: 4 -->
+- [x] Lọc sự kiện di chuột vật lý thực (Coordinate Delta $\ge 2\text{px}$) trong `lyrics.js` <!-- id: 0 -->
+- [x] Tắt `pointer-events` trên `.lyrics-container` trong trạng thái `.cinema-idle` ở `lyrics.css` <!-- id: 1 -->
+- [x] Tăng cache-buster version và kiểm thử để chuột trên lyric sau 3.5s <!-- id: 2 -->
+- [x] Ghi nhật ký phát triển `DEV_LOG.md` và `walkthrough.md` <!-- id: 3 -->

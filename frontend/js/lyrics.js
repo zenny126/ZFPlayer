@@ -14,6 +14,8 @@ class LyricsRenderer {
     this.targetScrollY = 0;
     this.rafId = null;
     this.cinemaIdleTimer = null;
+    this.lastMouseX = -1;
+    this.lastMouseY = -1;
     this.bindEvents();
   }
 
@@ -26,8 +28,16 @@ class LyricsRenderer {
     const lyricsContainer = this.overlay.querySelector('.lyrics-container');
     lyricsContainer?.addEventListener('wheel', (e) => this.handleWheel(e), { passive: false });
     
-    // Cinema Idle Activity Tracking (Mouse, Touch & Keyboard)
-    ['mousemove', 'mousedown', 'keydown', 'wheel', 'touchstart'].forEach(evt => {
+    // Cinema Idle Activity Tracking: Filter real mouse movements vs synthetic scroll events
+    window.addEventListener('mousemove', (e) => {
+      if (Math.abs(e.clientX - this.lastMouseX) >= 2 || Math.abs(e.clientY - this.lastMouseY) >= 2) {
+        this.lastMouseX = e.clientX;
+        this.lastMouseY = e.clientY;
+        this.resetCinemaIdleTimer();
+      }
+    }, { passive: true });
+
+    ['mousedown', 'keydown', 'wheel', 'touchstart'].forEach(evt => {
       window.addEventListener(evt, () => this.resetCinemaIdleTimer(), { passive: true });
     });
     window.addEventListener('resize', () => this.resetCinemaIdleTimer(), { passive: true });

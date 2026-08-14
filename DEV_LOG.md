@@ -1,5 +1,23 @@
 # DEV LOG
 
+## Timestamp: 2026-08-14T13:59:00
+### Tác vụ thực hiện
+Sửa lỗi không tự ẩn Cinema Idle khi con trỏ chuột đặt trên cột lời bài hát (Coordinate Delta Filtering).
+
+### Danh sách tệp tin thay đổi
+- frontend/js/lyrics.js (MODIFIED)
+- frontend/css/lyrics.css (MODIFIED)
+- frontend/index.html (MODIFIED)
+- task.md (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- **Nguyên nhân**: Khi lời bài hát tự cuộn, Chromium liên tục kích hoạt các sự kiện mousemove giả lập bên dưới con trỏ chuột tĩnh, khiến resetCinemaIdleTimer bị gọi liên tục.
+- **Giải pháp**:
+  - Bổ sung bộ lọc tọa độ vật lý thực (clientX / clientY thay đổi >= 2px mới reset timer).
+  - Tắt pointer-events trên .lyrics-container khi ở chế độ .cinema-idle.
+
+---
+
 ## Timestamp: 2026-08-14T13:53:00
 ### Tác vụ thực hiện
 Triển khai Chế Độ Cinema Idle Toàn Màn Hình F11: Tự động ẩn UI/con trỏ chuột và kích hoạt hoạt cảnh trôi lò xo dọc (Vertical Apple Spring) căn giữa ảnh bìa.

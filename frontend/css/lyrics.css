@@ -313,6 +313,10 @@
   transition: transform 750ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1));
 }
 
+#lyrics-overlay.cinema-idle .lyrics-container {
+  pointer-events: none;
+}
+
 /* Lyrics Column */
 .lyrics-container {
   flex: 1;
