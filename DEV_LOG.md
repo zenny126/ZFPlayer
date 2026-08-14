@@ -1,4 +1,21 @@
-﻿# DEV LOG
+# DEV LOG
+
+## Timestamp: 2026-08-14T12:08:00
+### Tác vụ thực hiện
+Loại bỏ hiệu ứng làm mờ (`filter: blur`) gây hiện tượng mờ đục xám xịt trên các câu hát chưa hát hoặc đã hát qua, giúp chữ sắc nét và trong trẻo chuẩn Apple Music.
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/lyrics.css` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- **Nguyên nhân màu tối bị đục**: Trước đó các dòng chữ tối (inactive / passed) có thuộc tính `filter: blur(1.5px)` và `filter: blur(1.2px)`. Khi chữ bán trong suốt bị blur, các pixel mờ trắng tản ra xung quanh tạo thành một lớp sương mù xám đục (milky haze) che lấp nền WebGL.
+- **Giải pháp**:
+  - Loại bỏ hoàn toàn `filter: blur` khỏi các trạng thái của `.lyrics-line`.
+  - Tinh chỉnh màu trong suốt chuẩn: Dòng chuẩn bị hát (`rgba(255, 255, 255, 0.35)`), Dòng đã hát qua (`rgba(255, 255, 255, 0.2)`), Hover (`rgba(255, 255, 255, 0.7)`).
+  - Giữ nguyên độ sắc nét tự nhiên của font Outfit, màu sắc chữ hòa quyện trong trẻo cùng nền chất lỏng WebGL.
+
+---
 
 ## Timestamp: 2026-08-14T02:00:00
 ### Tác vụ thực hiện
