@@ -1,5 +1,27 @@
 # DEV LOG
 
+## Timestamp: 2026-08-14T15:10:00
+### Tác vụ thực hiện
+Chuẩn hóa nhãn hiệu & thương hiệu bên thứ ba (Trademarks & Branding Cleanup for Commercialization).
+
+### Danh sách tệp tin thay đổi
+- frontend/index.html (MODIFIED)
+- frontend/css/main.css (MODIFIED)
+- frontend/css/lyrics.css (MODIFIED)
+- README.md (MODIFIED)
+- architect.md (MODIFIED)
+- docs/ARCHITECTURE.md (MODIFIED)
+- task.md (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- Loại bỏ hoàn toàn các tên gọi, tiền tố và class tham chiếu nhãn hiệu bên thứ ba (Apple, Apple Music, Spotify).
+- Đổi CSS selector layout #app.spotify-layout -> #app.zfp-layout.
+- Đổi biến CSS token --ease-apple-lyrics -> --ease-spring-lyrics trong toàn bộ hệ thống stylesheet (main.css, lyrics.css).
+- Chuẩn hóa tài liệu README.md, architect.md, docs/ARCHITECTURE.md sang các thuật ngữ kỹ thuật trung tính: Kinetic Spring Lyrics Engine, Glassmorphism Fluid Shader, Spring Easing.
+- Đảm bảo 100% mã nguồn và tài liệu thương mại sạch sẽ về mặt pháp lý quyền sở hữu trí tuệ mà không ảnh hưởng đến bất kỳ hiệu ứng chuyển động hay tính năng nào của ứng dụng.
+
+---
+
 ## Timestamp: 2026-08-14T14:55:00
 ### Tác vụ thực hiện
 Bảo toàn trạng thái Cinema Idle khi tự động chuyển sang bài hát mới (Cinema Idle Track Change Preservation).
@@ -1926,9 +1948,9 @@ ext_track() khng lm d?ng lu?ng pht nh?c.
   8. **Global Keyboard Shortcuts (main.js & player.js)**: H? tr? Spacebar (Play/Pause), Mui tn Tri/Ph?i (Seek 5s), Mui tn Ln/Xu?ng (Volume 5%), M (Mute/Unmute), Escape (ng Lyrics/Modals).
 
 ## [2026-08-14T14:59:00+07:00] Comprehensive Documentation & Feature Showcase Update
-- **T�c v? th?c hi?n**: C?p nh?t to�n di?n t?p README.md tr�nh b�y d?y d? t?t c? c�c t�nh nang, ki?n tr�c k? thu?t v� h? th?ng ph�m t?t c?a ZFPlayer.
-- **Danh s�ch t?p tin thay d?i**:
+- **Tc v? th?c hi?n**: C?p nh?t ton di?n t?p README.md trnh by d?y d? t?t c? cc tnh nang, ki?n trc k? thu?t v h? th?ng phm t?t c?a ZFPlayer.
+- **Danh sch t?p tin thay d?i**:
   - README.md
-- **M� t? chi ti?t k? thu?t**:
-  B? sung chi ti?t 5 tr? c?t t�nh nang: (1) �?ng co �m thanh Streaming & WASAPI Bit-Perfect; (2) M�n h�nh l?i b�i h�t Apple Music & Cinema Idle Mode; (3) Qu?n l� thu vi?n, b?o v? USB & Auto-skip; (4) Tr�nh qu?n l� ph�m t?t t�y bi?n ShortcutsManager; (5) T?i uu h�a hi?u nang render & b?o v? SSD.
+- **M t? chi ti?t k? thu?t**:
+  B? sung chi ti?t 5 tr? c?t tnh nang: (1) ?ng co m thanh Streaming & WASAPI Bit-Perfect; (2) Mn hnh l?i bi ht Apple Music & Cinema Idle Mode; (3) Qu?n l thu vi?n, b?o v? USB & Auto-skip; (4) Trnh qu?n l phm t?t ty bi?n ShortcutsManager; (5) T?i uu ha hi?u nang render & b?o v? SSD.
 

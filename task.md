@@ -1,5 +1,6 @@
-# Tasks - Bảo Toàn Cinema Idle Khi Chuyển Bài Mới
+# Tasks - Chuẩn Hóa Thương Hiệu & Nhãn Hiệu Bên Thứ Ba (Trademarks Cleanup)
 
-- [x] Phân tách luồng `show(isUserOpen = true)` và bảo toàn trạng thái `.cinema-idle` khi chuyển bài mới trong `lyrics.js` <!-- id: 0 -->
-- [x] Tăng cache-buster version và kiểm thử tự động sang bài mới trong Cinema Idle <!-- id: 1 -->
-- [x] Ghi nhật ký phát triển `DEV_LOG.md` và `walkthrough.md` <!-- id: 2 -->
+- [x] Cập nhật Frontend HTML & CSS (`index.html`, `main.css`, `lyrics.css`): đổi `spotify-layout` $\rightarrow$ `zfp-layout`, `--ease-apple-lyrics` $\rightarrow$ `--ease-spring-lyrics` <!-- id: 0 -->
+- [x] Rà soát & cập nhật tài liệu kỹ thuật (`README.md`, `architect.md`, `docs/ARCHITECTURE.md`) <!-- id: 1 -->
+- [x] Tự động kiểm tra cú pháp và rà soát toàn bộ dự án để đảm bảo không còn sót nhãn hiệu <!-- id: 2 -->
+- [x] Ghi nhật ký phát triển vào `DEV_LOG.md` và `walkthrough.md` <!-- id: 3 -->

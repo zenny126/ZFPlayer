@@ -12,7 +12,7 @@ ZFPlayer áp dụng mô hình **Client-Server lai Desktop (Hybrid Desktop Archit
 graph TD
     A[PyWebView Native Desktop Window] <--> B[Frontend Web App: HTML5 / CSS3 / Vanilla ES6 JS]
     B <-->|WebGL Shader Engine| W[Single-Canvas WebGL Fluid Background]
-    B <-->|Kinetic Physics Engine| L[Apple Music Kinetic Lyrics Subsystem]
+    B <-->|Kinetic Physics Engine| L[Kinetic Spring Lyrics Subsystem]
     B <-->|Shortcuts Dispatcher| S[ShortcutsManager & Key Recorder]
     B <-->|PyWebView Native Bridge / HTTP REST API| C[Bottle Threaded WSGI Backend Server]
     C <--> D[Library & Player Services]
@@ -25,8 +25,8 @@ graph TD
 ```
 
 ### Các Tầng Hệ Thống (System Layers):
-1. **Presentation Layer (Frontend):** Giao diện thuần Web (HTML5/CSS3/ES6 JS) thiết kế theo ngôn ngữ Apple Music Glassmorphism hiện đại. Quản lý trạng thái bằng luồng dữ liệu 1 chiều (`store.js`), ảo hóa danh sách cuộn (`VirtualList`), kết hợp công cụ đồ họa chất lỏng WebGL Simplex Shader (`fluid-shader.js`) và hệ thống quản trị phím tắt tùy biến (`shortcuts.js`).
-2. **Kinetic Lyrics Subsystem:** Động cơ hiển thị lời bài hát mô phỏng vật lý lò xo Apple Music (Critically Damped Spring Bezier), cuộn quán tính thời gian thực (`requestAnimationFrame`), thác đổ staggered waterfall và chế độ rạp chiếu phim toàn màn hình F11 (Cinema Idle).
+1. **Presentation Layer (Frontend):** Giao diện thuần Web (HTML5/CSS3/ES6 JS) thiết kế theo ngôn ngữ Modern Glassmorphism hiện đại. Quản lý trạng thái bằng luồng dữ liệu 1 chiều (`store.js`), ảo hóa danh sách cuộn (`VirtualList`), kết hợp công cụ đồ họa chất lỏng WebGL Simplex Shader (`fluid-shader.js`) và hệ thống quản trị phím tắt tùy biến (`shortcuts.js`).
+2. **Kinetic Lyrics Subsystem:** Động cơ hiển thị lời bài hát mô phỏng vật lý lò xo động lực học (Critically Damped Spring Bezier), cuộn quán tính thời gian thực (`requestAnimationFrame`), thác đổ staggered waterfall và chế độ rạp chiếu phim toàn màn hình F11 (Cinema Idle).
 3. **Application & API Layer (Backend):** Khởi chạy bằng Python 3.11+, dùng Bottle WSGI Server phục vụ REST API đa luồng và PyWebView IPC Native Bridge (`window.pywebview.api`).
 4. **Audio Subsystem:** Phân hệ âm thanh C-level (`libsndfile` qua `soundfile`, PortAudio qua `sounddevice`, `numpy` buffer), giải mã streaming liên tục qua `AudioRingBuffer` chống OOM và xuất trực tiếp xuống driver **Windows WASAPI Dual-Engine (Shared Mode & Exclusive Push Mode)**.
 5. **Storage Layer:** Cơ sở dữ liệu SQLite3 hoạt động ở chế độ WAL Mode, hỗ trợ Full-Text Search (FTS5) và tệp cấu hình JSON thread-safe.
@@ -120,7 +120,7 @@ graph TD
 
 #### Quy trình xử lý:
 1. **Singularity Background Architecture:** Duy nhất 1 thẻ `<canvas id="webgl-fluid-bg">` nằm cố định ở tầng nền dưới cùng của ứng dụng.
-2. **Simplex Noise GLSL Fragment Shader:** Tính toán pha trộn ngẫu nhiên liên tục của 4 màu sắc dạng chất lỏng sống động chuẩn phong cách Apple Music.
+2. **Simplex Noise GLSL Fragment Shader:** Tính toán pha trộn ngẫu nhiên liên tục của 4 màu sắc dạng chất lỏng sống động và giàu chiều sâu.
 3. **Tối Ưu 30x GPU Compute (Scale-up GPU Trick):**
    - Canvas chỉ render ở độ phân giải siêu thấp (25% kích thước màn hình).
    - Sử dụng GPU Bilinear Hardware Upscaling (`transform: scale(4.0) translateZ(0)`) phủ kín toàn màn hình, giảm 90% tải GPU.
@@ -128,12 +128,12 @@ graph TD
 
 ---
 
-### 2.7 Hệ Thống Lời Bài Hát Động Lực Học (Apple Music Kinetic Lyrics Engine)
+### 2.7 Hệ Thống Lời Bài Hát Động Lực Học (Kinetic Spring Lyrics Engine)
 - **Module Frontend:** `frontend/js/lyrics.js`, `frontend/css/lyrics.css`.
 
 #### Quy trình xử lý:
-1. **Đường Cong Vật Lý Lò Xo Apple Music (Critically Damped Spring Bezier):**
-   - Áp dụng token `--ease-apple-lyrics: cubic-bezier(0.2, 1, 0.2, 1)` mô phỏng chính xác thuật toán `CASpringAnimation` của iOS (`dampingFraction: 1.0` không bị nảy quá đà).
+1. **Đường Cong Vật Lý Lò Xo Động Lực Học (Critically Damped Spring Bezier):**
+   - Áp dụng token `--ease-spring-lyrics: cubic-bezier(0.2, 1, 0.2, 1)` mô phỏng chính xác thuật toán lò xo hãm quán tính (`dampingFraction: 1.0` không bị nảy quá đà).
    - Phân tầng thời lượng 3 pha: Khúc Phát Sáng `.active` (1200ms), Khúc Tối Trên `.passed` (1000ms), Khúc Tối Dưới base (1800ms).
 2. **Thuật Toán Neo Dọc 40% (40% Vertical Anchor Math):**
    - Tính toán neo dòng đang phát tại vị trí 40% từ đỉnh khung chứa:
@@ -168,10 +168,10 @@ graph TD
    - Ẩn 2 nút góc trên trong **800ms** (`opacity: 0; pointer-events: none`).
    - Ẩn thanh tua nhạc, nút Play/Pause và thanh âm lượng trong **600ms** (`opacity: 0; transform: translateY(16px)`).
    - Vô hiệu hóa hover trên lời bài hát (`pointer-events: none`).
-4. **Hoạt Ảnh Lò Xo Dọc Căn Giữa Cụm Ảnh Bìa (Vertical Apple Spring Center Glide):**
+4. **Hoạt Ảnh Lò Xo Dọc Căn Giữa Cụm Ảnh Bìa (Vertical Spring Center Glide):**
    - Tính toán động khoảng cách bù tâm `--cinema-idle-offset`:
      $$\Delta Y = \max\left(0, \frac{\text{containerHeight} - (\text{coverHeight} + \text{metaHeight} + 20)}{2}\right)$$
-   - Cụm Ảnh bìa + Tên bài hát lướt êm ái xuống chính giữa trục dọc màn hình bằng lò xo Apple trong **750ms** (`cubic-bezier(0.2, 1, 0.2, 1)`), cân xứng hoàn hảo với khung lời bài hát.
+   - Cụm Ảnh bìa + Tên bài hát lướt êm ái xuống chính giữa trục dọc màn hình bằng lò xo trong **750ms** (`cubic-bezier(0.2, 1, 0.2, 1)`), cân xứng hoàn hảo với khung lời bài hát.
 5. **Cô Lập Hoàn Toàn Bàn Phím Trong Nền (Keyboard Background Isolation):**
    - Bấm phím tắt điều khiển nhạc (Space, Tua bài, Chỉnh âm lượng, Next/Prev) phản hồi 100% trong nền mà **không đánh thức UI**.
    - Giao diện chỉ thức tỉnh và hiện lại tức thì trong **250ms** khi có tương tác chuột thực sự hoặc bấm Esc/F11 thoát.

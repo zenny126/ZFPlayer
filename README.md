@@ -7,13 +7,13 @@
 
   [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
   [![Audio Engine](https://img.shields.io/badge/Audio-WASAPI_Bit--Perfect-success.svg?logo=windows&logoColor=white)]()
-  [![UI Design](https://img.shields.io/badge/UI-Apple_Music_Style-purple.svg)]()
+  [![UI Design](https://img.shields.io/badge/UI-Glassmorphism_Fluid_Shader-purple.svg)]()
   [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 </div>
 
 ---
 
-**ZennyFLAC Player (ZFPlayer)** là ứng dụng nghe nhạc Lossless & Hi-Res Audio cao cấp dành riêng cho hệ điều hành Windows. Ứng dụng kết hợp giữa **Động cơ âm thanh C-Streaming & WASAPI Bit-Perfect** mạnh mẽ bên dưới và **Giao diện Glassmorphism / Fluid Shader lộng lẫy phong cách Apple Music** bên trên, mang lại không gian thưởng thức âm nhạc mượt mà, chân thực và thuần khiết nhất.
+**ZennyFLAC Player (ZFPlayer)** là ứng dụng nghe nhạc Lossless & Hi-Res Audio cao cấp dành riêng cho hệ điều hành Windows. Ứng dụng kết hợp giữa **Động cơ âm thanh C-Streaming & WASAPI Bit-Perfect** mạnh mẽ bên dưới và **Giao diện Glassmorphism / Fluid Shader động lực học lộng lẫy** bên trên, mang lại không gian thưởng thức âm nhạc mượt mà, chân thực và thuần khiết nhất.
 
 ---
 
@@ -31,8 +31,8 @@
 
 ---
 
-### 2. 🎤 Màn Hình Lời Bài Hát & Chế Độ Rạp Phim (Cinema Lyrics Engine)
-* **Giao Diện Fullscreen Chuẩn Apple Music**: Toàn màn hình với nền WebGL Fluid Shader động chuyển màu mượt mà theo ảnh bìa Album đang phát.
+### 2. 🎤 Màn Hình Lời Bài Hát & Chế Độ Rạp Phim (Kinetic Lyrics Engine)
+* **Giao Diện Fullscreen Động Lực Học**: Toàn màn hình với nền WebGL Fluid Shader động chuyển màu mượt mà theo ảnh bìa Album đang phát.
 * **Đồng Bộ Lời Nhạc Tự Động Đa Nguồn (Multi-Source Lyrics)**:
   * Ưu tiên 1: Tệp lời bài hát rời `.lrc` cùng thư mục.
   * Ưu tiên 2: Cơ sở dữ liệu lời nhạc trực tuyến **LRCLIB Search API**.
@@ -115,7 +115,7 @@ ZFPlayer/
 │       ├── main.js           # Khởi tạo ứng dụng & Kết nối thành phần
 │       ├── shortcuts.js      # Trình quản lý phím tắt toàn cục (ShortcutsManager)
 │       ├── player.js         # Bộ điều khiển thanh phát nhạc & Ticker 60fps
-│       ├── lyrics.js         # Động cơ lời bài hát Apple Music & Cinema Mode
+│       ├── lyrics.js         # Động cơ lời bài hát Kinetic Spring & Cinema Mode
 │       ├── library.js        # Hiển thị & tìm kiếm danh sách bài hát
 │       ├── playlists.js      # Trình quản lý Playlist & Nhập tệp
 │       ├── fluid-shader.js   # Hiệu ứng nền nước động WebGL (Fluid Shader)

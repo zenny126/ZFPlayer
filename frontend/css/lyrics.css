@@ -35,7 +35,7 @@
 .lyrics-close-btn {
   position: absolute;
   top: 32px;
-  left: 32px; /* Apple Music close button is on the top-left */
+  left: 32px;
   background: transparent;
   border: none;
   color: rgba(255, 255, 255, 0.5);
@@ -62,7 +62,7 @@
   height: 28px;
 }
 
-/* Apple Music Lyrics Toggle Button (Top Right) */
+/* Lyrics Toggle Button (Top Right) */
 .lyrics-toggle-btn {
   position: absolute;
   top: 32px;
@@ -109,7 +109,7 @@
   min-width: 0; /* Quan trọng: Ngăn chặn chuỗi text white-space: nowrap đẩy phồng chiều rộng flex item */
   position: relative;
   left: 0;
-  transition: left 700ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1));
+  transition: left 700ms var(--ease-spring-lyrics, cubic-bezier(0.2, 1, 0.2, 1));
   will-change: left;
 }
 
@@ -126,7 +126,7 @@
   border-radius: 12px;
   object-fit: cover;
   box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
-  transition: transform 750ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)), box-shadow var(--transition-fast);
+  transition: transform 750ms var(--ease-spring-lyrics, cubic-bezier(0.2, 1, 0.2, 1)), box-shadow var(--transition-fast);
   will-change: transform;
 }
 #lyrics-cover:hover {
@@ -141,7 +141,7 @@
   width: 100%;
   max-width: var(--max-cover-size);
   min-width: 0; /* Triệt tiêu min-content width propagation */
-  transition: transform 750ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1));
+  transition: transform 750ms var(--ease-spring-lyrics, cubic-bezier(0.2, 1, 0.2, 1));
   will-change: transform;
 }
 
@@ -188,7 +188,7 @@
   transform: scale(1.12);
 }
 
-/* Apple Music style Seekbar in Lyrics */
+/* Kinetic Seekbar in Lyrics */
 .lyrics-seek-container {
   width: 100%;
   max-width: var(--max-cover-size);
@@ -306,11 +306,11 @@
   transition: opacity 600ms ease-out, transform 600ms ease-out;
 }
 
-/* Cụm ảnh bìa + thông tin bài hát lướt êm ái xuống vị trí chính giữa trục dọc bằng lò xo Apple */
+/* Cụm ảnh bìa + thông tin bài hát lướt êm ái xuống vị trí chính giữa trục dọc bằng lò xo động lực học */
 #lyrics-overlay.cinema-idle #lyrics-cover,
 #lyrics-overlay.cinema-idle .lyrics-metadata-row {
   transform: translateY(var(--cinema-idle-offset, 85px));
-  transition: transform 750ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1));
+  transition: transform 750ms var(--ease-spring-lyrics, cubic-bezier(0.2, 1, 0.2, 1));
 }
 
 #lyrics-overlay.cinema-idle .lyrics-container {
@@ -331,7 +331,7 @@
   transform: translateX(0);
   visibility: visible;
   transition: opacity 550ms ease-out, 
-              transform 650ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)),
+              transform 650ms var(--ease-spring-lyrics, cubic-bezier(0.2, 1, 0.2, 1)),
               visibility 550ms;
   will-change: opacity, transform;
 }
@@ -358,7 +358,7 @@
 
 /* Staggered Waterfall Spring Animation: Lướt so le từng câu từ phải vào với tốc độ 800ms chậm rãi êm ái */
 #lyrics-content.stagger-in .lyrics-line {
-  animation: lyricWaterfallIn 800ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)) backwards;
+  animation: lyricWaterfallIn 800ms var(--ease-spring-lyrics, cubic-bezier(0.2, 1, 0.2, 1)) backwards;
   animation-delay: var(--stagger-delay, 0ms);
 }
 
@@ -371,9 +371,9 @@
 
 /* Interactive Manual Scrolling: 0ms CSS transform lag - chạy trực tiếp trên động cơ RAF Physics 60fps/120fps */
 #lyrics-content.manual-scrolling .lyrics-line {
-  transition: color 600ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)), 
-              text-shadow 600ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)),
-              opacity 600ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)) !important;
+  transition: color 600ms var(--ease-spring-lyrics, cubic-bezier(0.2, 1, 0.2, 1)), 
+              text-shadow 600ms var(--ease-spring-lyrics, cubic-bezier(0.2, 1, 0.2, 1)),
+              opacity 600ms var(--ease-spring-lyrics, cubic-bezier(0.2, 1, 0.2, 1)) !important;
 }
 
 .lyrics-line {
@@ -382,10 +382,10 @@
   font-weight: 700;
   color: rgba(255, 255, 255, 0.35); /* Chữ trong trẻo, tinh tế hơn */
   transform: translateY(var(--scroll-y, 0px)); /* True staggered scroll */
-  transition: color 400ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)), 
-              transform 1800ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)), 
-              text-shadow 1800ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)),
-              opacity 1800ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1));
+  transition: color 400ms var(--ease-spring-lyrics, cubic-bezier(0.2, 1, 0.2, 1)), 
+              transform 1800ms var(--ease-spring-lyrics, cubic-bezier(0.2, 1, 0.2, 1)), 
+              text-shadow 1800ms var(--ease-spring-lyrics, cubic-bezier(0.2, 1, 0.2, 1)),
+              opacity 1800ms var(--ease-spring-lyrics, cubic-bezier(0.2, 1, 0.2, 1));
   padding: 16px 45px 16px 0; /* 45px right padding ensures 35px glow fades out smoothly without hitting clipping boundary */
   box-sizing: border-box;
   text-align: left;
@@ -409,17 +409,17 @@
   font-size: 32px; /* Must match the base font-size */
   text-shadow: 0 0 18px rgba(255, 255, 255, 0.65), 0 0 35px rgba(255, 255, 255, 0.25); /* Dreamy light glow */
   transform: translateY(var(--scroll-y, 0px)) scale(1.06); /* Visually zooms active line smoothly within container bounds */
-  transition: color 1200ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)), 
-              transform 1200ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)), 
-              text-shadow 1200ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1));
+  transition: color 1200ms var(--ease-spring-lyrics, cubic-bezier(0.2, 1, 0.2, 1)), 
+              transform 1200ms var(--ease-spring-lyrics, cubic-bezier(0.2, 1, 0.2, 1)), 
+              text-shadow 1200ms var(--ease-spring-lyrics, cubic-bezier(0.2, 1, 0.2, 1));
 }
 
 /* Tier 1: Passed Lines - (Smooth brake) */
 .lyrics-line.passed {
   color: rgba(255, 255, 255, 0.2);
   transform: translateY(var(--scroll-y, 0px)) scale(1.0);
-  transition: color 1000ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)), 
-              transform 1000ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1));
+  transition: color 1000ms var(--ease-spring-lyrics, cubic-bezier(0.2, 1, 0.2, 1)), 
+              transform 1000ms var(--ease-spring-lyrics, cubic-bezier(0.2, 1, 0.2, 1));
 }
 
 /* Far jump override */
