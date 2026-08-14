@@ -155,7 +155,7 @@ def main():
 
     def on_closed():
         logger.info("Window closed. Cleaning up...")
-        audio_engine.stop()
+        audio_engine.shutdown_hardware_stream()
         if hasattr(database, 'close'):
             database.close()
         server.shutdown()

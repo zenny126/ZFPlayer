@@ -98,7 +98,7 @@ class AudioEngine:
         return mode
 
     def load(self, file_path: str):
-        self.stop_immediate()
+        self.stop_immediate(close_hardware=False)
         self.state = AudioState.LOADING
         
         try:
@@ -115,7 +115,12 @@ class AudioEngine:
             decoder = StreamingDecoder(ring_buffer)
             decoder.load(file_path)
             
+            stream_to_recreate = False
             with self._lock:
+                # If sample rate or channels changed, we MUST recreate the stream
+                if self.stream is not None and (self._current_samplerate != sr or self._current_channels != ch or not getattr(self.stream, 'active', False)):
+                    stream_to_recreate = True
+
                 self.ring_buffer = ring_buffer
                 self.decoder = decoder
                 self.play_pos = 0
@@ -124,6 +129,11 @@ class AudioEngine:
                 self._current_samplerate = sr
                 self._current_channels = ch
                 self._sd_dtype = 'float32'
+                self._fade_in_remaining = 0
+                self._fade_out_remaining = 0
+
+            if stream_to_recreate:
+                self.shutdown_hardware_stream()
 
             self.decoder.start()
             logger.info(
@@ -142,7 +152,7 @@ class AudioEngine:
         mode = getattr(self, 'audio_mode', 'shared')
         dev_id = self._get_wasapi_device_id()
         
-        logger.info(f"Opening WASAPI stream (mode={mode}, device={dev_id}, sr={sr}, dtype=float32)")
+        logger.info(f"Opening persistent WASAPI stream (mode={mode}, device={dev_id}, sr={sr}, dtype=float32)")
 
         if mode in ('exclusive', 'exclusive_push', 'exclusive_event'):
             wasapi_settings = sd.WasapiSettings(exclusive=True)
@@ -215,7 +225,7 @@ class AudioEngine:
         if self.state == AudioState.PAUSED:
             self.play()
 
-    def stop(self):
+    def stop(self, close_hardware: bool = False):
         if self.state in (AudioState.PLAYING, AudioState.PAUSED):
             with self._lock:
                 fade_samples = int(self._current_samplerate * 0.015)
@@ -226,12 +236,12 @@ class AudioEngine:
             # Short wait for callback to render smooth fade-out
             threading.Event().wait(0.020)
             
-        self.stop_immediate()
+        self.stop_immediate(close_hardware=close_hardware)
 
-    def stop_immediate(self):
-        """Stop playback and close the hardware stream.
-        Stream close and decoder stop are done OUTSIDE self._lock
-        to prevent deadlock with PortAudio callback thread."""
+    def stop_immediate(self, close_hardware: bool = False):
+        """Stop playback and optionally close the hardware stream.
+        By default close_hardware=False keeps the active WASAPI stream alive
+        feeding 0.0f to maintain 0V reference voltage on DAC and eliminate hiss."""
         stream_to_close = None
         decoder_to_stop = None
         with self._lock:
@@ -246,13 +256,28 @@ class AudioEngine:
                 self.ring_buffer.clear()
                 self.ring_buffer = None
             
-            if self.stream is not None:
+            if close_hardware and self.stream is not None:
                 stream_to_close = self.stream
                 self.stream = None
 
         if decoder_to_stop is not None:
             decoder_to_stop.stop()
 
+        if stream_to_close is not None:
+            try:
+                if stream_to_close.active:
+                    stream_to_close.stop()
+                stream_to_close.close()
+            except Exception:
+                pass
+
+    def shutdown_hardware_stream(self):
+        """Close the PortAudio hardware output stream completely."""
+        stream_to_close = None
+        with self._lock:
+            if self.stream is not None:
+                stream_to_close = self.stream
+                self.stream = None
         if stream_to_close is not None:
             try:
                 if stream_to_close.active:
@@ -293,68 +318,82 @@ class AudioEngine:
         if status:
             logger.debug(f"Audio callback status: {status}")
 
-        with self._lock:
-            # Handle Fade-Out phase when pausing/stopping
-            if self._fade_out_remaining > 0:
-                fade_len = min(frames, self._fade_out_remaining)
-                remaining = self.total_frames - self.play_pos
-                frames_to_copy = min(fade_len, max(0, remaining))
+        try:
+            with self._lock:
+                # Handle Fade-Out phase when pausing/stopping manually
+                if self._fade_out_remaining > 0:
+                    fade_len = min(frames, self._fade_out_remaining)
+                    remaining = self.total_frames - self.play_pos
+                    frames_to_copy = min(fade_len, max(0, remaining))
 
-                if self.ring_buffer is not None and frames_to_copy > 0:
+                    if self.ring_buffer is not None and frames_to_copy > 0:
+                        read_frames = self.ring_buffer.read_into(outdata[:frames_to_copy])
+                        self.play_pos += read_frames
+                        if read_frames < fade_len:
+                            outdata[read_frames:fade_len].fill(0)
+                    else:
+                        outdata[:fade_len].fill(0)
+
+                    start_ratio = self._fade_out_remaining / self._fade_out_total
+                    end_ratio = max(0.0, (self._fade_out_remaining - fade_len) / self._fade_out_total)
+                    ramp = np.linspace(start_ratio, end_ratio, fade_len, dtype=np.float32).reshape(-1, 1)
+                    outdata[:fade_len] *= ramp
+
+                    if self.volume != 1.0:
+                        outdata[:fade_len] *= self.volume
+
+                    if fade_len < frames:
+                        outdata[fade_len:].fill(0)
+
+                    self._fade_out_remaining -= fade_len
+                    if self._fade_out_remaining <= 0:
+                        self.state = self._target_state_after_fade or AudioState.STOPPED
+                    return
+
+                if self.ring_buffer is None or self.state != AudioState.PLAYING:
+                    outdata.fill(0)
+                    return
+
+                remaining = self.total_frames - self.play_pos
+                is_eof = (self.decoder is not None and getattr(self.decoder, 'eof_reached', False) and self.ring_buffer.available() == 0)
+                if remaining <= 0 or is_eof:
+                    outdata.fill(0)
+                    if self.state == AudioState.PLAYING:
+                        self.state = AudioState.STOPPED
+                        if self.on_track_end:
+                            threading.Thread(target=self.on_track_end, daemon=True).start()
+                    return
+
+                frames_to_copy = min(frames, remaining)
+                read_frames = 0
+                if frames_to_copy > 0:
                     read_frames = self.ring_buffer.read_into(outdata[:frames_to_copy])
                     self.play_pos += read_frames
-                    if read_frames < fade_len:
-                        outdata[read_frames:fade_len].fill(0)
-                else:
-                    outdata[:fade_len].fill(0)
 
-                start_ratio = self._fade_out_remaining / self._fade_out_total
-                end_ratio = max(0.0, (self._fade_out_remaining - fade_len) / self._fade_out_total)
-                ramp = np.linspace(start_ratio, end_ratio, fade_len, dtype=np.float32).reshape(-1, 1)
-                outdata[:fade_len] *= ramp
+                if read_frames < frames:
+                    outdata[read_frames:].fill(0)
+
+                # Tail Micro Fade-Out: If approaching the end of track, smooth out last 20ms to prevent DC cut-off pop
+                tail_remaining = self.total_frames - self.play_pos
+                tail_threshold = int(self._current_samplerate * 0.020)
+                if read_frames > 0 and tail_remaining <= tail_threshold:
+                    start_r = max(0.0, min(1.0, (tail_remaining + read_frames) / max(1, tail_threshold)))
+                    end_r = max(0.0, min(1.0, tail_remaining / max(1, tail_threshold)))
+                    tail_ramp = np.linspace(start_r, end_r, read_frames, dtype=np.float32).reshape(-1, 1)
+                    outdata[:read_frames] *= tail_ramp
+
+                # Handle Micro Fade-In phase when starting/seeking
+                if self._fade_in_remaining > 0 and read_frames > 0:
+                    fade_len = min(read_frames, self._fade_in_remaining)
+                    done = self._fade_in_total - self._fade_in_remaining
+                    start_ratio = done / self._fade_in_total
+                    end_ratio = (done + fade_len) / self._fade_in_total
+                    ramp = np.linspace(start_ratio, end_ratio, fade_len, dtype=np.float32).reshape(-1, 1)
+                    outdata[:fade_len] *= ramp
+                    self._fade_in_remaining -= fade_len
 
                 if self.volume != 1.0:
-                    outdata[:fade_len] *= self.volume
-
-                if fade_len < frames:
-                    outdata[fade_len:].fill(0)
-
-                self._fade_out_remaining -= fade_len
-                if self._fade_out_remaining <= 0:
-                    self.state = self._target_state_after_fade or AudioState.STOPPED
-                return
-
-            if self.ring_buffer is None or self.state != AudioState.PLAYING:
-                outdata.fill(0)
-                return
-
-            remaining = self.total_frames - self.play_pos
-            is_eof = (self.decoder is not None and getattr(self.decoder, 'eof_reached', False) and self.ring_buffer.available() == 0)
-            if remaining <= 0 or is_eof:
-                outdata.fill(0)
-                self.state = AudioState.STOPPED
-                if self.on_track_end:
-                    threading.Thread(target=self.on_track_end, daemon=True).start()
-                return
-
-            frames_to_copy = min(frames, remaining)
-            read_frames = 0
-            if frames_to_copy > 0:
-                read_frames = self.ring_buffer.read_into(outdata[:frames_to_copy])
-                self.play_pos += read_frames
-
-            if read_frames < frames:
-                outdata[read_frames:].fill(0)
-
-            # Handle Micro Fade-In phase when starting/seeking
-            if self._fade_in_remaining > 0:
-                fade_len = min(frames_to_copy, self._fade_in_remaining)
-                done = self._fade_in_total - self._fade_in_remaining
-                start_ratio = done / self._fade_in_total
-                end_ratio = (done + fade_len) / self._fade_in_total
-                ramp = np.linspace(start_ratio, end_ratio, fade_len, dtype=np.float32).reshape(-1, 1)
-                outdata[:fade_len] *= ramp
-                self._fade_in_remaining -= fade_len
-
-            if self.volume != 1.0:
-                outdata *= self.volume
+                    outdata *= self.volume
+        except Exception as e:
+            logger.debug(f"Audio callback exception: {e}")
+            outdata.fill(0)

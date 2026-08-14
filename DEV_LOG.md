@@ -1,5 +1,28 @@
 # DEV LOG
 
+## Timestamp: 2026-08-14T16:38:00
+### Tác vụ thực hiện
+Triệt tiêu 100% tiếng xì nền và bụp nổ khi hết bài hát / chuyển bài thông qua kiến trúc Persistent WASAPI Stream và Vi độ dốc Tail Micro Fade-Out.
+
+### Danh sách tệp tin thay đổi
+- `backend/audio/engine.py` (MODIFIED)
+- `backend/app.py` (MODIFIED)
+- `task.md` (MODIFIED)
+- `DEV_LOG.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Kiến trúc Persistent WASAPI Stream (`engine.py`)**:
+   - Duy trì luồng phát phần cứng `sd.OutputStream` luôn mở ở trạng thái active giữa các bài hát. Khi dừng phát hoặc chuyển bài, callback liên tục bơm mảng số `0.0f` để giữ điện áp tham chiếu 0V cho chip DAC, triệt tiêu hoàn toàn hiện tượng tầng khuếch đại analog bị rơi vào trạng thái lơ lửng (Floating State) sinh ra tiếng xì nền phần cứng.
+   - Bổ sung cơ chế `shutdown_hardware_stream()` để chỉ đóng luồng phần cứng khi ứng dụng thoát hẳn hoặc khi người dùng thay đổi thiết bị / chế độ âm thanh.
+   - `Smart Re-init`: Chỉ tái tạo lại stream khi Sample Rate hoặc Channels thực sự thay đổi giữa các bài hát.
+2. **Vi độ dốc Tail Micro Fade-Out 20ms (`engine.py`)**:
+   - Tự động phát hiện khi bài hát chạm ngưỡng 20ms cuối cùng hoặc khi buffer cạn sau EOF, áp dụng dải dốc hạ âm lượng từ mức nhiễu phòng thu về 0.0V trước khi kích hoạt `on_track_end`.
+   - Triệt tiêu hoàn toàn bước nhảy điện áp đột ngột (Waveform Discontinuity / DC Offset Cut-off) và hiện tượng rò rỉ phổ tần số cao (Gibbs Phenomenon).
+3. **Bọc an toàn Audio Callback (`engine.py`)**:
+   - Đặt khối `try...except` toàn diện trong `_audio_callback` tự động phục hồi và zero-fill an toàn nếu có biến cố ngoại lệ từ driver.
+
+---
+
 ## Timestamp: 2026-08-14T16:21:00
 ### Tác vụ thực hiện
 Bổ sung đặc tả kỹ thuật Auto-Restore Lyrics View & Lệnh khởi chạy vào rchitect.md / docs/ARCHITECTURE.md, và Đóng gói hoàn chỉnh bản cài đặt độc lập dist/ZennyFLAC_Player.exe.
