@@ -8,11 +8,20 @@ class VirtualList {
     this.scrollTop = 0;
     this.pool = [];
     this.poolSize = 0;
+    this.assigned = new Map(); // index -> pool item (O(1) lookup)
+    this.freePool = [];        // available free pool items
+    this.ticking = false;
     
     this.container.addEventListener('scroll', () => {
       this.scrollTop = this.container.scrollTop;
-      requestAnimationFrame(() => this.update());
-    });
+      if (!this.ticking) {
+        this.ticking = true;
+        requestAnimationFrame(() => {
+          this.update();
+          this.ticking = false;
+        });
+      }
+    }, { passive: true });
   }
 
   setTotalItems(total) {
@@ -30,7 +39,9 @@ class VirtualList {
       node.style.right = '0';
       node.style.display = 'none';
       this.scroller.appendChild(node);
-      this.pool.push({ node, index: -1 });
+      const item = { node, index: -1 };
+      this.pool.push(item);
+      this.freePool.push(item);
     }
     
     this.refresh();
@@ -38,44 +49,52 @@ class VirtualList {
 
   update() {
     if (this.totalItems === 0) {
-       this.pool.forEach(p => p.node.style.display = 'none');
-       return;
+      this.assigned.clear();
+      this.freePool = [...this.pool];
+      this.pool.forEach(p => {
+        p.index = -1;
+        p.node.style.display = 'none';
+      });
+      return;
     }
     const offsetTop = this.scroller ? this.scroller.offsetTop : 0;
     const trackScrollTop = Math.max(0, this.scrollTop - offsetTop);
-    const visibleHeight = this.container.clientHeight;
+    const visibleHeight = this.container.clientHeight || 600;
     const startIndex = Math.max(0, Math.floor(trackScrollTop / this.itemHeight) - 3);
     const endIndex = Math.min(this.totalItems - 1, Math.ceil((trackScrollTop + visibleHeight) / this.itemHeight) + 3);
 
-    const needed = new Set();
-    for (let i = startIndex; i <= endIndex; i++) needed.add(i);
+    // 1. Free up nodes that scrolled out of visible range
+    for (const [idx, item] of this.assigned.entries()) {
+      if (idx < startIndex || idx > endIndex) {
+        item.index = -1;
+        item.node.style.display = 'none';
+        this.assigned.delete(idx);
+        this.freePool.push(item);
+      }
+    }
     
-    this.pool.forEach(p => {
-       if (p.index !== -1 && !needed.has(p.index)) {
-          p.index = -1;
-          p.node.style.display = 'none';
-       }
-    });
-    
+    // 2. Assign and position nodes for newly visible items in O(1)
     for (let i = startIndex; i <= endIndex; i++) {
-       let assigned = this.pool.find(p => p.index === i);
-       if (!assigned) {
-          let free = this.pool.find(p => p.index === -1);
-          if (free) {
-             free.index = i;
-             free.node.style.display = '';
-             this.renderFn(i, free.node);
-             assigned = free;
-          }
-       }
-       if (assigned) {
-          assigned.node.style.transform = `translateY(${i * this.itemHeight}px)`;
-          assigned.node.style.top = '0';
-       }
+      let item = this.assigned.get(i);
+      if (!item) {
+        if (this.freePool.length > 0) {
+          item = this.freePool.pop();
+          item.index = i;
+          item.node.style.display = '';
+          this.renderFn(i, item.node);
+          this.assigned.set(i, item);
+        }
+      }
+      if (item) {
+        item.node.style.transform = `translateY(${i * this.itemHeight}px)`;
+        item.node.style.top = '0';
+      }
     }
   }
   
   refresh() {
+    this.assigned.clear();
+    this.freePool = [...this.pool];
     this.pool.forEach(p => {
       p.index = -1;
       p.node.style.display = 'none';

@@ -376,35 +376,70 @@ class LyricsRenderer {
     });
   }
 
+  findLyricIndex(currentTime) {
+    const arr = this.lyrics;
+    let low = 0;
+    let high = arr.length - 1;
+    let result = -1;
+
+    while (low <= high) {
+      const mid = (low + high) >> 1;
+      if (arr[mid].time <= currentTime) {
+        result = mid;
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+    return result;
+  }
+
   update(currentTime) {
     if (!this.lyrics.length || this.overlay.classList.contains('hidden')) return;
 
-    let newIndex = -1;
-    for (let i = this.lyrics.length - 1; i >= 0; i--) {
-      if (currentTime >= this.lyrics[i].time) {
-        newIndex = i;
-        break;
-      }
-    }
+    const newIndex = this.findLyricIndex(currentTime);
 
     if (newIndex !== this.activeIndex && newIndex !== -1) {
-      const isFarJump = this.activeIndex >= 0 && Math.abs(newIndex - this.activeIndex) > 3;
+      const isFarJump = this.activeIndex < 0 || Math.abs(newIndex - this.activeIndex) > 3;
       const lines = this.container.children;
+      const oldIndex = this.activeIndex;
       
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i]) {
-          lines[i].classList.remove('active', 'passed');
+      if (isFarJump) {
+        // Far jump / Init: Batch update all lines
+        for (let i = 0; i < lines.length; i++) {
+          const el = lines[i];
+          if (!el) continue;
           if (i < newIndex) {
-            lines[i].classList.add('passed');
+            el.classList.add('passed');
+            el.classList.remove('active');
+          } else if (i === newIndex) {
+            el.classList.add('active');
+            el.classList.remove('passed');
+          } else {
+            el.classList.remove('active', 'passed');
+          }
+        }
+      } else {
+        // Sequential advance: Selective O(1) update between oldIndex and newIndex
+        const minIdx = Math.max(0, Math.min(oldIndex, newIndex));
+        const maxIdx = Math.min(lines.length - 1, Math.max(oldIndex, newIndex));
+        for (let i = minIdx; i <= maxIdx; i++) {
+          const el = lines[i];
+          if (!el) continue;
+          if (i < newIndex) {
+            el.classList.add('passed');
+            el.classList.remove('active');
+          } else if (i === newIndex) {
+            el.classList.add('active');
+            el.classList.remove('passed');
+          } else {
+            el.classList.remove('active', 'passed');
           }
         }
       }
       
-      if (lines[newIndex]) {
-        lines[newIndex].classList.add('active');
-        if (!this.isUserScrolling) {
-          this.scrollToLine(newIndex, isFarJump);
-        }
+      if (lines[newIndex] && !this.isUserScrolling) {
+        this.scrollToLine(newIndex, isFarJump);
       }
 
       this.activeIndex = newIndex;

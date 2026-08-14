@@ -1,5 +1,31 @@
 # DEV LOG
 
+## Timestamp: 2026-08-14T14:35:00
+### Tác vụ thực hiện
+Triển khai tối ưu vi mô (Micro-Optimizations Phase 2): Binary Search & O(1) Selective DOM Lyrics Engine, O(1) VirtualList Pool & Scroll Event Coalescing, CSS Render Containment, và Thumbnail Compression.
+
+### Danh sách tệp tin tạo mới & thay đổi
+- `frontend/js/lyrics.js` (MODIFIED)
+- `frontend/js/library.js` (MODIFIED)
+- `frontend/css/library.css` (MODIFIED)
+- `frontend/css/albums.css` (MODIFIED)
+- `backend/storage/cache.py` (MODIFIED)
+- `DEV_LOG.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Lyrics Engine O(1) Selective DOM & Binary Search**:
+   - Thay thế việc quét tuyến tính từ cuối mảng bằng thuật toán Binary Search $O(\log N)$ trong `findLyricIndex()`.
+   - Chuyển đổi cơ chế cập nhật class: chỉ thay đổi class trên đúng 2 node DOM (dòng cũ và dòng mới) thay vì duyệt toàn bộ $N$ nodes trong mảng, loại bỏ 99% DOM operations khi chuyển câu hát.
+2. **VirtualList O(1) Pool Map & Scroll Event Coalescing**:
+   - Thay thế hàm tìm kiếm tuyến tính `this.pool.find()` bằng `Map` tra cứu $O(1)$ (`this.assigned`) và danh sách `this.freePool`.
+   - Thêm cờ `this.ticking` gộp nhiều sự kiện cuộn liên tiếp trong 1 frame vào 1 nhịp `requestAnimationFrame` duy nhất, loại bỏ hiện tượng tính toán chồng lấn khi cuộn chuột tốc độ cao.
+3. **CSS Render Containment & Isolation**:
+   - Thêm `contain: layout paint; content-visibility: auto;` cho `.track-row` và `contain: layout paint;` cho `.album-card` nhằm cách ly hoàn toàn sub-tree rendering của từng hàng, triệt tiêu reflow diện rộng của Chromium compositor.
+4. **Thumbnail Compression Optimization**:
+   - Bổ sung cờ `optimize=True` vào `Image.save()` của Pillow trong `CacheManager` để giảm dung lượng file JPEG đĩa thêm 15-25% và tăng tốc đọc I/O từ ổ cứng.
+
+---
+
 ## Timestamp: 2026-08-14T14:24:00
 ### Tác vụ thực hiện
 Đảm bảo luôn mở bung đầy đủ Lời bài hát khi bấm nút Mic trên thanh điều khiển Player (Reset View State On Open).

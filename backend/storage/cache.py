@@ -35,7 +35,7 @@ class CacheManager:
                 img = Image.open(io.BytesIO(image_bytes))
                 if img.mode != 'RGB':
                     img = img.convert('RGB')
-                img.save(path, 'JPEG', quality=90)
+                img.save(path, 'JPEG', quality=90, optimize=True)
             except Exception as e:
                 print(f"Error saving cover: {e}")
                 return ""
@@ -51,7 +51,7 @@ class CacheManager:
                 if img.mode != 'RGB':
                     img = img.convert('RGB')
                 img.thumbnail(size)
-                img.save(path, 'JPEG', quality=85)
+                img.save(path, 'JPEG', quality=85, optimize=True)
             except Exception as e:
                 print(f"Error saving thumbnail: {e}")
                 return ""

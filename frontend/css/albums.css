@@ -17,6 +17,7 @@
   transition: background-color var(--transition-fast), transform var(--transition-normal), box-shadow var(--transition-fast);
   cursor: pointer;
   will-change: transform;
+  contain: layout paint;
 }
 
 .album-card:hover {
