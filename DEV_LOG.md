@@ -1925,3 +1925,10 @@ ext_track() khng lm d?ng lu?ng pht nh?c.
   7. **Lyrics Fast-Switching Race Guard (lyrics.js)**: Ki?m tra 	his._currentTrackPath === track.path tru?c khi render l?i bi ht tr? v? t? async API.
   8. **Global Keyboard Shortcuts (main.js & player.js)**: H? tr? Spacebar (Play/Pause), Mui tn Tri/Ph?i (Seek 5s), Mui tn Ln/Xu?ng (Volume 5%), M (Mute/Unmute), Escape (ng Lyrics/Modals).
 
+## [2026-08-14T14:59:00+07:00] Comprehensive Documentation & Feature Showcase Update
+- **Tác v? th?c hi?n**: C?p nh?t toàn di?n t?p README.md trình bày d?y d? t?t c? các tính nang, ki?n trúc k? thu?t và h? th?ng phím t?t c?a ZFPlayer.
+- **Danh sách t?p tin thay d?i**:
+  - README.md
+- **Mô t? chi ti?t k? thu?t**:
+  B? sung chi ti?t 5 tr? c?t tính nang: (1) Ð?ng co âm thanh Streaming & WASAPI Bit-Perfect; (2) Màn hình l?i bài hát Apple Music & Cinema Idle Mode; (3) Qu?n lý thu vi?n, b?o v? USB & Auto-skip; (4) Trình qu?n lý phím t?t tùy bi?n ShortcutsManager; (5) T?i uu hóa hi?u nang render & b?o v? SSD.
+
