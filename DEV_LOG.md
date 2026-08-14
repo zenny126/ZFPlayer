@@ -1,5 +1,20 @@
 # DEV LOG
 
+## Timestamp: 2026-08-14T14:24:00
+### Tác vụ thực hiện
+Đảm bảo luôn mở bung đầy đủ Lời bài hát khi bấm nút Mic trên thanh điều khiển Player (Reset View State On Open).
+
+### Danh sách tệp tin thay đổi
+- frontend/js/lyrics.js (MODIFIED)
+- frontend/index.html (MODIFIED)
+- task.md (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- Trong hàm show() của LyricsRenderer, đặt lại this.userDisabledLyrics = false và luôn gọi this.applyLyricsViewState(true) khi người dùng mở giao diện Lời bài hát từ thanh điều khiển chính.
+- Nút bật/tắt ở góc trên bên phải (#btn-toggle-lyrics-view) vẫn hoạt động chuyển đổi bình thường trong lúc người dùng đang xem.
+
+---
+
 ## Timestamp: 2026-08-14T14:12:00
 ### Tác vụ thực hiện
 Tối ưu hóa toàn diện hiệu năng ứng dụng ZennyFLAC Player (Audio Engine Event-Driven, SQLite PRAGMA & Indexes, WebGL Shader Throttling, DOM Update Caching, List Thumbnail Optimization).

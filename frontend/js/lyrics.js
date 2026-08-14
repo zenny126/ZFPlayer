@@ -202,18 +202,15 @@ class LyricsRenderer {
 
   async show() {
     this.overlay.classList.remove('hidden');
+    this.userDisabledLyrics = false;
     this.resetCinemaIdleTimer();
     if (this.noLyricsTimer) {
       clearTimeout(this.noLyricsTimer);
       this.noLyricsTimer = null;
     }
 
-    // Restore view mode based on user preference
-    if (this.userDisabledLyrics) {
-      this.applyLyricsViewState(false);
-    } else {
-      this.applyLyricsViewState(true);
-    }
+    // Always open with full lyrics view
+    this.applyLyricsViewState(true);
 
     // Hide main app components to reveal global WebGL background, without hiding lyrics-overlay which is inside #app
     document.getElementById('top-bar').style.opacity = '0';
