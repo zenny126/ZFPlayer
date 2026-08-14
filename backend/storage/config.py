@@ -38,7 +38,8 @@ class Config:
             "theme": "dark",
             "last_track": None,
             "last_position": 0,
-            "audio_mode": "shared"
+            "audio_mode": "shared",
+            "shortcuts": {}
         }
         
         if os.path.exists(self.config_path):

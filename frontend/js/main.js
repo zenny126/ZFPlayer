@@ -4,6 +4,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   console.log("API Ready. Initializing app...");
 
   // Init components
+  window.shortcutsManager = new ShortcutsManager();
+  await window.shortcutsManager.init();
+
   window.uiController = new UIController();
   window.playerController = new PlayerController();
   window.lyricsRenderer = new LyricsRenderer();
@@ -81,72 +84,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
   
-  // Global Keyboard Shortcuts
+  // Global Keyboard Shortcuts (Managed via ShortcutsManager)
   document.addEventListener('keydown', async (e) => {
-    // Ignore keystrokes when typing inside inputs or textareas
-    const targetTag = e.target.tagName ? e.target.tagName.toLowerCase() : '';
-    if (targetTag === 'input' || targetTag === 'textarea' || e.target.isContentEditable) {
-      if (e.key === 'Escape') {
-        e.target.blur();
-        // Also close any active context menus or modals on 1st press
-        document.querySelectorAll('.context-menu').forEach(m => m.classList.add('hidden'));
-        document.querySelectorAll('.modal:not(.hidden)').forEach(m => m.classList.add('hidden'));
-      }
-      return;
-    }
-
-    if (e.key === ' ' || e.code === 'Space') {
-      e.preventDefault();
-      if (window.playerController) {
-        await window.playerController.togglePlay();
-      }
-    } else if (e.key === 'ArrowLeft') {
-      e.preventDefault();
-      if (window.playerController && window.playerController.ticker) {
-        const cur = window.playerController.ticker.position || 0;
-        await window.playerController.seek(Math.max(0, cur - 5));
-      }
-    } else if (e.key === 'ArrowRight') {
-      e.preventDefault();
-      if (window.playerController && window.playerController.ticker) {
-        const cur = window.playerController.ticker.position || 0;
-        const dur = window.playerController.ticker.duration || 0;
-        await window.playerController.seek(Math.min(dur, cur + 5));
-      }
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      if (window.playerController) {
-        await window.playerController.adjustVolume(5);
-      }
-    } else if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      if (window.playerController) {
-        await window.playerController.adjustVolume(-5);
-      }
-    } else if (e.key === 'm' || e.key === 'M') {
-      e.preventDefault();
-      if (window.playerController) {
-        await window.playerController.toggleMute();
-      }
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      const lyricsOverlay = document.getElementById('lyrics-overlay');
-      if (lyricsOverlay && !lyricsOverlay.classList.contains('hidden')) {
-        if (window.lyricsRenderer) window.lyricsRenderer.hide();
-      } else {
-        // Close any active context menus or modals
-        document.querySelectorAll('.context-menu').forEach(m => m.classList.add('hidden'));
-        document.querySelectorAll('.modal:not(.hidden)').forEach(m => m.classList.add('hidden'));
-      }
-    } else if (e.key === 'F11') {
-      e.preventDefault();
-      try {
-        if (window.api && window.api.toggleFullscreen) {
-          await window.api.toggleFullscreen();
-        }
-      } catch (err) {
-        console.error("PyWebView toggleFullscreen error:", err);
-      }
+    if (window.shortcutsManager) {
+      await window.shortcutsManager.handleGlobalKeyDown(e);
     }
   });
 

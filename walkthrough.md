@@ -1,44 +1,46 @@
-# Báo Cáo Thay Đổi Tài Liệu (Walkthrough)
+# Báo Cáo Hoàn Thành: Tùy Chỉnh Phím Tắt & Tổ Hợp Phím (Settings Modal)
 
-## Các Việc Đã Thực Hiện
-
-### 1. Viết lại `README.md`
-- **Tệp thay đổi:** [`README.md`](file:///d:/ZFPlayer/README.md)
-- **Nội dung:**
-  - Chuẩn hóa tổng quan dự án ZeroFLAC Player (ZFPlayer).
-  - Trình bày 4 nhóm tính năng nổi bật (Âm thanh Hi-Res WASAPI, Giao diện Glassmorphism Apple-style, Synced Lyrics 4 cấp fallback, Virtual Scrolling 60fps).
-  - Tóm tắt công nghệ Backend/Frontend, sơ đồ cây cấu trúc dự án.
-  - Hướng dẫn cài đặt, khởi chạy ứng dụng và hướng dẫn sử dụng chi tiết.
-  - Loại bỏ các icon trang trí dư thừa theo đúng yêu cầu từ người dùng.
-
-### 2. Viết lại `docs/ARCHITECTURE.md` và tạo `architect.md`
-- **Tệp thay đổi / tạo mới:** [`docs/ARCHITECTURE.md`](file:///d:/ZFPlayer/docs/ARCHITECTURE.md) và [`architect.md`](file:///d:/ZFPlayer/architect.md)
-- **Nội dung:**
-  - **Cấu trúc Hệ thống:** Mô hình Client-Server lai Desktop với sơ đồ Mermaid chi tiết.
-  - **5 Luồng Dữ Liệu Cốt Lõi:**
-    1. *Luồng Khởi chạy & IPC Bridge* (`pywebview` Edge Chromium + `bottle` WSGI REST API).
-    2. *Luồng Giải mã & Phát nhạc PCM Zero-Latency* (`soundfile` C-decoder + `numpy` RAM array + `sounddevice` WASAPI Shared Mode callback).
-    3. *Luồng Quét nhạc ngầm & Đánh chỉ mục FTS5* (`threading.Thread` + `mutagen` + SQLite3 FTS5 batch transaction).
-    4. *Luồng Tải & Đồng bộ Lời bài hát* (`queue.PriorityQueue` 2 cấp + Single Worker Thread với 0.5s throttle + Thác nước 4 cấp nguồn Local LRC / LRCLIB Search / Embedded Tag / Syncedlyrics).
-    5. *Luồng Frontend & Virtual Scrolling* (Central Unidirectional Store + `scrollTop - offsetTop` VirtualList Math + CSS Glass Tokens).
-  - **Yêu cầu Kỹ thuật Chuyên sâu:**
-    - Quy chuẩn Phần cứng & OS (Windows 10/11 64-bit, RAM Playback Caching).
-    - Thư viện phụ thuộc C-level & Python modules.
-    - Cơ sở dữ liệu SQLite3 WAL Mode & FTS5 optimization directives.
-    - Quy tắc đa luồng & an toàn thread (Audio Thread Callback isolation, Single Lyrics Worker Thread).
-    - Chỉ số SLA & giới hạn hiệu năng (Seek latency 0ms, CPU Idle < 0.5%, UI Frame Rate 60–120 FPS).
-
-### 3. Ghi nhật ký phát triển
-- **Tệp thay đổi:** [`DEV_LOG.md`](file:///d:/ZFPlayer/DEV_LOG.md) và [`task.md`](file:///d:/ZFPlayer/task.md)
-- Cập nhật nhật ký phát triển chi tiết từng mục thay đổi.
+## 1. Tổng Quan & Mục Tiêu Đạt Được
+Đã triển khai hoàn chỉnh tính năng cho phép người dùng tùy chỉnh tự do toàn bộ các phím tắt và tổ hợp phím (`Ctrl`, `Alt`, `Shift`, `Meta` + phím bất kỳ) ngay trong giao diện **Settings** modal của ứng dụng ZFPlayer.
 
 ---
 
-## Kiểm Chứng
+## 2. Chi Tiết Các Tệp Tin Đã Triển Khai
 
-- Đã xác minh tính đồng bộ 100% giữa tài liệu kiến trúc và mã nguồn triển khai thực tế trong `backend/` và `frontend/`.
-- Tất cả tệp tài liệu đều sử dụng định dạng Markdown chuẩn, không có lỗi biểu thức và không thêm emoji rác.
+| Tệp tin | Trạng thái | Chi tiết triển khai |
+| :--- | :---: | :--- |
+| [`frontend/js/shortcuts.js`](file:///d:/ZFPlayer/frontend/js/shortcuts.js) | **MỚI** | Module `ShortcutsManager` quản lý danh sách phím tắt, bắt & chuẩn hóa tổ hợp phím (`parseKeyEvent`), render thẻ `<kbd>`, chế độ ghi nhận phím động (Interactive Recorder) và điều phối phím tắt toàn cục. |
+| [`frontend/index.html`](file:///d:/ZFPlayer/frontend/index.html) | **SỬA** | Tái cấu trúc `#settings-modal` thành giao diện Tabs (`Audio Engine` & `Shortcuts`), container danh sách phím tắt, nút khôi phục mặc định và nạp `js/shortcuts.js`. |
+| [`frontend/css/main.css`](file:///d:/ZFPlayer/frontend/css/main.css) | **SỬA** | Định dạng giao diện Tabs, Key Pill buttons (`.btn-shortcut-pill`), hiệu ứng ghi nhận phát sáng xung nhịp (`recordingPulse`), thẻ phím `<kbd>` sắc nét và scrollbar tùy chỉnh. |
+| [`frontend/js/ui.js`](file:///d:/ZFPlayer/frontend/js/ui.js) | **SỬA** | Chuyển đổi Tab trong Settings modal, render danh sách phím tắt khi mở modal, gắn sự kiện nút Reset Defaults và đóng backdrop. |
+| [`frontend/js/main.js`](file:///d:/ZFPlayer/frontend/js/main.js) | **SỬA** | Khởi tạo `window.shortcutsManager` trong chu trình nạp app và chuyển tiếp sự kiện `keydown` sang ShortcutsManager. |
+| [`backend/storage/config.py`](file:///d:/ZFPlayer/backend/storage/config.py) | **SỬA** | Bổ sung trường `shortcuts: {}` vào cấu hình mặc định để lưu trữ bền vững vào `config.json`. |
+| [`DEV_LOG.md`](file:///d:/ZFPlayer/DEV_LOG.md) | **SỬA** | Ghi nhận chi tiết nhật ký phát triển theo chuẩn quy trình. |
 
-## Thêm Giấy phép Apache 2.0
-- **Thay đổi**: Đã tạo tệp LICENSE mới ở thư mục gốc của dự án chứa nội dung Apache License 2.0.
-- **Kiểm tra**: Nội dung giấy phép đã được kiểm tra tính chính xác và đầy đủ.
+---
+
+## 3. Danh Sách Phím Tắt Mặc Định Được Hỗ Trợ
+
+| Tác Vụ | Phím Tắt Mặc Định | Mô Tả |
+| :--- | :---: | :--- |
+| **Play / Pause** | <kbd>Space</kbd> | Bật / Tạm dừng phát nhạc |
+| **Next Track** | <kbd>Ctrl</kbd> + <kbd>→</kbd> | Chuyển sang bài tiếp theo |
+| **Previous Track** | <kbd>Ctrl</kbd> + <kbd>←</kbd> | Quay lại bài trước đó |
+| **Seek Forward** | <kbd>→</kbd> | Tua tới 5 giây |
+| **Seek Backward** | <kbd>←</kbd> | Tua lùi 5 giây |
+| **Volume Up** | <kbd>↑</kbd> | Tăng âm lượng 5% |
+| **Volume Down** | <kbd>↓</kbd> | Giảm âm lượng 5% |
+| **Mute / Unmute** | <kbd>M</kbd> | Bật / Tắt âm thanh |
+| **Toggle Lyrics** | <kbd>L</kbd> | Mở / Đóng toàn màn hình lời bài hát |
+| **Toggle Shuffle** | <kbd>S</kbd> | Bật / Tắt phát ngẫu nhiên |
+| **Toggle Repeat** | <kbd>R</kbd> | Chuyển chế độ lặp lại (Off / All / One) |
+| **Toggle Fullscreen** | <kbd>F11</kbd> | Bật / Tắt toàn màn hình ứng dụng |
+
+---
+
+## 4. Hướng Dẫn Sử Dụng
+1. Mở cửa sổ **Settings** (Bánh răng ở thanh điều hướng).
+2. Chuyển sang tab **Shortcuts**.
+3. Nhấp chuột vào bất kỳ nút phím tắt nào (sẽ chuyển sang trạng thái nhấp nháy `"Press keys..."`).
+4. Bấm bất kỳ phím đơn hoặc tổ hợp phím (ví dụ `Ctrl+Space`, `Alt+Shift+P`, `Ctrl+Right`, v.v.). Hệ thống tự động gán và lưu cấu hình ngay lập tức.
+5. Nhấn nút **Reset Defaults** để khôi phục lại toàn bộ cài đặt gốc bất cứ lúc nào.

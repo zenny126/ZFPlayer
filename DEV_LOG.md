@@ -1,5 +1,33 @@
 # DEV LOG
 
+## Timestamp: 2026-08-14T14:43:00
+### Tác vụ thực hiện
+Tùy biến & Cấu hình Phím tắt và Tổ hợp phím (Keyboard Shortcuts & Key Combinations Customization) trong giao diện Settings Modal.
+
+### Danh sách tệp tin tạo mới & thay đổi
+- `frontend/js/shortcuts.js` (NEW)
+- `frontend/index.html` (MODIFIED)
+- `frontend/css/main.css` (MODIFIED)
+- `frontend/js/ui.js` (MODIFIED)
+- `frontend/js/main.js` (MODIFIED)
+- `backend/storage/config.py` (MODIFIED)
+- `DEV_LOG.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Module Quản lý Phím tắt Toàn diện (`ShortcutsManager`)**:
+   - Xây dựng lớp `ShortcutsManager` hỗ trợ đầy đủ các phím đơn (`Space`, `ArrowLeft/Right/Up/Down`, `F1-F12`, `M`, `L`, `S`, `R`, v.v.) và các tổ hợp phím nâng cao (`Ctrl`, `Alt`, `Shift`, `Meta` + phím bất kỳ).
+   - Bộ giải mã & chuẩn hóa sự kiện bàn phím `parseKeyEvent` và chuẩn hóa hiển thị HTML dạng `<kbd>` key badges tinh tế, trực quan.
+   - Cơ chế ghi nhận phím trực tiếp (Interactive Key Recorder): Nhấn vào nút phím tắt để kích hoạt chế độ lắng nghe bàn phím với hiệu ứng phát sáng viền (`#00e676`), hỗ trợ hiển thị phím bổ trợ theo thời gian thực (`Ctrl + ...`), tự động gán & lưu trữ khi hoàn tất, hỗ trợ phím `Escape` để hủy và phát hiện/cảnh báo trùng lặp tổ hợp phím.
+   - Tính năng khôi phục mặc định (Reset to Defaults) cho từng phím riêng lẻ hoặc toàn bộ danh sách.
+2. **Nâng cấp Hệ thống Tab Giao diện Settings Modal**:
+   - Tái cấu trúc `#settings-modal` với hệ thống Tabs gồm `Audio Engine` (WASAPI & RAM Playback) và `Shortcuts` (Bảng quản trị phím tắt với danh sách cuộn mượt mà).
+   - Thêm bộ phong cách CSS cao cấp (`.settings-tab-btn`, `.btn-shortcut-pill`, `.shortcut-row`, `.recordingPulse`, `.custom-scrollbar`).
+3. **Đồng bộ & Lưu trữ Cấu hình**:
+   - Lưu trữ tự động vào backend `Config` (`config.json`) qua IPC `window.api.setConfig('shortcuts', ...)` và khôi phục khi khởi động ứng dụng.
+   - Thay thế bộ lắng nghe cứng `keydown` trong `main.js` bằng trình điều phối động `ShortcutsManager.handleGlobalKeyDown()`.
+
+---
+
 ## Timestamp: 2026-08-14T14:35:00
 ### Tác vụ thực hiện
 Triển khai tối ưu vi mô (Micro-Optimizations Phase 2): Binary Search & O(1) Selective DOM Lyrics Engine, O(1) VirtualList Pool & Scroll Event Coalescing, CSS Render Containment, và Thumbnail Compression.

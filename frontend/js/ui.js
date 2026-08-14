@@ -62,7 +62,46 @@ class UIController {
             console.error('Failed to load audio_mode config:', e);
           }
         }
+        if (window.shortcutsManager) {
+          window.shortcutsManager.renderShortcutsUI();
+        }
         document.getElementById('settings-modal').classList.remove('hidden');
+      });
+    }
+
+    // Settings Modal Tabs Switching
+    const settingsTabBtns = document.querySelectorAll('.settings-tab-btn');
+    settingsTabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        settingsTabBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const audioPane = document.getElementById('settings-tab-audio');
+        const shortcutsPane = document.getElementById('settings-tab-shortcuts');
+
+        if (tab === 'audio') {
+          if (audioPane) audioPane.style.display = 'block';
+          if (shortcutsPane) shortcutsPane.style.display = 'none';
+        } else if (tab === 'shortcuts') {
+          if (audioPane) audioPane.style.display = 'none';
+          if (shortcutsPane) {
+            shortcutsPane.style.display = 'block';
+            if (window.shortcutsManager) {
+              window.shortcutsManager.renderShortcutsUI();
+            }
+          }
+        }
+      });
+    });
+
+    // Reset all shortcuts button
+    const btnResetShortcuts = document.getElementById('btn-reset-shortcuts');
+    if (btnResetShortcuts) {
+      btnResetShortcuts.addEventListener('click', async () => {
+        if (window.shortcutsManager) {
+          await window.shortcutsManager.resetAll();
+        }
       });
     }
 
@@ -94,7 +133,22 @@ class UIController {
     const btnCloseSettings = document.getElementById('btn-close-settings');
     if (btnCloseSettings) {
       btnCloseSettings.addEventListener('click', () => {
+        if (window.shortcutsManager) {
+          window.shortcutsManager.stopRecording();
+        }
         document.getElementById('settings-modal').classList.add('hidden');
+      });
+    }
+
+    const settingsModal = document.getElementById('settings-modal');
+    if (settingsModal) {
+      settingsModal.addEventListener('click', (e) => {
+        if (e.target === settingsModal) {
+          if (window.shortcutsManager) {
+            window.shortcutsManager.stopRecording();
+          }
+          settingsModal.classList.add('hidden');
+        }
       });
     }
 

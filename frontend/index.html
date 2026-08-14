@@ -247,33 +247,63 @@
   </div>
 
   <div id="settings-modal" class="modal hidden">
-    <div class="modal-content" style="width: 500px;">
-      <h2>Settings</h2>
+    <div class="modal-content settings-modal-content">
+      <div class="settings-header">
+        <h2>Settings</h2>
+        <div class="settings-tabs-nav">
+          <button class="settings-tab-btn active" data-tab="audio">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
+            Audio Engine
+          </button>
+          <button class="settings-tab-btn" data-tab="shortcuts">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><line x1="6" y1="8" x2="6" y2="8"></line><line x1="10" y1="8" x2="10" y2="8"></line><line x1="14" y1="8" x2="14" y2="8"></line><line x1="18" y1="8" x2="18" y2="8"></line><line x1="6" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="18" y2="12"></line><line x1="10" y1="12" x2="14" y2="12"></line><line x1="8" y1="16" x2="16" y2="16"></line></svg>
+            Shortcuts
+          </button>
+        </div>
+      </div>
       
-      <div class="setting-group" style="margin-bottom: 20px;">
-        <div style="font-weight: 600; font-size: 14px; margin-bottom: 8px; color: #ffffff; display: flex; align-items: center; justify-content: space-between;">
-          <span>WASAPI Transmission Mode</span>
-          <span style="font-size: 11px; background: rgba(255,255,255,0.12); padding: 2px 8px; border-radius: 12px; font-weight: 500; color: rgba(255,255,255,0.7);">Windows Audio Driver</span>
+      <!-- Audio Settings Tab -->
+      <div id="settings-tab-audio" class="settings-tab-pane active">
+        <div class="setting-group" style="margin-bottom: 20px;">
+          <div style="font-weight: 600; font-size: 14px; margin-bottom: 8px; color: #ffffff; display: flex; align-items: center; justify-content: space-between;">
+            <span>WASAPI Transmission Mode</span>
+            <span style="font-size: 11px; background: rgba(255,255,255,0.12); padding: 2px 8px; border-radius: 12px; font-weight: 500; color: rgba(255,255,255,0.7);">Windows Audio Driver</span>
+          </div>
+          
+          <select id="select-audio-mode" class="settings-select" style="width: 100%; padding: 10px 12px; border-radius: 8px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 13.5px; font-family: inherit; outline: none; cursor: pointer;">
+            <option value="shared">WASAPI Shared Mode (System Mixer)</option>
+            <option value="exclusive">WASAPI Exclusive Mode (Push Driven)</option>
+          </select>
+          
+          <div id="audio-mode-info" class="audio-mode-info-card" style="margin-top: 12px; padding: 12px 14px; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; font-size: 12px; line-height: 1.5; color: rgba(255,255,255,0.85);">
+          </div>
         </div>
-        
-        <select id="select-audio-mode" class="settings-select" style="width: 100%; padding: 10px 12px; border-radius: 8px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 13.5px; font-family: inherit; outline: none; cursor: pointer;">
-          <option value="shared">WASAPI Shared Mode (System Mixer)</option>
-          <option value="exclusive">WASAPI Exclusive Mode (Push Driven)</option>
-        </select>
-        
-        <div id="audio-mode-info" class="audio-mode-info-card" style="margin-top: 12px; padding: 12px 14px; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; font-size: 12px; line-height: 1.5; color: rgba(255,255,255,0.85);">
+
+        <div class="setting-row" style="margin-bottom: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.08);">
+          <div>
+            <div style="font-weight: 600; font-size: 13px;">Zero-Latency RAM Playback</div>
+            <div style="font-size: 11.5px; color: rgba(255,255,255,0.5); margin-top: 2px;">C-Decoder preloads 100% audio into RAM (0% Disk I/O during playback)</div>
+          </div>
+          <span style="font-size: 11px; color: #00e676; font-weight: 600; background: rgba(0,230,118,0.15); padding: 3px 8px; border-radius: 6px;">ACTIVE</span>
         </div>
       </div>
 
-      <div class="setting-row" style="margin-bottom: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.08);">
-        <div>
-          <div style="font-weight: 600; font-size: 13px;">Zero-Latency RAM Playback</div>
-          <div style="font-size: 11.5px; color: rgba(255,255,255,0.5); margin-top: 2px;">C-Decoder preloads 100% audio into RAM (0% Disk I/O during playback)</div>
+      <!-- Shortcuts Settings Tab -->
+      <div id="settings-tab-shortcuts" class="settings-tab-pane" style="display: none;">
+        <div class="shortcuts-header-bar">
+          <div class="shortcuts-hint">Click any key pill to record new shortcut or combination.</div>
+          <button id="btn-reset-shortcuts" class="btn-ghost-sm" title="Restore all default shortcuts">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon" style="width: 13px; height: 13px;"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+            Reset Defaults
+          </button>
         </div>
-        <span style="font-size: 11px; color: #00e676; font-weight: 600; background: rgba(0,230,118,0.15); padding: 3px 8px; border-radius: 6px;">ACTIVE</span>
+
+        <div id="shortcuts-list-container" class="shortcuts-list custom-scrollbar">
+          <!-- Populated dynamically by ShortcutsManager -->
+        </div>
       </div>
 
-      <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+      <div class="settings-footer">
         <button id="btn-close-settings" class="btn-primary">Close</button>
       </div>
     </div>
@@ -397,6 +427,7 @@
 
   <script src="js/store.js?v=26"></script>
   <script src="js/api.js?v=26"></script>
+  <script src="js/shortcuts.js?v=26"></script>
   <script src="js/player.js?v=26"></script>
   <script src="js/lyrics.js?v=35"></script>
   <script src="js/library.js?v=26"></script>
