@@ -157,12 +157,22 @@ class AudioEngine:
         if mode in ('exclusive', 'exclusive_push', 'exclusive_event'):
             wasapi_settings = sd.WasapiSettings(exclusive=True)
             try:
-                wasapi_settings._streaminfo.flags |= sd._lib.paWinWasapiPolling
+                if hasattr(sd, '_lib') and hasattr(sd._lib, 'paWinWasapiPolling'):
+                    wasapi_settings._streaminfo.flags |= sd._lib.paWinWasapiPolling
             except Exception as e:
                 logger.warning(f"Failed to set paWinWasapiPolling flag: {e}")
             latency_setting = 'low'
         else: # 'shared'
-            wasapi_settings = sd.WasapiSettings(exclusive=False)
+            try:
+                wasapi_settings = sd.WasapiSettings(exclusive=False, auto_convert=True)
+            except TypeError:
+                wasapi_settings = sd.WasapiSettings(exclusive=False)
+            
+            try:
+                if hasattr(sd, '_lib') and hasattr(sd._lib, 'paWinWasapiAutoConvert'):
+                    wasapi_settings._streaminfo.flags |= sd._lib.paWinWasapiAutoConvert
+            except Exception as e:
+                logger.warning(f"Failed to set paWinWasapiAutoConvert flag: {e}")
             latency_setting = 'high'
 
         try:
@@ -180,15 +190,54 @@ class AudioEngine:
             self.stream = sd.OutputStream(**kwargs)
             self.stream.start()
         except Exception as e:
+            logger.warning(f"Failed to open audio stream (mode={mode}, sr={sr}): {e}. Attempting smart fallback...")
+            
+            # Step 1: If exclusive mode failed, fallback to WASAPI Shared Mode with AutoConvert
             if mode != 'shared':
-                logger.warning(f"Failed to open WASAPI mode '{mode}' ({e}). Falling back to WASAPI Shared Mode.")
-                wasapi_settings = sd.WasapiSettings(exclusive=False)
-                kwargs['latency'] = 'high'
-                kwargs['extra_settings'] = wasapi_settings
-                self.stream = sd.OutputStream(**kwargs)
+                try:
+                    try:
+                        shared_settings = sd.WasapiSettings(exclusive=False, auto_convert=True)
+                    except TypeError:
+                        shared_settings = sd.WasapiSettings(exclusive=False)
+                    try:
+                        if hasattr(sd, '_lib') and hasattr(sd._lib, 'paWinWasapiAutoConvert'):
+                            shared_settings._streaminfo.flags |= sd._lib.paWinWasapiAutoConvert
+                    except Exception:
+                        pass
+                    
+                    fallback_kwargs = {
+                        'samplerate': sr,
+                        'channels': ch,
+                        'dtype': 'float32',
+                        'latency': 'high',
+                        'extra_settings': shared_settings,
+                        'callback': self._audio_callback,
+                    }
+                    if dev_id is not None:
+                        fallback_kwargs['device'] = dev_id
+                        
+                    self.stream = sd.OutputStream(**fallback_kwargs)
+                    self.stream.start()
+                    logger.info("Successfully opened audio stream via WASAPI Shared fallback.")
+                    return
+                except Exception as ex_shared:
+                    logger.warning(f"WASAPI Shared fallback failed: {ex_shared}. Proceeding to generic audio fallback...")
+            
+            # Step 2: Universal Fallback - Standard PortAudio output stream without extra_settings (allows PortAudio software mixer & auto-resampler)
+            try:
+                generic_kwargs = {
+                    'samplerate': sr,
+                    'channels': ch,
+                    'dtype': 'float32',
+                    'latency': 'high',
+                    'callback': self._audio_callback,
+                }
+                self.stream = sd.OutputStream(**generic_kwargs)
                 self.stream.start()
-            else:
-                raise e
+                logger.info("Successfully opened audio stream via generic PortAudio fallback.")
+            except Exception as final_e:
+                logger.error(f"All audio stream initialization attempts failed: {final_e}")
+                raise final_e
 
     def play(self):
         if self.state in (AudioState.PLAYING, AudioState.LOADING):

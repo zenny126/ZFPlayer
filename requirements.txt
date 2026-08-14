@@ -1,0 +1,21 @@
+# ZennyFLAC Player - Python Dependencies
+
+# Audio Engine & DSP
+sounddevice>=0.4.6
+soundfile>=0.12.1
+numpy>=1.24.0
+
+# Audio Metadata & Tags
+mutagen>=1.46.0
+
+# Web Backend & GUI Window
+bottle>=0.12.25
+pywebview>=4.0.0
+Pillow>=10.0.0
+
+# Lyrics Services
+requests>=2.31.0
+syncedlyrics>=0.7.0
+
+# Packaging & Build
+pyinstaller>=6.0.0

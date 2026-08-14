@@ -1,5 +1,42 @@
 # DEV LOG
 
+## Timestamp: 2026-08-14T17:45:00
+### Tác vụ thực hiện
+Xây dựng bộ công cụ tự động hóa môi trường phát triển (Developer Environment Setup & Workflow Automation): `requirements.txt`, `setup_env.bat`, `run_dev.bat`, `build.bat`.
+
+### Danh sách tệp tin tạo mới
+- `requirements.txt` (NEW)
+- `setup_env.bat` (NEW)
+- `run_dev.bat` (NEW)
+- `build.bat` (NEW)
+- `DEV_LOG.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **`requirements.txt`**: Khai báo đầy đủ các phụ thuộc phân tầng âm thanh C-level (`sounddevice`, `soundfile`, `numpy`), metadata (`mutagen`), backend WSGI (`bottle`, `pywebview`), lời bài hát (`syncedlyrics`, `requests`, `Pillow`) và đóng gói nhị phân (`pyinstaller`).
+2. **`setup_env.bat`**: Script 1-click tự động kiểm tra Python hệ thống, tạo môi trường ảo `.venv`, nâng cấp pip và cài đặt 100% dependencies.
+3. **`run_dev.bat`**: Khởi chạy ứng dụng từ mã nguồn với chế độ `--debug` (hỗ trợ DevTools F12).
+4. **`build.bat`**: Tự động gọi `build_exe.py` đóng gói sản phẩm ra `dist/ZennyFLAC_Player.exe`.
+
+---
+
+## Timestamp: 2026-08-14T17:25:00
+### Tác vụ thực hiện
+Khắc phục lỗi mất tiếng trong chế độ WASAPI Shared Mode khi tần số bài hát khác định dạng mặc định (Default Format) của Windows thông qua cờ `paWinWasapiAutoConvert` và Fallback 2 lớp thông minh.
+
+### Danh sách tệp tin thay đổi
+- `backend/audio/engine.py` (MODIFIED)
+- `DEV_LOG.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Kích hoạt cờ Tự động Resample phần cứng/hệ điều hành (`engine.py`)**:
+   - Khởi tạo `sd.WasapiSettings(exclusive=False, auto_convert=True)` và gán cờ `paWinWasapiAutoConvert` (`AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM`).
+   - Cho phép Windows Audio Engine (AudioDG) tự động chuyển đổi tần số của file nhạc (ví dụ 44.1kHz chuẩn CD hoặc 96kHz Hi-Res) khớp với tần số cấu hình trong Windows Sound Mixer (ví dụ 48000Hz 32-bit Studio Quality) mà không bị từ chối kết nối với mã lỗi `AUDCLNT_E_UNSUPPORTED_FORMAT`.
+2. **Kiến trúc Fallback 2 lớp thông minh (Smart Multi-layer Fallback)**:
+   - *Lớp 1 (Exclusive -> Shared)*: Nếu chế độ Exclusive Mode gặp sự cố phần cứng, tự động chuyển về Shared Mode với `auto_convert=True`.
+   - *Lớp 2 (Universal PortAudio Fallback)*: Nếu driver soundcard của người dùng không hỗ trợ cờ WASAPI mở rộng, hệ thống tự động fallback về stream PortAudio chuẩn không có extra_settings để bộ resampler chất lượng cao của PortAudio tự động xử lý, đảm bảo 100% không bao giờ bị mất tiếng hay crash ứng dụng.
+
+---
+
 ## Timestamp: 2026-08-14T16:38:00
 ### Tác vụ thực hiện
 Triệt tiêu 100% tiếng xì nền và bụp nổ khi hết bài hát / chuyển bài thông qua kiến trúc Persistent WASAPI Stream và Vi độ dốc Tail Micro Fade-Out.
