@@ -1,5 +1,25 @@
 # DEV LOG
 
+## Timestamp: 2026-08-14T13:26:00
+### Tác vụ thực hiện
+Triển khai tính năng Cuộn Lời Bài Hát Tự Do (Manual Scroll & Auto-Resume sau 3.5s) chuẩn Apple Music.
+
+### Danh sách tệp tin thay đổi
+- rontend/js/lyrics.js (MODIFIED)
+- rontend/css/lyrics.css (MODIFIED)
+- rontend/index.html (MODIFIED)
+- 	ask.md (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- **Sự kiện cuộn tay wheel**: Bắt sự kiện con lăn chuột trực tiếp trên .lyrics-container. Tích lũy deltaY mượt mà kết hợp thuật toán giới hạn biên (clamping bounds + overscroll 100px) ngăn chặn cuộn tràn ra khoảng trống vô tận.
+- **Tạm dừng bám đuổi & Auto-Resume**:
+  - Khi người dùng lăn chuột, kích hoạt isUserScrolling = true, tạm dừng việc tự động giật màn hình theo bài hát để người dùng thoải mái đọc lời.
+  - Khởi tạo timer tự động đếm lùi **3.5 giây**. Sau 3.5 giây không còn tương tác lăn chuột, hệ thống kích hoạt hoạt cảnh lò xo lướt êm ái trở lại câu đang phát sáng (ctiveIndex).
+  - Nếu người dùng click vào bất kỳ câu hát nào, hệ thống lập tức hủy timer, seek bài hát tới mốc đó và lướt ngay tới câu vừa chọn.
+- **CSS Phản hồi tức thì**: Thêm class .manual-scrolling giúp transform phản hồi nhạy bén theo từng khấc con lăn chuột (60ms easing) mà không bị trễ nhịp hay giật lag.
+
+---
+
 ## Timestamp: 2026-08-14T13:18:00
 ### Tác vụ thực hiện
 Điều chỉnh vị trí neo câu hát đang phát (Active Line) lên 40% từ đỉnh khung chứa.

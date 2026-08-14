@@ -331,6 +331,14 @@
   }
 }
 
+/* Interactive Manual Scrolling: Phản hồi con lăn tức thì và mượt mà khi người dùng tự cuộn xem lời */
+#lyrics-content.manual-scrolling .lyrics-line {
+  transition: transform 60ms cubic-bezier(0.1, 1, 0.1, 1), 
+              color 600ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)), 
+              text-shadow 600ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)),
+              opacity 600ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)) !important;
+}
+
 .lyrics-line {
   font-family: 'Outfit', sans-serif;
   font-size: 32px; /* Identical font-size for all states to prevent layout shifts and text re-wrapping */

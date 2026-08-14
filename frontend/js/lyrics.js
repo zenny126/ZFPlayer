@@ -8,6 +8,9 @@ class LyricsRenderer {
     this.activeIndex = -1;
     this.userDisabledLyrics = false;
     this.noLyricsTimer = null;
+    this.isUserScrolling = false;
+    this.userScrollResumeTimer = null;
+    this.currentScrollY = 0;
     this.bindEvents();
   }
 
@@ -16,6 +19,10 @@ class LyricsRenderer {
     document.getElementById('btn-close-lyrics')?.addEventListener('click', () => this.hide());
     this.toggleLyricsBtn?.addEventListener('click', () => this.toggleLyricsView());
     
+    // Interactive Manual Scroll on Lyrics Container
+    const lyricsContainer = this.overlay.querySelector('.lyrics-container');
+    lyricsContainer?.addEventListener('wheel', (e) => this.handleWheel(e), { passive: false });
+    
     if (window.store) {
       window.store.subscribe('currentTrack', () => {
         if (!this.overlay.classList.contains('hidden')) {
@@ -23,6 +30,44 @@ class LyricsRenderer {
         }
       });
     }
+  }
+
+  handleWheel(e) {
+    if (!this.lyrics.length || this.overlay.classList.contains('hidden') || this.lyrics.length <= 1) return;
+    e.preventDefault();
+
+    this.isUserScrolling = true;
+    if (this.userScrollResumeTimer) clearTimeout(this.userScrollResumeTimer);
+
+    // Smooth delta accumulation
+    const delta = e.deltaY;
+    this.currentScrollY -= delta;
+
+    // Boundary protection (clamping)
+    const firstLine = this.container.firstElementChild;
+    const lastLine = this.container.lastElementChild;
+    if (firstLine && lastLine) {
+      const containerHeight = this.container.parentElement.clientHeight;
+      const targetAnchor = containerHeight * 0.40;
+      
+      const maxScroll = targetAnchor - firstLine.offsetTop - (firstLine.clientHeight / 2);
+      const minScroll = targetAnchor - lastLine.offsetTop - (lastLine.clientHeight / 2);
+      
+      const overscroll = 100;
+      this.currentScrollY = Math.max(minScroll - overscroll, Math.min(maxScroll + overscroll, this.currentScrollY));
+    }
+
+    this.container.classList.add('manual-scrolling');
+    this.container.style.setProperty('--scroll-y', `${this.currentScrollY}px`);
+
+    // Auto-resume after 3.5s of no scroll interaction
+    this.userScrollResumeTimer = setTimeout(() => {
+      this.isUserScrolling = false;
+      this.container.classList.remove('manual-scrolling');
+      if (this.activeIndex >= 0) {
+        this.scrollToLine(this.activeIndex, false);
+      }
+    }, 3500);
   }
 
   toggleLyricsView() {
@@ -160,6 +205,13 @@ class LyricsRenderer {
       clearTimeout(this.noLyricsTimer);
       this.noLyricsTimer = null;
     }
+    if (this.userScrollResumeTimer) {
+      clearTimeout(this.userScrollResumeTimer);
+      this.userScrollResumeTimer = null;
+    }
+    this.isUserScrolling = false;
+    this.container?.classList.remove('manual-scrolling');
+
     // Restore main app components
     document.getElementById('top-bar').style.opacity = '1';
     document.getElementById('top-bar').style.pointerEvents = 'auto';
@@ -194,7 +246,13 @@ class LyricsRenderer {
   setLyrics(lyricsArr) {
     this.lyrics = lyricsArr;
     this.activeIndex = -1;
+    if (this.userScrollResumeTimer) {
+      clearTimeout(this.userScrollResumeTimer);
+      this.userScrollResumeTimer = null;
+    }
+    this.isUserScrolling = false;
     if (this.container) {
+      this.container.classList.remove('manual-scrolling');
       this.container.style.transform = 'translateY(0)';
     }
     this.render();
@@ -210,6 +268,13 @@ class LyricsRenderer {
       el.style.setProperty('--stagger-delay', `${Math.min(idx * 45, 550)}ms`);
       el.addEventListener('click', () => {
         if (window.playerController && line.time >= 0) {
+          if (this.userScrollResumeTimer) {
+            clearTimeout(this.userScrollResumeTimer);
+            this.userScrollResumeTimer = null;
+          }
+          this.isUserScrolling = false;
+          this.container?.classList.remove('manual-scrolling');
+          
           // Immediately highlight & scroll to selected lyric line before seek IPC responds
           this.update(line.time);
           window.playerController.seek(line.time);
@@ -245,7 +310,9 @@ class LyricsRenderer {
       
       if (lines[newIndex]) {
         lines[newIndex].classList.add('active');
-        this.scrollToLine(newIndex, isFarJump);
+        if (!this.isUserScrolling) {
+          this.scrollToLine(newIndex, isFarJump);
+        }
       }
 
       this.activeIndex = newIndex;
@@ -268,6 +335,7 @@ class LyricsRenderer {
     const targetAnchor = containerHeight * 0.40;
     const scrollAmount = targetAnchor - offsetTop - (lineEl.clientHeight / 2);
     
+    this.currentScrollY = scrollAmount;
     // Set variable for individual child transforms (True staggered parallax)
     this.container.style.setProperty('--scroll-y', `${scrollAmount}px`);
   }
