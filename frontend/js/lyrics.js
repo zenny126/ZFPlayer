@@ -37,7 +37,8 @@ class LyricsRenderer {
       }
     }, { passive: true });
 
-    ['mousedown', 'keydown', 'wheel', 'touchstart'].forEach(evt => {
+    // Mouse/Touch triggers Cinema Idle wake-up (Keyboard operates purely in background without waking UI)
+    ['mousedown', 'wheel', 'touchstart'].forEach(evt => {
       window.addEventListener(evt, () => this.resetCinemaIdleTimer(), { passive: true });
     });
     window.addEventListener('resize', () => this.resetCinemaIdleTimer(), { passive: true });

@@ -1,5 +1,27 @@
 # DEV LOG
 
+## Timestamp: 2026-08-14T14:50:00
+### Tác vụ thực hiện
+Cô lập phím tắt bàn phím trong chế độ Cinema Idle (Keyboard Background Operation) và Cập nhật toàn diện tài liệu kiến trúc kỹ thuật (rchitect.md & docs/ARCHITECTURE.md).
+
+### Danh sách tệp tin thay đổi
+- rontend/js/lyrics.js (MODIFIED)
+- rontend/index.html (MODIFIED)
+- rchitect.md (MODIFIED)
+- docs/ARCHITECTURE.md (MODIFIED)
+- 	ask.md (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Cô lập Bàn phím trong Cinema Idle**:
+   - Loại bỏ sự kiện keydown khỏi bộ lắng nghe resetCinemaIdleTimer() trong LyricsRenderer.
+   - Giờ đây khi giao diện đang ở chế độ Cinema Idle (UI ẩn, con trỏ chuột ẩn, ảnh bìa trôi giữa), người dùng bấm mọi phím tắt (Play/Pause, Tua bài, Chỉnh âm lượng, Next/Prev) thì nhạc vẫn phản hồi 100% trong nền mà giao diện KHÔNG bị hiện lại.
+   - Giao diện chỉ thức tỉnh và hiện lại khi có tương tác chuột thực sự hoặc bấm phím Esc/F11 thoát.
+2. **Cập nhật Toàn diện Tài liệu Kiến trúc Hệ thống**:
+   - Bổ sung đầy đủ 9 luồng xử lý cốt lõi (System Flows & Pipelines) bao gồm: WebGL Fluid Dynamic Shader, Apple Music Kinetic Lyrics Engine (Spring Physics, 40% Anchor, Staggered Waterfall, Kinetic RAF Momentum, Binary Search O(log N) Lyric Finder, O(1) Selective DOM diffing), Cinema Idle Fullscreen Mode, Shortcuts Manager & Key Combinations <kbd>, VirtualList O(1) Pool Map & Scroll Coalescing, Streaming Decoder & Audio Ring Buffer chống OOM, WASAPI Dual-Engine Hardening, Singleton Lock Thread-Safety, Debounced Volume Persistence.
+   - Bổ sung bảng chỉ số SLA hiệu năng thực tế.
+
+---
+
 ## Timestamp: 2026-08-14T14:46:00
 ### Tác vụ thực hiện
 Khắc phục lỗi thanh cuộn kép/thừa (Redundant Outer Scrollbar) trong giao diện Settings Modal.
