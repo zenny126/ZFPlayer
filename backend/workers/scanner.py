@@ -29,12 +29,16 @@ class LibraryScanner:
                         all_files.append(os.path.join(root, f))
                         
         total = len(all_files)
+        accessible_dirs = [os.path.abspath(d) for d in music_dirs if os.path.exists(d)]
+        
         if total == 0:
             if progress_callback:
                 progress_callback(0, 0, "")
-            if handle_deletions:
-                for path in self.database.get_all_tracks():
-                    self.database.delete_track(path['path'])
+            if handle_deletions and accessible_dirs:
+                for t in self.database.get_all_tracks():
+                    p = os.path.abspath(t['path'])
+                    if any(p.startswith(ad) for ad in accessible_dirs):
+                        self.database.delete_track(t['path'])
             return
 
         existing_tracks = {t['path']: t for t in self.database.get_all_tracks()}
@@ -53,12 +57,14 @@ class LibraryScanner:
             except Exception:
                 pass
                 
-        # Handle deletions
-        if handle_deletions:
+        # Handle deletions: Only delete if the parent music folder exists and is mounted
+        if handle_deletions and accessible_dirs:
             disk_paths = set(all_files)
             for path in existing_tracks:
                 if path not in disk_paths:
-                    self.database.delete_track(path)
+                    abs_p = os.path.abspath(path)
+                    if any(abs_p.startswith(ad) for ad in accessible_dirs):
+                        self.database.delete_track(path)
 
         scanned = 0
         batch = []

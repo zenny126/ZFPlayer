@@ -42,6 +42,7 @@ class LyricsRenderer {
     const defaultCover = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1NiIgaGVpZ2h0PSI1NiI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iIzMzMyIvPjwvc3ZnPg==';
     
     if (track) {
+      this._currentTrackPath = track.path;
       document.getElementById('lyrics-track-name').textContent = track.title || 'Unknown';
       document.getElementById('lyrics-track-artist').textContent = track.artist || 'Unknown';
       
@@ -57,12 +58,18 @@ class LyricsRenderer {
       this.setLyrics([{ time: 0, text: "Loading lyrics..." }]);
       
       const lrcData = await window.api.getLyrics(track.artist, track.title, track.album, track.duration, track.path);
+      
+      // Prevent race conditions: Ensure this response still belongs to the currently active track
+      if (this._currentTrackPath !== track.path) {
+        return;
+      }
+
       if (lrcData && lrcData.synced_lyrics) {
         const parsed = this.parseLRC(lrcData.synced_lyrics);
         if (parsed && parsed.length > 0) {
           this.setLyrics(parsed);
-          if (window.playerController) {
-            this.update(window.playerController.currentTime || 0);
+          if (window.playerController && window.playerController.ticker) {
+            this.update(window.playerController.ticker.position || 0);
           }
         } else {
           this.setLyrics([{ time: 0, text: "No synced lyrics available." }]);

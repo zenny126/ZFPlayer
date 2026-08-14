@@ -83,7 +83,7 @@ class PlayerController {
     
     const volBar = document.getElementById('volume-bar');
     const volBarLyrics = document.getElementById('lyrics-volume-bar');
-    const updateVolUI = (val) => {
+    this.updateVolUI = (val) => {
       const num = parseFloat(val);
       if (volBar) {
         volBar.value = num;
@@ -97,16 +97,16 @@ class PlayerController {
     if (volBar) {
       volBar.addEventListener('input', (e) => {
         this.setVolume(e.target.value);
-        updateVolUI(e.target.value);
+        this.updateVolUI(e.target.value);
       });
     }
     if (volBarLyrics) {
       volBarLyrics.addEventListener('input', (e) => {
         this.setVolume(e.target.value);
-        updateVolUI(e.target.value);
+        this.updateVolUI(e.target.value);
       });
     }
-    if (volBar) updateVolUI(volBar.value);
+    if (volBar) this.updateVolUI(volBar.value);
 
     // Setup Windows SMTC / Browser MediaSession Action Handlers
     if ('mediaSession' in navigator) {
@@ -346,8 +346,26 @@ class PlayerController {
   }
 
   async setVolume(level) {
-    await window.api.setVolume(level / 100);
-    window.store.setState({ volume: level });
+    const numLevel = Math.max(0, Math.min(100, Math.round(level)));
+    await window.api.setVolume(numLevel / 100);
+    window.store.setState({ volume: numLevel });
+    if (this.updateVolUI) this.updateVolUI(numLevel);
+  }
+
+  async adjustVolume(delta) {
+    const current = window.store.getState().volume !== undefined ? window.store.getState().volume : 80;
+    const target = Math.max(0, Math.min(100, current + delta));
+    await this.setVolume(target);
+  }
+
+  async toggleMute() {
+    const current = window.store.getState().volume !== undefined ? window.store.getState().volume : 80;
+    if (current > 0) {
+      this._unmuteVolume = current;
+      await this.setVolume(0);
+    } else {
+      await this.setVolume(this._unmuteVolume || 80);
+    }
   }
 
   async next() {

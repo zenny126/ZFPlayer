@@ -17,6 +17,7 @@ class PlayerService:
         self.shuffled_playlist = []
         self.current_playlist_id = self.config.get('last_playlist_id', 'all')
         self._load_token = 0
+        self._vol_save_timer = None
         
         # Restore saved volume level
         saved_vol = self.config.get('volume', 0.8)
@@ -145,7 +146,11 @@ class PlayerService:
                 # Asynchronously preload the next 5 tracks' lyrics
                 threading.Thread(target=self._preload_next_tracks_lyrics, args=(target_path,), daemon=True).start()
             except Exception as e:
-                logger.error(f"RAM load failed for {target_path}: {e}")
+                logger.error(f"Playback load failed for {target_path}: {e}")
+                # Auto-skip unplayable/missing files if this load is still the active one
+                if token == self._load_token and self.current_path == target_path:
+                    logger.info("Auto-advancing to next track due to load error")
+                    self.next_track(user_initiated=False)
 
         if immediate:
             # Auto-advance: load directly, no debounce needed
@@ -181,9 +186,15 @@ class PlayerService:
         return self.get_state()
 
     def set_volume(self, level: float) -> None:
-        logger.debug(f"Setting volume to {level}")
+        level = max(0.0, min(1.0, float(level)))
         self.audio_engine.set_volume(level)
-        self.config.set('volume', level)
+        
+        # Debounce disk I/O config save by 0.3s
+        if hasattr(self, '_vol_save_timer') and self._vol_save_timer:
+            self._vol_save_timer.cancel()
+        self._vol_save_timer = threading.Timer(0.3, lambda: self.config.set('volume', level))
+        self._vol_save_timer.daemon = True
+        self._vol_save_timer.start()
 
     def insert_play_next(self, path: str) -> Dict[str, Any]:
         logger.info(f"Queuing track to play next: {path}")
@@ -279,6 +290,11 @@ class PlayerService:
 
     def prev_track(self) -> Optional[Dict[str, Any]]:
         logger.info(f"Skipping to previous track (active playlist_id={self.current_playlist_id})")
+        # Standard UX: If current track has played for > 3.0s, seek back to 0:00 instead of skipping track
+        current_state = self.audio_engine.get_state()
+        if current_state.get('position_seconds', 0.0) > 3.0:
+            return self.seek(0.0)
+
         if not self.current_path:
             self._sync_playlists_and_index('', self.current_playlist_id)
             shuffle_mode = self.config.get('shuffle', False)

@@ -185,7 +185,7 @@ class AudioEngine:
             return
 
         with self._lock:
-            if self.stream is None:
+            if self.stream is None or not getattr(self.stream, 'active', False):
                 self._create_stream()
 
             # Trigger 20ms micro fade-in ramp to eliminate start pops/clicks
@@ -329,7 +329,8 @@ class AudioEngine:
                 return
 
             remaining = self.total_frames - self.play_pos
-            if remaining <= 0:
+            is_eof = (self.decoder is not None and getattr(self.decoder, 'eof_reached', False) and self.ring_buffer.available() == 0)
+            if remaining <= 0 or is_eof:
                 outdata.fill(0)
                 self.state = AudioState.STOPPED
                 if self.on_track_end:

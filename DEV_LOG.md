@@ -1541,3 +1541,23 @@ gba(255,255,255,0.15)). Replaced hardcoded occurrences in library.css and main.c
 
 
 
+## [2026-08-14T12:22:00+07:00] Comprehensive User-Interaction & Hardware Edge-Case Hardening
+- **Tác v? th?c hi?n**: Kh?c ph?c 7 v?n d? ti?m ?n và nâng c?p tr?i nghi?m ngu?i dùng theo chu?n ?ng d?ng âm nh?c thuong m?i.
+- **Danh sách t?p tin thay d?i**:
+  - ackend/audio/engine.py
+  - ackend/services/player_service.py
+  - ackend/workers/scanner.py
+  - rontend/js/lyrics.js
+  - rontend/js/player.js
+  - rontend/js/main.js
+- **Mô t? chi ti?t k? thu?t**:
+  1. **Audio Device Reconnect Recovery (engine.py)**: S?a play() ki?m tra if self.stream is None or not getattr(self.stream, 'active', False): d? t? d?ng kh?i t?o l?i stream n?u thi?t b? ph?n c?ng (tai nghe/Bluetooth/DAC) b? ng?t k?t n?i ho?c l?i.
+  2. **Corrupt / VBR Early EOF Freeze Fix (engine.py)**: Trong _audio_callback, b? sung di?u ki?n k?t thúc bài if remaining <= 0 or (self.decoder and self.decoder.eof_reached and self.ring_buffer.available() == 0) d? auto-next không bao gi? b? treo khi file âm thanh có header frame count l?ch th?c t?.
+  3. **Industry Standard Prev-Track UX (player_service.py)**: Nút Previous ki?m tra position_seconds > 3.0s $\rightarrow$ tua v?  .0s d? ngu?i dùng nghe l?i d?u bài; n?u $\le 3.0s$ m?i nh?y v? bài tru?c.
+  4. **Auto-Skip Unplayable Files (player_service.py)**: Trong do_load, khi b?t exception n?p file (file b? xóa, h?ng d?nh d?ng), t? d?ng nh?y 
+ext_track() không làm d?ng lu?ng phát nh?c.
+  5. **Volume Config Debounce (player_service.py)**: Tách bi?t vi?c áp d?ng âm lu?ng t?c thì trên RAM/AudioEngine v?i vi?c luu dia config.json qua debounce 300ms, lo?i b? ngh?n I/O SSD khi kéo thanh slider.
+  6. **External USB / Unmounted Drive Protection (scanner.py)**: LibraryScanner ki?m tra ccessible_dirs = [d for d in music_dirs if os.path.exists(d)], không xóa các bài hát thu?c ? dia ngoài khi USB dang rút.
+  7. **Lyrics Fast-Switching Race Guard (lyrics.js)**: Ki?m tra 	his._currentTrackPath === track.path tru?c khi render l?i bài hát tr? v? t? async API.
+  8. **Global Keyboard Shortcuts (main.js & player.js)**: H? tr? Spacebar (Play/Pause), Mui tên Trái/Ph?i (Seek ±5s), Mui tên Lên/Xu?ng (Volume ±5%), M (Mute/Unmute), Escape (Ðóng Lyrics/Modals).
+
