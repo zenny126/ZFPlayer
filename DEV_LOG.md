@@ -1,5 +1,20 @@
 # DEV LOG
 
+## Timestamp: 2026-08-14T13:35:00
+### Tác vụ thực hiện
+Khắc phục triệt để lỗi khựng animation khi giữ chuột hover trên câu hát (Hover Stutter Fix).
+
+### Danh sách tệp tin thay đổi
+- frontend/css/lyrics.css (MODIFIED)
+- frontend/index.html (MODIFIED)
+- task.md (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- Loại bỏ khai báo transition shorthand ghi đè trong .lyrics-line:hover:not(.active) (vốn làm mất transition transform của dòng chữ khi đang hover).
+- Đưa color: 400ms làm transition cơ sở và đặt độ sáng hover đồng nhất 0.75. Giờ đây khi giữ chuột trên câu hát và bài hát tiếp tục chạy, câu hát vẫn trôi theo dàn hàng êm ru 100% không bị khựng giật.
+
+---
+
 ## Timestamp: 2026-08-14T13:30:00
 ### Tác vụ thực hiện
 Nâng cấp Động Cơ Vật Lý Quán Tính (Kinetic RAF Momentum & Exponential Spring Lerp) cho trải nghiệm cuộn lời bài hát mượt mà chuẩn 60fps/120fps.

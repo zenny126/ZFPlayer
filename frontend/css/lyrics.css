@@ -344,7 +344,7 @@
   font-weight: 700;
   color: rgba(255, 255, 255, 0.35); /* Chữ trong trẻo, tinh tế hơn */
   transform: translateY(var(--scroll-y, 0px)); /* True staggered scroll */
-  transition: color 1800ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)), 
+  transition: color 400ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)), 
               transform 1800ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)), 
               text-shadow 1800ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)),
               opacity 1800ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1));
@@ -361,9 +361,8 @@
   white-space: normal;
 }
 
-.lyrics-line:hover {
-  color: rgba(255, 255, 255, 0.7);
-  transition: color 400ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1));
+.lyrics-line:hover:not(.active) {
+  color: rgba(255, 255, 255, 0.75);
 }
 
 /* Tier 2: Active Line - Glowing and Smooth (Fast acceleration, long brake tail) */

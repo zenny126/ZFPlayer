@@ -1,7 +1,6 @@
-# Tasks - Động Cơ Quán Tính Cuộn Lời Bài Hát (Kinetic RAF Momentum & Spring Lerp)
+# Tasks - Khắc Phục Lỗi Khựng Animation Khi Rê Chuột (Hover Stutter Fix)
 
-- [x] Xây dựng động cơ `requestAnimationFrame` kết hợp thuật toán Exponential Spring Lerp trong `lyrics.js` <!-- id: 0 -->
-- [x] Tích hợp xung lực mượt mà và giới hạn biên đàn hồi trong `handleWheel` trong `lyrics.js` <!-- id: 1 -->
-- [x] Tắt độ trễ CSS `transform` trong trạng thái `.manual-scrolling` trong `lyrics.css` <!-- id: 2 -->
-- [x] Tăng cache-buster version và kiểm thử cuộn quán tính 60fps/120fps <!-- id: 3 -->
-- [x] Ghi nhật ký phát triển `DEV_LOG.md` và `walkthrough.md` <!-- id: 4 -->
+- [x] Sửa khai báo transition của `.lyrics-line` và `.lyrics-line:hover:not(.active)` trong `lyrics.css` <!-- id: 0 -->
+- [x] Thiết lập độ sáng hover đồng nhất `0.75` trong `lyrics.css` <!-- id: 1 -->
+- [x] Tăng cache-buster version và kiểm thử cuộn mượt khi giữ hover <!-- id: 2 -->
+- [x] Ghi nhật ký phát triển `DEV_LOG.md` và `walkthrough.md` <!-- id: 3 -->
