@@ -142,6 +142,7 @@ class PlayerService:
                     self.audio_engine.stop()
                     return
                 self.audio_engine.play()
+                self._consecutive_load_failures = 0
                 
                 # Asynchronously preload the next 5 tracks' lyrics
                 threading.Thread(target=self._preload_next_tracks_lyrics, args=(target_path,), daemon=True).start()
@@ -149,8 +150,13 @@ class PlayerService:
                 logger.error(f"Playback load failed for {target_path}: {e}")
                 # Auto-skip unplayable/missing files if this load is still the active one
                 if token == self._load_token and self.current_path == target_path:
-                    logger.info("Auto-advancing to next track due to load error")
-                    self.next_track(user_initiated=False)
+                    self._consecutive_load_failures = getattr(self, '_consecutive_load_failures', 0) + 1
+                    if self._consecutive_load_failures >= 10:
+                        logger.warning("Stopped auto-skipping: 10 consecutive load failures detected")
+                        self.stop()
+                    else:
+                        logger.info(f"Auto-advancing to next track (failure {self._consecutive_load_failures}/10)")
+                        self.next_track(user_initiated=False)
 
         if immediate:
             # Auto-advance: load directly, no debounce needed

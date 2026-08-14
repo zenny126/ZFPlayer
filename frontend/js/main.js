@@ -88,6 +88,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (targetTag === 'input' || targetTag === 'textarea' || e.target.isContentEditable) {
       if (e.key === 'Escape') {
         e.target.blur();
+        // Also close any active context menus or modals on 1st press
+        document.querySelectorAll('.context-menu').forEach(m => m.classList.add('hidden'));
+        document.querySelectorAll('.modal:not(.hidden)').forEach(m => m.classList.add('hidden'));
       }
       return;
     }
