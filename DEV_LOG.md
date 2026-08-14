@@ -1,5 +1,20 @@
 # DEV LOG
 
+## Timestamp: 2026-08-14T14:46:00
+### Tác vụ thực hiện
+Khắc phục lỗi thanh cuộn kép/thừa (Redundant Outer Scrollbar) trong giao diện Settings Modal.
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/main.css` (MODIFIED)
+- `frontend/js/ui.js` (MODIFIED)
+- `DEV_LOG.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- Chuyển `#settings-tab-shortcuts` và `.settings-tab-pane` sang layout flexbox cách ly với `overflow: hidden`, triệt tiêu hoàn toàn thanh cuộn ở viền ngoài modal.
+- Đặt danh sách `.shortcuts-list` là phần tử cuộn duy nhất (`overflow-y: auto; flex: 1; max-height: 360px`) kết hợp padding lề phải tinh tế, giúp giao diện Settings gọn gàng, sắc nét.
+
+---
+
 ## Timestamp: 2026-08-14T14:43:00
 ### Tác vụ thực hiện
 Tùy biến & Cấu hình Phím tắt và Tổ hợp phím (Keyboard Shortcuts & Key Combinations Customization) trong giao diện Settings Modal.

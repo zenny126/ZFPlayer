@@ -1,8 +1,6 @@
-# Nhiệm Vụ: Tùy Chỉnh Phím Tắt & Tổ Hợp Phím trong Settings Modal
+# Nhiệm Vụ: Khắc Phục Lỗi Thừa Thanh Cuộn (Outer Scrollbar) Trong Settings Modal
 
-- [x] Tạo module `frontend/js/shortcuts.js` quản lý cấu hình, bắt tổ hợp phím (Key Combinations) và điều phối sự kiện <!-- id: 0 -->
-- [x] Cập nhật giao diện `#settings-modal` trong `frontend/index.html` với cấu trúc Tabs (Audio & Phím tắt) <!-- id: 1 -->
-- [x] Bổ sung CSS cho Settings Tabs, Keyboard Badges `<kbd>` và Key Recorder UI trong `frontend/css/main.css` <!-- id: 2 -->
-- [x] Cập nhật `frontend/js/ui.js` và `frontend/js/main.js` để tích hợp `ShortcutsManager` và lưu trữ cấu hình qua `Config` <!-- id: 3 -->
-- [x] Kiểm thử toàn diện các tổ hợp phím tắt, lưu trữ cấu hình và khôi phục mặc định <!-- id: 4 -->
-- [x] Ghi nhật ký phát triển vào `DEV_LOG.md` và cập nhật `walkthrough.md` <!-- id: 5 -->
+- [x] Tinh chỉnh CSS `.settings-tab-pane` và `.shortcuts-list` trong `frontend/css/main.css` để loại bỏ hoàn toàn thanh cuộn ngoài <!-- id: 0 -->
+- [x] Cập nhật cơ chế hiển thị Flexbox cho Shortcuts tab trong `frontend/js/ui.js` <!-- id: 1 -->
+- [x] Kiểm thử hiển thị giao diện modal không còn hiện tượng thanh cuộn thừa <!-- id: 2 -->
+- [x] Ghi nhật ký vào `DEV_LOG.md` và `walkthrough.md` <!-- id: 3 -->

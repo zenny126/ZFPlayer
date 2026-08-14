@@ -86,7 +86,7 @@ class UIController {
         } else if (tab === 'shortcuts') {
           if (audioPane) audioPane.style.display = 'none';
           if (shortcutsPane) {
-            shortcutsPane.style.display = 'block';
+            shortcutsPane.style.display = 'flex';
             if (window.shortcutsManager) {
               window.shortcutsManager.renderShortcutsUI();
             }

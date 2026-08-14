@@ -601,15 +601,25 @@ input[type="range"]::-webkit-slider-runnable-track {
 
 .settings-tab-pane {
   flex: 1;
-  overflow-y: auto;
   min-height: 0;
+  overflow: hidden;
+}
+
+#settings-tab-audio {
+  overflow-y: auto;
+}
+
+#settings-tab-shortcuts {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .settings-footer {
   display: flex;
   justify-content: flex-end;
-  margin-top: 20px;
-  padding-top: 16px;
+  margin-top: 16px;
+  padding-top: 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -618,8 +628,9 @@ input[type="range"]::-webkit-slider-runnable-track {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   gap: 12px;
+  flex-shrink: 0;
 }
 
 .shortcuts-hint {
@@ -652,12 +663,15 @@ input[type="range"]::-webkit-slider-runnable-track {
 }
 
 .shortcuts-list {
-  max-height: 380px;
+  flex: 1;
+  min-height: 0;
+  max-height: 360px;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding-right: 4px;
+  padding-right: 6px;
 }
 
 .shortcut-row {
