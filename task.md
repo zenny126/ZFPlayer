@@ -1,5 +1,7 @@
-# Tasks - Tự Động Mở Lại Cột Lời Khi Bài Mới Có Lời
+# Tasks - Bổ Sung Đặc Tả Kỹ Thuật Vào Architect.md & Đóng Gói EXE
 
-- [x] Sửa điều kiện `applyLyricsViewState(true)` khi nạp xong lyric trong `lyrics.js` <!-- id: 0 -->
-- [x] Tăng cache-buster version và kiểm thử chuyển từ bài không lời sang bài có lời <!-- id: 1 -->
-- [x] Ghi nhật ký phát triển `DEV_LOG.md` và `walkthrough.md` <!-- id: 2 -->
+- [x] Bổ sung đặc tả Auto-Restore Lyrics View và lệnh chạy vào `architect.md` <!-- id: 0 -->
+- [x] Đồng bộ hóa tài liệu sang `docs/ARCHITECTURE.md` <!-- id: 1 -->
+- [x] Đóng gói thành công ứng dụng độc lập `dist/ZennyFLAC_Player.exe` (36.05 MB) <!-- id: 2 -->
+- [x] Ghi nhật ký phát triển `DEV_LOG.md` và `walkthrough.md` <!-- id: 3 -->
+- [x] Đẩy toàn bộ mã nguồn lên GitHub repository <!-- id: 4 -->

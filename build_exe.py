@@ -41,9 +41,19 @@ def main():
         except Exception as e:
             print(f"[!] Warning: Could not remove old {old_exe}: {e}")
 
-    print("\n[+] Running PyInstaller build...")
+    # Clean previous build directories
+    build_temp = project_root / "build"
+    if build_temp.exists():
+        try:
+            shutil.rmtree(build_temp, ignore_errors=True)
+            print("[+] Cleaned temporary build directory.")
+        except Exception:
+            pass
+
+    print("\n[+] Running Optimized PyInstaller build (-OO bytecode)...")
     cmd = [
         sys.executable,
+        "-OO",
         "-m",
         "PyInstaller",
         "--noconfirm",
@@ -65,12 +75,15 @@ def main():
             except Exception as e:
                 print(f"[!] Warning: Could not create {zenny_exe}: {e}")
 
+            file_size_mb = os.path.getsize(zenny_exe if zenny_exe.exists() else exe_path) / (1024 * 1024)
+
             print("\n" + "=" * 60)
-            print("  BUILD SUCCESSFUL!")
-            print(f"  Executable output: {exe_path}")
+            print("  OPTIMIZED BUILD SUCCESSFUL!")
+            print(f"  Branded Executable: {zenny_exe}")
+            print(f"  File Size:          {file_size_mb:.2f} MB")
             print("=" * 60)
             print("\nTo test the standalone application:")
-            print(f"  Run: {exe_path}")
+            print(f"  Run: {zenny_exe}")
         else:
             print(f"\n[!] Build finished but ZFPlayer.exe was not found in {project_root / 'dist'}.")
     except subprocess.CalledProcessError as e:

@@ -175,6 +175,8 @@ graph TD
 5. **Cô Lập Hoàn Toàn Bàn Phím Trong Nền (Keyboard Background Isolation):**
    - Bấm phím tắt điều khiển nhạc (Space, Tua bài, Chỉnh âm lượng, Next/Prev) phản hồi 100% trong nền mà **không đánh thức UI**.
    - Giao diện chỉ thức tỉnh và hiện lại tức thì trong **250ms** khi có tương tác chuột thực sự hoặc bấm Esc/F11 thoát.
+6. **Bảo Toàn Trạng Thái Cinema Idle Khi Đổi Bài Hát (Track Change Idle Preservation):**
+   - Khi tự động chuyển bài hát mới hoặc bấm Next/Prev trong Cinema Idle, hệ thống duy trì 100% lớp .cinema-idle, cập nhật động khoảng cách bù tâm updateCinemaIdleOffset(), cập nhật ảnh bìa và tên bài mới ngay tại trung tâm mà không làm hiện lại UI hay con trỏ chuột.
 
 ---
 
@@ -237,3 +239,14 @@ PRAGMA temp_store = MEMORY;
 | **Khối lượng Render DOM** | $< 500\text{ nodes}$ | $\sim 30 - 40\text{ nodes}$ (VirtualList) |
 | **Bộ nhớ RAM tiêu thụ** | $< 400\text{MB}$ | $\sim 150\text{MB} - 280\text{MB}$ |
 | **Tải GPU cho Shader Nền** | Tiết kiệm 90% | Bilinear 25% scale-up pass |
+
+### 3.6 Lệnh Khởi Chạy & Đóng Gói Ứng Dụng (Execution & Build Commands)
+- **Lệnh chạy từ mã nguồn (Development / Direct run):**
+  `ash
+  python backend/app.py
+  `
+- **Lệnh đóng gói tệp thực thi độc lập (Production EXE Build):**
+  `ash
+  python build_exe.py
+  `
+  Đầu ra tệp thực thi đơn duy nhất: dist/ZennyFLAC_Player.exe và dist/ZFPlayer.exe.

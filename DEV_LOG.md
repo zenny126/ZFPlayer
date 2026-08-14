@@ -1,5 +1,29 @@
 # DEV LOG
 
+## Timestamp: 2026-08-14T16:21:00
+### Tác vụ thực hiện
+Bổ sung đặc tả kỹ thuật Auto-Restore Lyrics View & Lệnh khởi chạy vào rchitect.md / docs/ARCHITECTURE.md, và Đóng gói hoàn chỉnh bản cài đặt độc lập dist/ZennyFLAC_Player.exe.
+
+### Danh sách tệp tin thay đổi
+- rchitect.md (MODIFIED)
+- docs/ARCHITECTURE.md (MODIFIED)
+- uild_exe.py (MODIFIED)
+- zfplayer.spec (MODIFIED)
+- dist/ZennyFLAC_Player.exe (UPDATED)
+- dist/ZFPlayer.exe (UPDATED)
+- 	ask.md (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- **Kiến trúc & Đặc tả**:
+  - Ghi nhận chi tiết mục 2.7.7: Cơ Chế Tự Động Phục Hồi Lời Khi Đổi Bài (Auto-Restore Lyrics View on Track Change).
+  - Ghi nhận chi tiết mục 2.8.6: Bảo Toàn Trạng Thái Cinema Idle Khi Đổi Bài Hát (Track Change Idle Preservation).
+  - Ghi nhận chi tiết mục 3.6: Lệnh Khởi Chạy & Đóng Gói Ứng Dụng (Development run & Production EXE Build).
+- **Đóng gói nhị phân (EXE Build)**:
+  - Tối ưu hóa PyInstaller với bytecode -OO và danh sách loại trừ thư viện thừa (excludes).
+  - Xuất bản tệp thực thi đơn duy nhất: dist/ZennyFLAC_Player.exe (Dung lượng: 36.05 MB).
+
+---
+
 ## Timestamp: 2026-08-14T16:15:00
 ### Tác vụ thực hiện
 Sửa lỗi không tự động mở lại cột Lời bài hát khi bài hát mới có lời sau khi bài trước đó tự động ẩn vào Center Mode do không có lời.
