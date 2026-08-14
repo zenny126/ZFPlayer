@@ -1,5 +1,20 @@
 # DEV LOG
 
+## Timestamp: 2026-08-14T13:18:00
+### Tác vụ thực hiện
+Điều chỉnh vị trí neo câu hát đang phát (Active Line) lên 40% từ đỉnh khung chứa.
+
+### Danh sách tệp tin thay đổi
+- rontend/js/lyrics.js (MODIFIED)
+- rontend/css/lyrics.css (MODIFIED)
+- rontend/index.html (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- **Vị trí neo 40%**: Chuyển 	argetAnchor = containerHeight * 0.40; trong scrollToLine. Vị trí câu đang phát sáng nằm cân đối hoàn hảo ở 40% chiều cao (không quá cao như 35% và không quá thấp như 50%).
+- **Dải mờ đỉnh**: Cập nhật mask-image về lack 18% và padding #lyrics-content thành 30vh 0 45vh 0 để dòng chữ cuộn mượt mà từ đầu đến cuối.
+
+---
+
 ## Timestamp: 2026-08-14T13:12:00
 ### Tác vụ thực hiện
 Nâng mốc neo câu hát đang phát (Active Line) lên 35% từ đỉnh xuống và làm chậm tốc độ trượt vào của lời bài hát khi mở.

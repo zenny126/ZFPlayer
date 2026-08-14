@@ -287,8 +287,8 @@
   position: relative;
   padding-left: 32px; /* Balanced left/right safe padding */
   padding-right: 32px; /* Expanded right boundary for perfect symmetry */
-  mask-image: linear-gradient(to bottom, transparent 0%, black 22%, black 85%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 22%, black 85%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 85%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 85%, transparent 100%);
   opacity: 1;
   transform: translateX(0);
   visibility: visible;
@@ -312,7 +312,7 @@
 #lyrics-content {
   display: flex;
   flex-direction: column;
-  padding: 25vh 0 50vh 0; /* Neo 35% ở trên thông thoáng, cuộn đáy 50vh thoải mái */
+  padding: 30vh 0 45vh 0; /* Neo 40% cân đối hoàn hảo */
   /* Removed transition: transform... to stop moving the container itself */
   will-change: auto;
   width: 100%;

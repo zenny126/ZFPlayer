@@ -264,8 +264,8 @@ class LyricsRenderer {
 
     const containerHeight = this.container.parentElement.clientHeight;
     const offsetTop = lineEl.offsetTop;
-    // Neo ở vị trí 35% từ đỉnh xuống thay vì giữa 50%
-    const targetAnchor = containerHeight * 0.35;
+    // Neo ở vị trí 40% từ đỉnh xuống
+    const targetAnchor = containerHeight * 0.40;
     const scrollAmount = targetAnchor - offsetTop - (lineEl.clientHeight / 2);
     
     // Set variable for individual child transforms (True staggered parallax)
