@@ -41,15 +41,17 @@
   color: rgba(255, 255, 255, 0.5);
   width: 44px;
   height: 44px;
+  border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color var(--transition-fast), transform var(--transition-spring);
+  transition: color var(--transition-fast), background var(--transition-fast), transform var(--transition-spring);
   z-index: 205;
 }
 .lyrics-close-btn:hover {
   color: white;
+  background: rgba(255, 255, 255, 0.1);
   transform: scale(1.08);
 }
 .lyrics-close-btn:active {
@@ -58,6 +60,42 @@
 .lyrics-close-btn .icon {
   width: 28px;
   height: 28px;
+}
+
+/* Apple Music Lyrics Toggle Button (Top Right) */
+.lyrics-toggle-btn {
+  position: absolute;
+  top: 32px;
+  right: 32px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--transition-fast), background var(--transition-fast), transform var(--transition-spring), box-shadow var(--transition-fast);
+  z-index: 205;
+}
+.lyrics-toggle-btn:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.08);
+}
+.lyrics-toggle-btn:active {
+  transform: scale(0.92);
+}
+.lyrics-toggle-btn.active {
+  color: white;
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.2);
+}
+.lyrics-toggle-btn .icon {
+  width: 24px;
+  height: 24px;
 }
 
 .lyrics-track-info {
@@ -69,6 +107,13 @@
   width: var(--max-cover-size); /* Cố định chính xác độ rộng theo kích thước tính toán */
   max-width: var(--max-cover-size);
   min-width: 0; /* Quan trọng: Ngăn chặn chuỗi text white-space: nowrap đẩy phồng chiều rộng flex item */
+  margin-left: 0;
+  transition: margin-left 750ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1));
+}
+
+/* Center Mode: Glides track info & album cover smoothly to the exact center */
+.lyrics-overlay-container.center-mode .lyrics-track-info {
+  margin-left: calc(50% - (var(--max-cover-size) / 2));
 }
 
 #lyrics-cover {
@@ -242,6 +287,19 @@
   padding-right: 32px; /* Expanded right boundary for perfect symmetry */
   mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+  opacity: 1;
+  transform: translateX(0);
+  visibility: visible;
+  transition: opacity 550ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)), 
+              transform 650ms var(--ease-apple-lyrics, cubic-bezier(0.2, 1, 0.2, 1)),
+              visibility 550ms;
+}
+
+.lyrics-overlay-container.center-mode .lyrics-container {
+  opacity: 0;
+  transform: translateX(36px);
+  pointer-events: none;
+  visibility: hidden;
 }
 
 #lyrics-content {

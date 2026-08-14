@@ -2,14 +2,19 @@ class LyricsRenderer {
   constructor() {
     this.container = document.getElementById('lyrics-content');
     this.overlay = document.getElementById('lyrics-overlay');
+    this.overlayContainer = this.overlay.querySelector('.lyrics-overlay-container');
+    this.toggleLyricsBtn = document.getElementById('btn-toggle-lyrics-view');
     this.lyrics = [];
     this.activeIndex = -1;
+    this.userDisabledLyrics = false;
+    this.noLyricsTimer = null;
     this.bindEvents();
   }
 
   bindEvents() {
     document.getElementById('btn-lyrics-toggle').addEventListener('click', () => this.toggle());
     document.getElementById('btn-close-lyrics')?.addEventListener('click', () => this.hide());
+    this.toggleLyricsBtn?.addEventListener('click', () => this.toggleLyricsView());
     
     if (window.store) {
       window.store.subscribe('currentTrack', () => {
@@ -17,6 +22,27 @@ class LyricsRenderer {
           this.show();
         }
       });
+    }
+  }
+
+  toggleLyricsView() {
+    this.userDisabledLyrics = !this.userDisabledLyrics;
+    if (this.noLyricsTimer) {
+      clearTimeout(this.noLyricsTimer);
+      this.noLyricsTimer = null;
+    }
+    this.applyLyricsViewState(!this.userDisabledLyrics);
+  }
+
+  applyLyricsViewState(showLyrics) {
+    if (showLyrics) {
+      this.overlayContainer?.classList.remove('center-mode');
+      this.toggleLyricsBtn?.classList.add('active');
+      if (this.toggleLyricsBtn) this.toggleLyricsBtn.title = 'Hide Lyrics';
+    } else {
+      this.overlayContainer?.classList.add('center-mode');
+      this.toggleLyricsBtn?.classList.remove('active');
+      if (this.toggleLyricsBtn) this.toggleLyricsBtn.title = 'Show Lyrics';
     }
   }
 
@@ -30,6 +56,18 @@ class LyricsRenderer {
 
   async show() {
     this.overlay.classList.remove('hidden');
+    if (this.noLyricsTimer) {
+      clearTimeout(this.noLyricsTimer);
+      this.noLyricsTimer = null;
+    }
+
+    // Restore view mode based on user preference
+    if (this.userDisabledLyrics) {
+      this.applyLyricsViewState(false);
+    } else {
+      this.applyLyricsViewState(true);
+    }
+
     // Hide main app components to reveal global WebGL background, without hiding lyrics-overlay which is inside #app
     document.getElementById('top-bar').style.opacity = '0';
     document.getElementById('top-bar').style.pointerEvents = 'none';
@@ -68,14 +106,17 @@ class LyricsRenderer {
         const parsed = this.parseLRC(lrcData.synced_lyrics);
         if (parsed && parsed.length > 0) {
           this.setLyrics(parsed);
+          if (!this.userDisabledLyrics) {
+            this.applyLyricsViewState(true);
+          }
           if (window.playerController && window.playerController.ticker) {
             this.update(window.playerController.ticker.position || 0);
           }
         } else {
-          this.setLyrics([{ time: 0, text: "No synced lyrics available." }]);
+          this.handleNoLyrics();
         }
       } else {
-        this.setLyrics([{ time: 0, text: "No synced lyrics available." }]);
+        this.handleNoLyrics();
       }
     } else {
       document.getElementById('lyrics-track-name').textContent = 'No Track';
@@ -86,8 +127,24 @@ class LyricsRenderer {
     }
   }
 
+  handleNoLyrics() {
+    this.setLyrics([{ time: 0, text: "No synced lyrics available." }]);
+    if (this.noLyricsTimer) clearTimeout(this.noLyricsTimer);
+    
+    // Display message for 2.5s, then gracefully transition to center mode
+    this.noLyricsTimer = setTimeout(() => {
+      if (!this.overlay.classList.contains('hidden') && !this.userDisabledLyrics) {
+        this.applyLyricsViewState(false);
+      }
+    }, 2500);
+  }
+
   hide() {
     this.overlay.classList.add('hidden');
+    if (this.noLyricsTimer) {
+      clearTimeout(this.noLyricsTimer);
+      this.noLyricsTimer = null;
+    }
     // Restore main app components
     document.getElementById('top-bar').style.opacity = '1';
     document.getElementById('top-bar').style.pointerEvents = 'auto';

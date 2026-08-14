@@ -1,5 +1,28 @@
 # DEV LOG
 
+## Timestamp: 2026-08-14T12:41:00
+### Tác vụ thực hiện
+Thêm nút Bật/Tắt Lời bài hát (Lyrics Toggle) và hiệu ứng chuyển động về giữa màn hình (Center Album Art Mode) chuẩn Apple Music.
+
+### Danh sách tệp tin thay đổi
+- rontend/index.html (MODIFIED)
+- rontend/css/lyrics.css (MODIFIED)
+- rontend/js/lyrics.js (MODIFIED)
+- 	ask.md (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+- **HTML**: Thêm nút #btn-toggle-lyrics-view góc trên bên phải (top: 32px; right: 32px;), đối xứng với nút Đóng X góc trái. Sử dụng icon thoại/trích dẫn Apple Music.
+- **CSS**:
+  - Tạo kiểu dáng cho .lyrics-toggle-btn với trạng thái active (nền mờ sáng tròn) và hover mượt mà.
+  - Xây dựng hoạt cảnh Center Mode: Cụm .lyrics-track-info sử dụng margin-left: calc(50% - (var(--max-cover-size) / 2)) với transition 750ms ar(--ease-apple-lyrics) để lướt êm ái ra chính giữa màn hình.
+  - Cột lời bài hát .lyrics-container mờ dần và trượt nhẹ 	ranslateX(36px) khi ẩn.
+- **Javascript**:
+  - Quản lý trạng thái userDisabledLyrics: Ghi nhớ lựa chọn chủ động của người dùng.
+  - Đối với bài hát không có lyric: hiển thị thông báo 'No synced lyrics available.' trong đúng 2.5 giây, sau đó tự động kích hoạt center-mode đưa ảnh bìa về giữa.
+  - Khi đổi sang bài hát mới có lời: nếu người dùng không chủ động tắt, giao diện sẽ tự động mở lại lời bài hát.
+
+---
+
 ## Timestamp: 2026-08-14T12:08:00
 ### Tác vụ thực hiện
 Loại bỏ hiệu ứng làm mờ (`filter: blur`) gây hiện tượng mờ đục xám xịt trên các câu hát chưa hát hoặc đã hát qua, giúp chữ sắc nét và trong trẻo chuẩn Apple Music.
@@ -1511,7 +1534,8 @@ gba(255,255,255,0.15)). Replaced hardcoded occurrences in library.css and main.c
   - ackend/services/player_service.py
   - rontend/js/player.js
 - **M� t? chi ti?t k? thu?t**:
-  1. **Play Next Array Shift**: S?a h�m insert_play_next trong player_service.py. N?u track d�ch d� c� s?n trong danh s�ch, ph?i ti?n h�nh emove track d� kh?i danh s�ch TRU?C, r?i m?i l?y index c?a track hi?n t?i d? insert track d�ch v�o. �?o ngu?c logic cu v?n d? g�y ch?ch index.
+  1. **Play Next Array Shift**: S?a h�m insert_play_next trong player_service.py. N?u track d�ch d� c� s?n trong danh s�ch, ph?i ti?n h�nh 
+emove track d� kh?i danh s�ch TRU?C, r?i m?i l?y index c?a track hi?n t?i d? insert track d�ch v�o. �?o ngu?c logic cu v?n d? g�y ch?ch index.
   2. **Race Condition Rapid Skip**: B? sung co ch? self._load_token v�o h�m play(). M?i khi b?m Next/Prev/Play, token du?c sinh m?i. Trong lu?ng do_load background, th?c hi?n validate token 2 l?n (tru?c khi load v� sau khi load). N?u token d� cu (do user b?m n�t qu� nhanh g?i lu?ng kh�c), lu?ng s? t? h?y v� gi?i ph�ng engine thay v� ti?p t?c play v� d� l�n lu?ng m?i.
   3. **Polling Request Pile-up**: S?a h�m startSyncLoop trong player.js. Thay th? setInterval 500ms b?ng m� h�nh setTimeout d? quy k?t h?p v?i flag 	his._isPolling = false. �i?u n�y d?m b?o m?i tick polling (bao g?m fetch API) ph?i ho�n t?t to�n b? (ho?c throw error) th� m?i du?c h?n gi? 500ms sau g?i l?i, ch?ng k?t ngh?n h�ng d?i HTTP request l�m lag UI.
 
@@ -1542,22 +1566,22 @@ gba(255,255,255,0.15)). Replaced hardcoded occurrences in library.css and main.c
 
 
 ## [2026-08-14T12:22:00+07:00] Comprehensive User-Interaction & Hardware Edge-Case Hardening
-- **T�c v? th?c hi?n**: Kh?c ph?c 7 v?n d? ti?m ?n v� n�ng c?p tr?i nghi?m ngu?i d�ng theo chu?n ?ng d?ng �m nh?c thuong m?i.
-- **Danh s�ch t?p tin thay d?i**:
+- **Tc v? th?c hi?n**: Kh?c ph?c 7 v?n d? ti?m ?n v nng c?p tr?i nghi?m ngu?i dng theo chu?n ?ng d?ng m nh?c thuong m?i.
+- **Danh sch t?p tin thay d?i**:
   - ackend/audio/engine.py
   - ackend/services/player_service.py
   - ackend/workers/scanner.py
   - rontend/js/lyrics.js
   - rontend/js/player.js
   - rontend/js/main.js
-- **M� t? chi ti?t k? thu?t**:
+- **M t? chi ti?t k? thu?t**:
   1. **Audio Device Reconnect Recovery (engine.py)**: S?a play() ki?m tra if self.stream is None or not getattr(self.stream, 'active', False): d? t? d?ng kh?i t?o l?i stream n?u thi?t b? ph?n c?ng (tai nghe/Bluetooth/DAC) b? ng?t k?t n?i ho?c l?i.
-  2. **Corrupt / VBR Early EOF Freeze Fix (engine.py)**: Trong _audio_callback, b? sung di?u ki?n k?t th�c b�i if remaining <= 0 or (self.decoder and self.decoder.eof_reached and self.ring_buffer.available() == 0) d? auto-next kh�ng bao gi? b? treo khi file �m thanh c� header frame count l?ch th?c t?.
-  3. **Industry Standard Prev-Track UX (player_service.py)**: N�t Previous ki?m tra position_seconds > 3.0s $\rightarrow$ tua v?  .0s d? ngu?i d�ng nghe l?i d?u b�i; n?u $\le 3.0s$ m?i nh?y v? b�i tru?c.
-  4. **Auto-Skip Unplayable Files (player_service.py)**: Trong do_load, khi b?t exception n?p file (file b? x�a, h?ng d?nh d?ng), t? d?ng nh?y 
-ext_track() kh�ng l�m d?ng lu?ng ph�t nh?c.
-  5. **Volume Config Debounce (player_service.py)**: T�ch bi?t vi?c �p d?ng �m lu?ng t?c th� tr�n RAM/AudioEngine v?i vi?c luu dia config.json qua debounce 300ms, lo?i b? ngh?n I/O SSD khi k�o thanh slider.
-  6. **External USB / Unmounted Drive Protection (scanner.py)**: LibraryScanner ki?m tra ccessible_dirs = [d for d in music_dirs if os.path.exists(d)], kh�ng x�a c�c b�i h�t thu?c ? dia ngo�i khi USB dang r�t.
-  7. **Lyrics Fast-Switching Race Guard (lyrics.js)**: Ki?m tra 	his._currentTrackPath === track.path tru?c khi render l?i b�i h�t tr? v? t? async API.
-  8. **Global Keyboard Shortcuts (main.js & player.js)**: H? tr? Spacebar (Play/Pause), Mui t�n Tr�i/Ph?i (Seek �5s), Mui t�n L�n/Xu?ng (Volume �5%), M (Mute/Unmute), Escape (��ng Lyrics/Modals).
+  2. **Corrupt / VBR Early EOF Freeze Fix (engine.py)**: Trong _audio_callback, b? sung di?u ki?n k?t thc bi if remaining <= 0 or (self.decoder and self.decoder.eof_reached and self.ring_buffer.available() == 0) d? auto-next khng bao gi? b? treo khi file m thanh c header frame count l?ch th?c t?.
+  3. **Industry Standard Prev-Track UX (player_service.py)**: Nt Previous ki?m tra position_seconds > 3.0s $\rightarrow$ tua v?  .0s d? ngu?i dng nghe l?i d?u bi; n?u $\le 3.0s$ m?i nh?y v? bi tru?c.
+  4. **Auto-Skip Unplayable Files (player_service.py)**: Trong do_load, khi b?t exception n?p file (file b? xa, h?ng d?nh d?ng), t? d?ng nh?y 
+ext_track() khng lm d?ng lu?ng pht nh?c.
+  5. **Volume Config Debounce (player_service.py)**: Tch bi?t vi?c p d?ng m lu?ng t?c th trn RAM/AudioEngine v?i vi?c luu dia config.json qua debounce 300ms, lo?i b? ngh?n I/O SSD khi ko thanh slider.
+  6. **External USB / Unmounted Drive Protection (scanner.py)**: LibraryScanner ki?m tra ccessible_dirs = [d for d in music_dirs if os.path.exists(d)], khng xa cc bi ht thu?c ? dia ngoi khi USB dang rt.
+  7. **Lyrics Fast-Switching Race Guard (lyrics.js)**: Ki?m tra 	his._currentTrackPath === track.path tru?c khi render l?i bi ht tr? v? t? async API.
+  8. **Global Keyboard Shortcuts (main.js & player.js)**: H? tr? Spacebar (Play/Pause), Mui tn Tri/Ph?i (Seek 5s), Mui tn Ln/Xu?ng (Volume 5%), M (Mute/Unmute), Escape (ng Lyrics/Modals).
 
