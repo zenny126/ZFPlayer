@@ -1,9 +1,12 @@
 import json
 import os
 import threading
+import logging
 from typing import Any
 
 from backend.utils.path_utils import get_config_path
+
+logger = logging.getLogger(__name__)
 
 class Config:
     _instance = None
@@ -48,7 +51,7 @@ class Config:
                     data = json.load(f)
                     self._data = {**default_config, **data}
             except Exception as e:
-                print(f"Error loading config: {e}")
+                logger.error(f"Error loading config: {e}")
                 self._data = default_config.copy()
         else:
             self._data = default_config.copy()
@@ -80,4 +83,4 @@ class Config:
                 json.dump(data_copy, f, indent=2)
             os.replace(temp_path, self.config_path)
         except Exception as e:
-            print(f"Error saving config: {e}")
+            logger.error(f"Error saving config: {e}")

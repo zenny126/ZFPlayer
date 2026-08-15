@@ -175,8 +175,9 @@ class LibraryService:
                 cover_url = f"/api/covers/{cover_hash}_thumb.jpg"
                 pid_str = str(playlist_id)
                 if pid_str in ['all', 'favorites']:
-                    from storage.config import Config
-                    Config().set(f"cover_{pid_str}", cover_url)
+                    from backend.storage.config import Config
+                    cfg = self.config or Config()
+                    cfg.set(f"cover_{pid_str}", cover_url)
                     return {'status': 'success', 'cover_hash': cover_hash, 'cover_url': cover_url}
                 elif pid_str.isdigit():
                     self.db.update_playlist_cover(int(pid_str), cover_hash)
@@ -187,9 +188,11 @@ class LibraryService:
         return {'status': 'error', 'message': 'Invalid playlist id'}
 
     def get_system_playlist_covers(self) -> Dict[str, Any]:
+        from backend.storage.config import Config
+        cfg = self.config or Config()
         return {
-            'all': None,
-            'favorites': None
+            'all': cfg.get("cover_all"),
+            'favorites': cfg.get("cover_favorites")
         }
 
     def get_playlists(self) -> List[Dict[str, Any]]:
@@ -224,12 +227,9 @@ class LibraryService:
             # 1. Scan folder to ensure tracks are in DB
             self.scanner.scan([folder_path], progress_callback=progress_cb, handle_deletions=False)
             
-            # 2. Add all tracks in folder to playlist
+            # 2. Add all tracks in folder to playlist in a single atomic bulk transaction
             paths = self.db.get_tracks_in_folder(folder_path)
-            added_count = 0
-            for path in paths:
-                self.db.add_track_to_playlist(playlist_id, path)
-                added_count += 1
+            added_count = self.db.add_tracks_to_playlist_bulk(playlist_id, paths)
                 
             # 3. Trigger async lyrics prefetch
             threading.Thread(target=self._prefetch_all_lyrics, daemon=True).start()
@@ -258,11 +258,8 @@ class LibraryService:
             dirs_to_scan = set(os.path.dirname(p) for p in file_paths)
             self.scanner.scan(list(dirs_to_scan), progress_callback=progress_cb, handle_deletions=False)
             
-            # Add tracks
-            added_count = 0
-            for path in file_paths:
-                self.db.add_track_to_playlist(playlist_id, path)
-                added_count += 1
+            # Add tracks in a single atomic bulk transaction
+            added_count = self.db.add_tracks_to_playlist_bulk(playlist_id, file_paths)
                 
             # Trigger async lyrics prefetch
             threading.Thread(target=self._prefetch_all_lyrics, daemon=True).start()
@@ -274,5 +271,32 @@ class LibraryService:
         finally:
             self._scan_state['is_scanning'] = False
 
+    def get_bootstrap_data(self, player_service=None) -> Dict[str, Any]:
+        config_data = self.config._data if self.config else {}
+        player_state = player_service.get_state() if player_service else None
+        playlists = self.get_playlists()
+        system_covers = self.get_system_playlist_covers()
+        recently_played = self.get_recently_played(20)
+        total_tracks = self.get_track_count()
+        
+        return {
+            'config': config_data,
+            'player_state': player_state,
+            'playlists': playlists,
+            'system_covers': system_covers,
+            'recently_played': recently_played,
+            'total_tracks': total_tracks
+        }
+
     def update_track(self, path: str, updates: Dict[str, Any]):
         self.db.update_track(path, updates)
+
+    def clear_database(self, clear_cache: bool = True) -> Dict[str, Any]:
+        try:
+            self.db.clear_database()
+            if clear_cache and hasattr(self, 'cache'):
+                self.cache.clear_all()
+            return {'status': 'success', 'message': 'Database and library cleared successfully'}
+        except Exception as e:
+            logger.error(f"Error clearing database: {e}")
+            return {'status': 'error', 'message': str(e)}

@@ -29,6 +29,7 @@ class StreamingDecoder:
         self.eof_reached = False
         self.chunk_size = 4096
         self.lock = threading.Lock()
+        self._read_buffer = None
 
     def load(self, file_path: str):
         with self.lock:
@@ -40,10 +41,14 @@ class StreamingDecoder:
             subtype = self.sf_file.subtype
             fmt = _SUBTYPE_MAP.get(subtype, {'dtype': 'float32', 'bit_depth': 16})
             self._read_dtype = fmt['dtype']
+            channels = self.sf_file.channels
+            
+            # Pre-allocate reusable numpy read buffer (zero-allocation in hot loop)
+            self._read_buffer = np.zeros((self.chunk_size, channels), dtype=np.float32)
             
             self.info = {
                 'samplerate': self.sf_file.samplerate,
-                'channels': self.sf_file.channels,
+                'channels': channels,
                 'duration': len(self.sf_file) / self.sf_file.samplerate if self.sf_file.samplerate else 0,
                 'total_frames': len(self.sf_file),
                 'subtype': subtype,
@@ -61,7 +66,7 @@ class StreamingDecoder:
 
     def start(self):
         self.stop_event.clear()
-        self.thread = threading.Thread(target=self._decode_loop, daemon=True)
+        self.thread = threading.Thread(target=self._decode_loop, daemon=True, name="StreamingDecoderThread")
         self.thread.start()
 
     def stop(self):
@@ -114,7 +119,12 @@ class StreamingDecoder:
                 if not self.sf_file or self.eof_reached:
                     continue
                 try:
-                    data = self.sf_file.read(frames_to_read, dtype=self._read_dtype)
+                    if self._read_buffer is not None and len(self._read_buffer) >= frames_to_read:
+                        target_slice = self._read_buffer[:frames_to_read]
+                        read_data = self.sf_file.read(out=target_slice, dtype=self._read_dtype)
+                        data = target_slice[:len(read_data)] if read_data is not None else []
+                    else:
+                        data = self.sf_file.read(frames_to_read, dtype=self._read_dtype)
                 except Exception:
                     data = []
             
@@ -125,8 +135,6 @@ class StreamingDecoder:
                 
             if len(data.shape) == 1:
                 data = data.reshape(-1, 1)
-
-            # (Removed int32 MSB alignment as engine needs float32 for DSP)
 
             written = 0
             while written < len(data) and not self.stop_event.is_set():

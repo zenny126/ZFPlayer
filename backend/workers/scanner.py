@@ -5,6 +5,9 @@ from typing import List, Callable, Optional
 from backend.workers.metadata_worker import MetadataWorker
 from backend.storage.database import Database
 from backend.storage.cache import CacheManager
+import logging
+
+logger = logging.getLogger(__name__)
 
 class LibraryScanner:
     def __init__(self, database: Database, cache_manager: CacheManager, lyrics_worker=None):
@@ -14,9 +17,11 @@ class LibraryScanner:
         self.metadata_worker = MetadataWorker()
         self.stop_event = threading.Event()
         self.supported_exts = {'.flac', '.wav', '.mp3', '.ogg', '.aiff'}
+        self._seen_covers_in_scan = set()
 
     def scan(self, music_dirs: List[str], progress_callback: Optional[Callable[[int, int, str], None]] = None, handle_deletions: bool = True):
         self.stop_event.clear()
+        self._seen_covers_in_scan.clear()
         
         all_files = []
         for d in music_dirs:
@@ -70,6 +75,11 @@ class LibraryScanner:
             if deleted_paths:
                 self.database.delete_tracks_bulk(deleted_paths)
 
+        if not to_process:
+            if progress_callback:
+                progress_callback(total, total, "")
+            return
+
         scanned = 0
         batch = []
         batch_size = 100
@@ -84,9 +94,13 @@ class LibraryScanner:
                 track_dict['size'] = size
                 
                 cover_bytes = track_dict.pop('_cover_bytes', None)
-                if cover_bytes and track_dict.get('cover_hash'):
-                    self.cache_manager.save_cover(cover_bytes, track_dict['cover_hash'])
-                    self.cache_manager.save_thumbnail(cover_bytes, track_dict['cover_hash'])
+                cover_hash = track_dict.get('cover_hash')
+                if cover_bytes and cover_hash:
+                    # In-memory deduplication for cover art
+                    if cover_hash not in self._seen_covers_in_scan:
+                        self._seen_covers_in_scan.add(cover_hash)
+                        self.cache_manager.save_cover(cover_bytes, cover_hash)
+                        self.cache_manager.save_thumbnail(cover_bytes, cover_hash)
                     
             return track_dict
 
@@ -94,23 +108,30 @@ class LibraryScanner:
             if not self.lyrics_worker: return
             self.lyrics_worker.enqueue_tracks(track_batch, priority=False)
 
-        with ThreadPoolExecutor(max_workers=4) as executor:
-            for track_dict in executor.map(_process_file, to_process):
-                if self.stop_event.is_set():
-                    break
-                scanned += 1
-                if track_dict:
-                    batch.append(track_dict)
-                    if len(batch) >= batch_size:
-                        self.database.bulk_insert_tracks(batch)
-                        threading.Thread(target=_prefetch_lyrics_for_batch, args=(list(batch),), daemon=True).start()
-                        batch.clear()
-                if progress_callback and track_dict:
-                    progress_callback(scanned, len(to_process), track_dict.get('path', ''))
-            
-            if batch:
-                self.database.bulk_insert_tracks(batch)
-                threading.Thread(target=_prefetch_lyrics_for_batch, args=(list(batch),), daemon=True).start()
+        # Disable FTS triggers during fast bulk insert
+        self.database.disable_fts_triggers()
+        try:
+            with ThreadPoolExecutor(max_workers=4) as executor:
+                for track_dict in executor.map(_process_file, to_process):
+                    if self.stop_event.is_set():
+                        break
+                    scanned += 1
+                    if track_dict:
+                        batch.append(track_dict)
+                        if len(batch) >= batch_size:
+                            self.database.bulk_insert_tracks(batch)
+                            threading.Thread(target=_prefetch_lyrics_for_batch, args=(list(batch),), daemon=True).start()
+                            batch.clear()
+                    if progress_callback and track_dict:
+                        progress_callback(scanned, len(to_process), track_dict.get('path', ''))
+                
+                if batch:
+                    self.database.bulk_insert_tracks(batch)
+                    threading.Thread(target=_prefetch_lyrics_for_batch, args=(list(batch),), daemon=True).start()
+        finally:
+            # Re-enable FTS triggers and rebuild full-text search index in a single fast pass
+            self.database.enable_fts_triggers()
+            self.database.rebuild_fts()
 
     def stop(self):
         self.stop_event.set()

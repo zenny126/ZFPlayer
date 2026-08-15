@@ -259,6 +259,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><line x1="6" y1="8" x2="6" y2="8"></line><line x1="10" y1="8" x2="10" y2="8"></line><line x1="14" y1="8" x2="14" y2="8"></line><line x1="18" y1="8" x2="18" y2="8"></line><line x1="6" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="18" y2="12"></line><line x1="10" y1="12" x2="14" y2="12"></line><line x1="8" y1="16" x2="16" y2="16"></line></svg>
             Shortcuts
           </button>
+          <button class="settings-tab-btn" data-tab="library">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+            Library
+          </button>
         </div>
       </div>
       
@@ -303,8 +307,83 @@
         </div>
       </div>
 
+      <!-- Library Settings Tab -->
+      <div id="settings-tab-library" class="settings-tab-pane custom-scrollbar" style="display: none; overflow-y: auto; padding-right: 4px;">
+        <div class="setting-group" style="margin-bottom: 18px;">
+          <div style="font-weight: 600; font-size: 14px; margin-bottom: 10px; color: #ffffff; display: flex; align-items: center; justify-content: space-between;">
+            <span>Database Status</span>
+            <span style="font-size: 11px; background: rgba(0, 230, 118, 0.15); color: #00e676; padding: 2px 8px; border-radius: 12px; font-weight: 600;">SQLite WAL + FTS5</span>
+          </div>
+          
+          <div style="background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--border-radius-md); padding: 12px 16px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+              <span style="color: var(--text-subdued);">Indexed Tracks</span>
+              <span id="settings-db-track-count" style="font-weight: 600; color: #fff;">0</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+              <span style="color: var(--text-subdued);">Custom Playlists</span>
+              <span id="settings-db-playlist-count" style="font-weight: 600; color: #fff;">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Row: Rescan Library -->
+        <div class="setting-row" style="margin-bottom: 14px; padding: 14px 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: var(--border-radius-md); display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-weight: 600; font-size: 13.5px; color: #ffffff;">Rescan Music Folders</div>
+            <div style="font-size: 12px; color: var(--text-subdued); margin-top: 3px; line-height: 1.4;">Scan configured folders to discover newly added tracks and refresh metadata.</div>
+          </div>
+          <button id="btn-settings-rescan" class="btn-outline" style="font-size: 12.5px; padding: 7px 14px; flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; border-radius: 6px; font-weight: 500; cursor: pointer; white-space: nowrap;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon" style="width: 13.5px; height: 13.5px;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            Rescan Library
+          </button>
+        </div>
+
+        <!-- Action Row: Danger Zone Clear Database -->
+        <div class="setting-row" style="margin-bottom: 6px; padding: 14px 16px; background: rgba(255, 51, 75, 0.04); border: 1px solid rgba(255, 51, 75, 0.15); border-radius: var(--border-radius-md); display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-weight: 600; font-size: 13.5px; color: #ff5252; display: flex; align-items: center; gap: 6px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+              Clear Music Database
+            </div>
+            <div style="font-size: 12px; color: var(--text-subdued); margin-top: 3px; line-height: 1.4;">Wipe all indexed library data, cached lyrics, and custom playlists from SQLite.</div>
+          </div>
+          <button id="btn-settings-clear-db" class="btn-outline" style="border-color: rgba(255, 51, 75, 0.4); color: #ff5252; font-size: 12.5px; padding: 7px 14px; flex-shrink: 0; background: rgba(255, 51, 75, 0.08); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; border-radius: 6px; font-weight: 500; white-space: nowrap;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon" style="width: 13.5px; height: 13.5px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            Clear Data
+          </button>
+        </div>
+      </div>
+
       <div class="settings-footer">
         <button id="btn-close-settings" class="btn-primary">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirm-clear-db-modal" class="modal hidden">
+    <div class="modal-content" style="width: 440px; max-width: 92%;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(255, 51, 75, 0.15); display: flex; align-items: center; justify-content: center; color: #ff5252; flex-shrink: 0;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 22px; height: 22px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </div>
+        <h2 style="margin: 0; font-size: 18px; color: #fff;">Clear Database & Library?</h2>
+      </div>
+      
+      <p style="font-size: 13px; color: var(--text-subdued); line-height: 1.5; margin: 0 0 18px 0;">
+        Are you sure you want to completely clean and wipe the music database? All indexed songs, cached lyrics, and custom playlists will be reset. Your original music files on disk will not be deleted.
+      </p>
+
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 12px; margin-bottom: 20px;">
+        <label style="display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: #eee; cursor: pointer;">
+          <input type="checkbox" id="checkbox-clear-cache" checked style="accent-color: #e22134; width: 16px; height: 16px; cursor: pointer;">
+          <span>Also delete cached album covers & lyrics sidecar files</span>
+        </label>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 12px;">
+        <button id="btn-cancel-clear-db" class="btn-ghost">Cancel</button>
+        <button id="btn-confirm-clear-db" class="btn-primary" style="background: #e22134; border-color: #e22134;">Yes, Clear Database</button>
       </div>
     </div>
   </div>
@@ -332,7 +411,10 @@
           <div class="cover-edit-overlay"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="width: 28px; height: 28px;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></div>
         </div>
         <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
-          <button id="btn-edit-playlist-change-cover" class="btn-outline" style="font-size: 12px; padding: 8px 16px; width: fit-content;">🖼️ Change Cover Image</button>
+          <button id="btn-edit-playlist-change-cover" class="btn-outline" style="font-size: 12px; padding: 8px 16px; width: fit-content; display: inline-flex; align-items: center; gap: 6px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon" style="width: 14px; height: 14px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+            Change Cover Image
+          </button>
           <div style="font-size: 11px; color: var(--text-subdued);">Click the button above or click the image directly to change the cover photo for this playlist.</div>
         </div>
       </div>
@@ -344,7 +426,10 @@
 
       <div id="edit-playlist-delete-section" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
         <span style="font-size: 13px; color: var(--text-subdued);">Delete this playlist</span>
-        <button id="btn-edit-playlist-trigger-delete" class="btn-outline" style="border-color: #e22134; color: #e22134; padding: 6px 16px; font-size: 12px;">🗑️ Delete Playlist</button>
+        <button id="btn-edit-playlist-trigger-delete" class="btn-outline" style="border-color: #e22134; color: #e22134; padding: 6px 16px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon" style="width: 14px; height: 14px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+          Delete Playlist
+        </button>
       </div>
 
       <div style="display:flex; justify-content:flex-end; gap:16px; margin-top:28px;">

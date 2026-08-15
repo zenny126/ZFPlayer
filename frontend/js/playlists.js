@@ -66,6 +66,9 @@ class PlaylistManager {
             p = { name: 'All Songs', track_count: window.libraryManager ? window.libraryManager.totalCount : 0, cover_url: this.systemCovers.all };
         } else if (state.playlistId === 'favorites') {
             p = { name: 'Favorite Songs', track_count: window.libraryManager ? window.libraryManager.totalCount : 0, cover_url: this.systemCovers.favorites };
+        } else if (typeof state.playlistId === 'string' && state.playlistId.startsWith('album:')) {
+            const albumTitle = state.playlistId.slice(6);
+            p = { name: albumTitle, track_count: window.libraryManager ? window.libraryManager.totalCount : 0, is_album: true };
         }
 
         if (p) {
@@ -84,10 +87,11 @@ class PlaylistManager {
              coverEl.src = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%23282828'/><path d='M9 18V5l12-2v13' stroke='%23888' stroke-width='2' fill='none'/><circle cx='6' cy='18' r='3' stroke='%23888' stroke-width='2' fill='none'/><circle cx='18' cy='16' r='3' stroke='%23888' stroke-width='2' fill='none'/></svg>";
           }
 
-          // Hide import buttons for Favorite Songs playlist
-          const isFavorites = (state.playlistId === 'favorites');
-          if (this.btnImportFolder) this.btnImportFolder.style.display = isFavorites ? 'none' : 'inline-flex';
-          if (this.btnImportFiles) this.btnImportFiles.style.display = isFavorites ? 'none' : 'inline-flex';
+          // Hide import/edit buttons for system playlists & album scopes
+          const isSpecialScope = (state.playlistId === 'favorites' || p.is_album);
+          if (this.btnImportFolder) this.btnImportFolder.style.display = isSpecialScope ? 'none' : 'inline-flex';
+          if (this.btnImportFiles) this.btnImportFiles.style.display = isSpecialScope ? 'none' : 'inline-flex';
+          if (this.btnHeaderEdit) this.btnHeaderEdit.style.display = (p.is_album || state.playlistId === 'all' || state.playlistId === 'favorites') ? 'none' : 'inline-flex';
         }
       } else {
         header.classList.add('hidden');

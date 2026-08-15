@@ -31,6 +31,7 @@ class ApiWrapper {
   }
 
   // API Methods
+  getBootstrapData() { return this.call('get_bootstrap_data'); }
   getTrackInfo(path) { return this.call('get_track_info', path); }
   getTracks(offset, limit, search, sortBy, sortDir, playlistId = null) { return this.call('get_tracks', offset, limit, search, sortBy, sortDir, playlistId); }
   getTrackCount(search, playlistId = null) { return this.call('get_track_count', search, playlistId); }
@@ -61,6 +62,7 @@ class ApiWrapper {
   toggleLike(path) { return this.call('toggle_like', path); }
   toggleFavorite(path) { return this.toggleLike(path); }
   toggleFullscreen() { return this.call('toggle_fullscreen'); }
+  clearDatabase(clearCache = true) { return this.call('clear_database', clearCache); }
 
   // Playlist Methods
   createPlaylist(name, folderPath = null) { return this.call('create_playlist', name, folderPath); }

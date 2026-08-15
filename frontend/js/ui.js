@@ -47,6 +47,21 @@ class UIController {
       }
     };
 
+    const updateDbStats = async () => {
+      if (window.api) {
+        try {
+          const count = await window.api.getTrackCount('');
+          const playlists = await window.api.getPlaylists() || [];
+          const countEl = document.getElementById('settings-db-track-count');
+          const plCountEl = document.getElementById('settings-db-playlist-count');
+          if (countEl) countEl.textContent = `${count} tracks`;
+          if (plCountEl) plCountEl.textContent = `${playlists.length} playlists`;
+        } catch (e) {
+          console.warn('Failed to load DB stats:', e);
+        }
+      }
+    };
+
     const btnSettings = document.getElementById('btn-settings');
     if (btnSettings) {
       btnSettings.addEventListener('click', async () => {
@@ -65,6 +80,7 @@ class UIController {
         if (window.shortcutsManager) {
           window.shortcutsManager.renderShortcutsUI();
         }
+        updateDbStats();
         document.getElementById('settings-modal').classList.remove('hidden');
       });
     }
@@ -78,11 +94,18 @@ class UIController {
 
         const audioPane = document.getElementById('settings-tab-audio');
         const shortcutsPane = document.getElementById('settings-tab-shortcuts');
+        const libraryPane = document.getElementById('settings-tab-library');
         if (audioPane) audioPane.style.display = tab === 'audio' ? 'block' : 'none';
         if (shortcutsPane) {
           shortcutsPane.style.display = tab === 'shortcuts' ? 'flex' : 'none';
           if (tab === 'shortcuts' && window.shortcutsManager) {
             window.shortcutsManager.renderShortcutsUI();
+          }
+        }
+        if (libraryPane) {
+          libraryPane.style.display = tab === 'library' ? 'block' : 'none';
+          if (tab === 'library') {
+            updateDbStats();
           }
         }
       });
@@ -94,6 +117,86 @@ class UIController {
       btnResetShortcuts.addEventListener('click', async () => {
         if (window.shortcutsManager) {
           await window.shortcutsManager.resetAll();
+        }
+      });
+    }
+
+    // Library Rescan button in Settings
+    const btnSettingsRescan = document.getElementById('btn-settings-rescan');
+    if (btnSettingsRescan) {
+      btnSettingsRescan.addEventListener('click', async () => {
+        if (window.api && window.api.scanLibrary) {
+          document.getElementById('settings-modal')?.classList.add('hidden');
+          const scanModal = document.getElementById('scan-modal');
+          if (scanModal) scanModal.classList.remove('hidden');
+          await window.api.scanLibrary();
+          if (window.libraryManager) this.startScanProgressPolling();
+        }
+      });
+    }
+
+    // Clear Database Danger Action & Confirmation Modal
+    const btnClearDb = document.getElementById('btn-settings-clear-db');
+    const modalConfirmClear = document.getElementById('confirm-clear-db-modal');
+    const btnCancelClear = document.getElementById('btn-cancel-clear-db');
+    const btnConfirmClear = document.getElementById('btn-confirm-clear-db');
+    const checkboxClearCache = document.getElementById('checkbox-clear-cache');
+
+    if (btnClearDb && modalConfirmClear) {
+      btnClearDb.addEventListener('click', () => {
+        modalConfirmClear.classList.remove('hidden');
+      });
+    }
+
+    if (btnCancelClear && modalConfirmClear) {
+      btnCancelClear.addEventListener('click', () => {
+        modalConfirmClear.classList.add('hidden');
+      });
+    }
+
+    if (btnConfirmClear && modalConfirmClear) {
+      btnConfirmClear.addEventListener('click', async () => {
+        const originalText = btnConfirmClear.textContent;
+        btnConfirmClear.textContent = 'Cleaning Database...';
+        btnConfirmClear.disabled = true;
+
+        const clearCache = checkboxClearCache ? checkboxClearCache.checked : true;
+
+        try {
+          // Stop playback first
+          if (window.playerController && typeof window.playerController.stop === 'function') {
+            await window.playerController.stop();
+          } else if (window.api && typeof window.api.stop === 'function') {
+            await window.api.stop();
+          }
+
+          // Call API to clear database
+          const res = await window.api.clearDatabase(clearCache);
+
+          // Reset store state
+          window.store.setState({
+            currentTrack: null,
+            isPlaying: false,
+            playlist: [],
+            playlistId: 'all'
+          });
+
+          // Reload all managers
+          if (window.libraryManager) await window.libraryManager.reload();
+          if (window.playlistManager) await window.playlistManager.loadPlaylists();
+          if (window.albumsManager) await window.albumsManager.loadAlbums();
+          if (window.homeManager) await window.homeManager.loadHome();
+
+          modalConfirmClear.classList.add('hidden');
+          document.getElementById('settings-modal')?.classList.add('hidden');
+
+          this.showToast(res?.message || 'Database has been cleaned successfully.');
+        } catch (err) {
+          console.error('Error clearing database:', err);
+          this.showToast('Failed to clean database: ' + err.message);
+        } finally {
+          btnConfirmClear.textContent = originalText;
+          btnConfirmClear.disabled = false;
         }
       });
     }

@@ -48,7 +48,28 @@ class AudioEngine:
         self._fade_out_total = 0
         self._fade_out_remaining = 0
         self._target_state_after_fade = None
+
+        # Pre-allocated zero-allocation DSP ramp buffers
+        self._ramp_capacity = 8192
+        self._ramp_buf = np.zeros((self._ramp_capacity, 1), dtype=np.float32)
+        self._ramp_indices = np.arange(self._ramp_capacity, dtype=np.float32).reshape(-1, 1)
+
         self._lock = threading.Lock()
+
+        # Dedicated asynchronous dispatcher for track end event (Zero GIL lock in audio callback)
+        self._track_end_event = threading.Event()
+        self._track_end_dispatcher = threading.Thread(target=self._track_end_worker, daemon=True, name="AudioTrackEndDispatcher")
+        self._track_end_dispatcher.start()
+
+    def _track_end_worker(self):
+        while True:
+            self._track_end_event.wait()
+            self._track_end_event.clear()
+            if self.on_track_end:
+                try:
+                    self.on_track_end()
+                except Exception as e:
+                    logger.error(f"Error executing on_track_end: {e}")
 
     def _get_wasapi_device_id(self):
         try:
@@ -336,12 +357,19 @@ class AudioEngine:
                 pass
 
     def seek(self, seconds: float):
+        sr = self._current_samplerate
+        total = self.total_frames
+        frame = int(seconds * sr)
+        target_pos = max(0, min(frame, total))
+        
+        # Perform decoder disk I/O seek outside engine lock to prevent audio callback stall
+        decoder = self.decoder
+        if decoder:
+            decoder.seek(target_pos)
+
         with self._lock:
-            frame = int(seconds * self._current_samplerate)
-            self.play_pos = max(0, min(frame, self.total_frames))
-            
-            if self.decoder:
-                self.decoder.seek(self.play_pos)
+            self.play_pos = target_pos
+            if self.ring_buffer:
                 self.ring_buffer.clear()
 
             # 15ms anti-pop micro ramp after seek
@@ -362,6 +390,19 @@ class AudioEngine:
             'is_playing': self.state == AudioState.PLAYING,
             'audio_mode': getattr(self, 'audio_mode', 'shared')
         }
+
+    def _apply_linear_ramp(self, out_slice: np.ndarray, start_val: float, end_val: float, length: int):
+        if length <= 0:
+            return
+        if self._ramp_capacity < length:
+            self._ramp_capacity = max(length, self._ramp_capacity * 2)
+            self._ramp_buf = np.zeros((self._ramp_capacity, 1), dtype=np.float32)
+            self._ramp_indices = np.arange(self._ramp_capacity, dtype=np.float32).reshape(-1, 1)
+            
+        step = (end_val - start_val) / max(1, length - 1) if length > 1 else 0.0
+        np.multiply(self._ramp_indices[:length], step, out=self._ramp_buf[:length])
+        self._ramp_buf[:length] += start_val
+        out_slice[:length] *= self._ramp_buf[:length]
 
     def _audio_callback(self, outdata, frames, time_info, status):
         if status:
@@ -385,8 +426,7 @@ class AudioEngine:
 
                     start_ratio = self._fade_out_remaining / self._fade_out_total
                     end_ratio = max(0.0, (self._fade_out_remaining - fade_len) / self._fade_out_total)
-                    ramp = np.linspace(start_ratio, end_ratio, fade_len, dtype=np.float32).reshape(-1, 1)
-                    outdata[:fade_len] *= ramp
+                    self._apply_linear_ramp(outdata, start_ratio, end_ratio, fade_len)
 
                     if self.volume != 1.0:
                         outdata[:fade_len] *= self.volume
@@ -410,7 +450,7 @@ class AudioEngine:
                     if self.state == AudioState.PLAYING:
                         self.state = AudioState.STOPPED
                         if self.on_track_end:
-                            threading.Thread(target=self.on_track_end, daemon=True).start()
+                            self._track_end_event.set()
                     return
 
                 frames_to_copy = min(frames, remaining)
@@ -428,8 +468,7 @@ class AudioEngine:
                 if read_frames > 0 and tail_remaining <= tail_threshold:
                     start_r = max(0.0, min(1.0, (tail_remaining + read_frames) / max(1, tail_threshold)))
                     end_r = max(0.0, min(1.0, tail_remaining / max(1, tail_threshold)))
-                    tail_ramp = np.linspace(start_r, end_r, read_frames, dtype=np.float32).reshape(-1, 1)
-                    outdata[:read_frames] *= tail_ramp
+                    self._apply_linear_ramp(outdata[:read_frames], start_r, end_r, read_frames)
 
                 # Handle Micro Fade-In phase when starting/seeking
                 if self._fade_in_remaining > 0 and read_frames > 0:
@@ -437,8 +476,7 @@ class AudioEngine:
                     done = self._fade_in_total - self._fade_in_remaining
                     start_ratio = done / self._fade_in_total
                     end_ratio = (done + fade_len) / self._fade_in_total
-                    ramp = np.linspace(start_ratio, end_ratio, fade_len, dtype=np.float32).reshape(-1, 1)
-                    outdata[:fade_len] *= ramp
+                    self._apply_linear_ramp(outdata, start_ratio, end_ratio, fade_len)
                     self._fade_in_remaining -= fade_len
 
                 if self.volume != 1.0:

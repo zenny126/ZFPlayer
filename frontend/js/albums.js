@@ -58,14 +58,11 @@ class AlbumsManager {
     cards.forEach(card => {
       card.addEventListener('click', () => {
         const albumName = card.dataset.album;
-        // Search and switch to songs view
-        const searchInput = document.getElementById('search-input');
-        if (searchInput) {
-          searchInput.value = albumName;
-          // Dispatch input event to trigger search
-          searchInput.dispatchEvent(new Event('input'));
-        }
-        window.store.setState({ view: 'songs' });
+        if (!albumName) return;
+        // Uncheck active items in sidebar
+        document.querySelectorAll('#playlist-container li').forEach(item => item.classList.remove('active'));
+        // Switch to playlist view with scoped album
+        window.store.setState({ view: 'playlist', playlistId: `album:${albumName}` });
       });
     });
   }

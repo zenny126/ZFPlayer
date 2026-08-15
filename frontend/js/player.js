@@ -248,10 +248,13 @@ class PlayerController {
         const lSeekBar = document.getElementById('lyrics-seek-bar');
         if (lSeekBar) lSeekBar.max = state.currentTrack.duration || 100;
         let imageUrl = 'none';
+        let colorSourceUrl = 'none';
         if (state.currentTrack.cover_hash) {
            const url = `/api/covers/${state.currentTrack.cover_hash}.jpg`;
+           const thumbUrl = `/api/covers/${state.currentTrack.cover_hash}_thumb.jpg`;
            document.getElementById('player-cover').src = url;
            imageUrl = `url('${url}')`;
+           colorSourceUrl = thumbUrl;
            document.getElementById('app').style.setProperty('--global-cover', imageUrl);
         } else {
            document.getElementById('player-cover').src = "data:image/svg+xml;utf8,<svg viewBox='0 0 24 24' width='200' height='200' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%23282828'/><path d='M9 18V5l12-2v13' stroke='%23888' stroke-width='2' fill='none'/><circle cx='6' cy='18' r='3' stroke='%23888' stroke-width='2' fill='none'/><circle cx='18' cy='16' r='3' stroke='%23888' stroke-width='2' fill='none'/></svg>";
@@ -260,7 +263,7 @@ class PlayerController {
         
         if (window.extractDominantColors && this.lastCoverUrl !== imageUrl) {
             this.lastCoverUrl = imageUrl;
-            window.extractDominantColors(imageUrl, (colors) => {
+            window.extractDominantColors(colorSourceUrl, (colors) => {
               if (window.updateFluidColors) {
                 window.updateFluidColors(colors);
               }
@@ -329,6 +332,22 @@ class PlayerController {
       window.store.setState({ isPlaying: true });
       this.ticker.start();
     }
+  }
+
+  async stop() {
+    try {
+      if (window.api && window.api.stop) {
+        await window.api.stop();
+      }
+    } catch (e) {
+      console.warn('API stop error:', e);
+    }
+    window.store.setState({ isPlaying: false, currentTrack: null });
+    if (this.ticker) {
+      this.ticker.stop();
+      this.ticker.sync(0, 0, false);
+    }
+    this.updateSeekUI(0, 0);
   }
 
   async seek(seconds) {

@@ -286,7 +286,7 @@ class LibraryManager {
     // Quick sync layout
     row.innerHTML = `
       <div class="track-number">${index + 1}</div>
-      <div class="play-icon">▶</div>
+      <div class="play-icon"><svg viewBox="0 0 24 24" fill="currentColor" style="width: 14px; height: 14px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></div>
       <div class="track-title">Loading...</div>
       <div class="track-album"></div>
       <div class="track-date"></div>
@@ -326,7 +326,7 @@ class LibraryManager {
         <div class="track-number">${index + 1}</div>
         <div class="play-icon">${playIcon}</div>
         <div class="track-title">
-           <img src="${coverUrl}" class="track-thumbnail" alt="" ${fallbackAttr}>
+           <img src="${coverUrl}" class="track-thumbnail" alt="" loading="lazy" decoding="async" ${fallbackAttr}>
            <div class="track-title-text">
              <div class="track-title-name">${track.title || 'Unknown Title'}</div>
              <div class="track-title-artist">${track.artist || 'Unknown Artist'}</div>

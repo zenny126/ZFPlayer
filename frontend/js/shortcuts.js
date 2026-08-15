@@ -182,6 +182,25 @@ class ShortcutsManager {
     const container = document.getElementById('shortcuts-list-container');
     if (!container) return;
 
+    if (!this._isDelegationBound) {
+      this._isDelegationBound = true;
+      container.addEventListener('click', async (e) => {
+        const pillBtn = e.target.closest('.btn-shortcut-pill');
+        if (pillBtn && pillBtn.dataset.action) {
+          e.stopPropagation();
+          this.startRecording(pillBtn.dataset.action);
+          return;
+        }
+
+        const resetBtn = e.target.closest('.btn-shortcut-reset');
+        if (resetBtn && resetBtn.dataset.action) {
+          e.stopPropagation();
+          await this.resetAction(resetBtn.dataset.action);
+          return;
+        }
+      });
+    }
+
     let html = '';
     this.ACTION_DEFINITIONS.forEach(action => {
       const currentCombo = this.shortcuts[action.id] || '';
@@ -213,24 +232,6 @@ class ShortcutsManager {
     });
 
     container.innerHTML = html;
-
-    // Attach listeners to pill buttons
-    container.querySelectorAll('.btn-shortcut-pill').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const actionId = btn.dataset.action;
-        this.startRecording(actionId);
-      });
-    });
-
-    // Attach listeners to individual reset buttons
-    container.querySelectorAll('.btn-shortcut-reset').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const actionId = btn.dataset.action;
-        await this.resetAction(actionId);
-      });
-    });
   }
 
   /**
@@ -341,15 +342,23 @@ class ShortcutsManager {
       return;
     }
 
-    // 3. Close modals/context menus on Escape
+    // 3. Close modals/context menus on Escape, and isolate shortcut triggers when modal/context menu is active
+    const activeModals = document.querySelectorAll('.modal:not(.hidden)');
+    const activeContextMenus = document.querySelectorAll('.context-menu:not(.hidden)');
+    if (activeModals.length > 0 || activeContextMenus.length > 0) {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.context-menu').forEach(m => m.classList.add('hidden'));
+        document.querySelectorAll('.modal:not(.hidden)').forEach(m => m.classList.add('hidden'));
+      }
+      return;
+    }
+
     if (e.key === 'Escape') {
       const lyricsOverlay = document.getElementById('lyrics-overlay');
       if (lyricsOverlay && !lyricsOverlay.classList.contains('hidden')) {
         if (window.lyricsRenderer) window.lyricsRenderer.hide();
         return;
       }
-      document.querySelectorAll('.context-menu').forEach(m => m.classList.add('hidden'));
-      document.querySelectorAll('.modal:not(.hidden)').forEach(m => m.classList.add('hidden'));
       return;
     }
 

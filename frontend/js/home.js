@@ -3,6 +3,8 @@ class HomeManager {
     this.recentContainer = document.getElementById('home-recent-grid');
     this.playlistsContainer = document.getElementById('home-playlists-grid');
     this.loaded = false;
+    this.lastRecentPaths = [];
+    this.renderedTracks = [];
   }
 
   async loadHome() {
@@ -17,7 +19,6 @@ class HomeManager {
     ]);
     this.loaded = true;
   }
-
 
   async loadPlaylists() {
     if (!this.playlistsContainer) return;
@@ -53,6 +54,8 @@ class HomeManager {
         color: '#888'
       });
       
+      const fragment = document.createDocumentFragment();
+
       playlists.forEach(pl => {
         const card = document.createElement('div');
         card.className = 'album-card';
@@ -87,12 +90,15 @@ class HomeManager {
           }
         });
         
-        this.playlistsContainer.appendChild(card);
+        fragment.appendChild(card);
       });
+
+      this.playlistsContainer.appendChild(fragment);
     } catch (e) {
       console.error("Failed to load playlists", e);
     }
   }
+
   formatTime(seconds) {
     if (!seconds) return '0:00';
     const m = Math.floor(seconds / 60);
@@ -104,18 +110,38 @@ class HomeManager {
     if (!this.recentContainer) return;
     try {
       const tracks = await window.api.getTracks(0, 20, "", "last_played", "DESC", null);
-      this.recentContainer.innerHTML = '';
       if (!tracks || tracks.length === 0) {
         this.recentContainer.innerHTML = '<div style="color: var(--text-subdued); padding: 16px;">No recently played tracks yet.</div>';
+        this.lastRecentPaths = [];
         return;
       }
-      
+
       const currentTrack = window.store.getState().currentTrack;
+      const currentTrackPath = currentTrack ? currentTrack.path : null;
+      const newPaths = tracks.map(t => t.path);
+
+      // Fast Path: If track order hasn't changed, only update active highlight without recreating DOM
+      if (this.lastRecentPaths.length === newPaths.length && this.lastRecentPaths.every((p, i) => p === newPaths[i])) {
+        const rows = this.recentContainer.querySelectorAll('.track-row');
+        rows.forEach((row, i) => {
+          const track = tracks[i];
+          if (track && track.path === currentTrackPath) {
+            row.classList.add('active');
+          } else {
+            row.classList.remove('active');
+          }
+        });
+        return;
+      }
+
+      this.lastRecentPaths = newPaths;
+      this.recentContainer.innerHTML = '';
+      const fragment = document.createDocumentFragment();
 
       tracks.forEach((track, index) => {
         const row = document.createElement('div');
         row.className = 'track-row track-row-static';
-        if (currentTrack && currentTrack.path === track.path) {
+        if (currentTrackPath === track.path) {
           row.classList.add('active');
         }
         
@@ -173,8 +199,10 @@ class HomeManager {
           if (window.uiController) window.uiController.showContextMenu(e, track);
         });
         
-        this.recentContainer.appendChild(row);
+        fragment.appendChild(row);
       });
+
+      this.recentContainer.appendChild(fragment);
     } catch (e) {
       console.error("Failed to load recent tracks", e);
     }

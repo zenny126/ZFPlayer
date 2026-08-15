@@ -1,8 +1,11 @@
 import hashlib
+import logging
 from typing import Optional, Dict, Any
 import mutagen
 from mutagen.flac import FLAC
 from mutagen.mp3 import MP3
+
+logger = logging.getLogger(__name__)
 
 class MetadataWorker:
     def extract(self, file_path: str) -> Optional[Dict[str, Any]]:
@@ -65,5 +68,5 @@ class MetadataWorker:
 
             return track_info
         except Exception as e:
-            print(f"Error extracting metadata for {file_path}: {e}")
+            logger.error(f"Error extracting metadata for {file_path}: {e}")
             return None

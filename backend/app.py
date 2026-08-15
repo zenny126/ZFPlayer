@@ -54,6 +54,7 @@ def make_threaded_server(host, port, app):
 # --- Unified API Class ---
 class ZFPlayerAPI(PlayerAPI, LibraryAPI, LyricsAPI, ConfigAPI):
     def __init__(self, player_service, library_service, lyrics_worker, config, audio_engine):
+        self.player_service = player_service
         PlayerAPI.__init__(self, player_service)
         LibraryAPI.__init__(self, library_service, config)
         LyricsAPI.__init__(self, lyrics_worker)
@@ -105,23 +106,23 @@ def main():
 
     @app.route('/')
     def serve_index():
-        return static_file('index.html', root=str(frontend_dir))
+        return static_file('index.html', root=str(frontend_dir), headers={'Cache-Control': 'no-cache'})
 
     @app.route('/css/<filename:path>')
     def serve_css(filename):
-        return static_file(filename, root=str(frontend_dir / 'css'))
+        return static_file(filename, root=str(frontend_dir / 'css'), headers={'Cache-Control': 'public, max-age=86400'})
 
     @app.route('/js/<filename:path>')
     def serve_js(filename):
-        return static_file(filename, root=str(frontend_dir / 'js'))
+        return static_file(filename, root=str(frontend_dir / 'js'), headers={'Cache-Control': 'public, max-age=86400'})
 
     @app.route('/api/covers/<filename:path>')
     def serve_covers(filename):
-        return static_file(filename, root=str(covers_dir))
+        return static_file(filename, root=str(covers_dir), headers={'Cache-Control': 'public, max-age=31536000, immutable'})
 
     @app.route('/favicon.ico')
     def serve_favicon():
-        return static_file('favicon.ico', root=str(frontend_dir))
+        return static_file('favicon.ico', root=str(frontend_dir), headers={'Cache-Control': 'public, max-age=604800'})
 
     # Start Bottle Server in background thread
     port = get_free_port()

@@ -239,6 +239,9 @@ class LyricsRenderer {
     
     if (track) {
       this._currentTrackPath = track.path;
+      this._fetchToken = (this._fetchToken || 0) + 1;
+      const currentToken = this._fetchToken;
+
       document.getElementById('lyrics-track-name').textContent = track.title || 'Unknown';
       document.getElementById('lyrics-track-artist').textContent = track.artist || 'Unknown';
       
@@ -255,8 +258,8 @@ class LyricsRenderer {
       
       const lrcData = await window.api.getLyrics(track.artist, track.title, track.album, track.duration, track.path);
       
-      // Prevent race conditions: Ensure this response still belongs to the currently active track
-      if (this._currentTrackPath !== track.path) {
+      // Prevent race conditions: Ensure response belongs to the current request and active track
+      if (this._fetchToken !== currentToken || this._currentTrackPath !== track.path) {
         return;
       }
 
@@ -327,23 +330,51 @@ class LyricsRenderer {
 
   parseLRC(lrcText) {
     if (!lrcText) return [];
-    const lines = lrcText.split('\n');
+    const lines = lrcText.split(/\r?\n/);
     const result = [];
-    const timeRegex = /\[(\d{1,2}):(\d{2})(?:\.(\d{2,3}))?\]/g;
+    const timeRegex = /\[(\d{1,2}):(\d{2})(?:[.:](\d{2,3}))?\]/g;
+    const offsetRegex = /^\[offset:\s*([+-]?\d+)\s*\]/i;
+    const karaokeTagRegex = /<\d{1,2}:\d{2}(?:[.:]\d{2,3})?>/g;
     
-    for (const line of lines) {
+    let globalOffsetSec = 0;
+
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line) continue;
+
+      // Parse global [offset: +/-ms] tag
+      const offsetMatch = line.match(offsetRegex);
+      if (offsetMatch) {
+        const ms = parseInt(offsetMatch[1], 10);
+        if (!isNaN(ms)) {
+          globalOffsetSec = ms / 1000.0;
+        }
+        continue;
+      }
+
+      // Ignore ID tags like [ar:Artist], [ti:Title], [al:Album], [by:Creator], etc.
+      if (/^\[(ar|ti|al|by|length|re|ve|hash):/i.test(line)) {
+        continue;
+      }
+
       const timestamps = [];
       let match;
       timeRegex.lastIndex = 0;
       while ((match = timeRegex.exec(line)) !== null) {
         const m = parseInt(match[1], 10);
         const s = parseInt(match[2], 10);
-        const ms = match[3] ? parseInt(match[3], 10) : 0;
-        const time = m * 60 + s + (ms / (match[3] && match[3].length === 2 ? 100 : 1000));
+        let ms = 0;
+        if (match[3]) {
+          const msStr = match[3];
+          ms = msStr.length === 2 ? parseInt(msStr, 10) * 10 : parseInt(msStr, 10);
+        }
+        const time = Math.max(0, m * 60 + s + (ms / 1000) + globalOffsetSec);
         timestamps.push(time);
       }
+
       if (timestamps.length > 0) {
-        const text = line.replace(timeRegex, '').trim();
+        // Strip timestamps and inline word-by-word karaoke markers
+        let text = line.replace(timeRegex, '').replace(karaokeTagRegex, '').trim();
         if (text) {
           for (const time of timestamps) {
             result.push({ time, text });
@@ -372,6 +403,7 @@ class LyricsRenderer {
 
   render() {
     this.container.innerHTML = '';
+    const fragment = document.createDocumentFragment();
     this.lyrics.forEach((line, idx) => {
       const el = document.createElement('div');
       el.className = 'lyrics-line';
@@ -393,8 +425,9 @@ class LyricsRenderer {
           window.playerController.seek(line.time);
         }
       });
-      this.container.appendChild(el);
+      fragment.appendChild(el);
     });
+    this.container.appendChild(fragment);
   }
 
   findLyricIndex(currentTime) {
@@ -480,7 +513,7 @@ class LyricsRenderer {
 
     const containerHeight = this.container.parentElement.clientHeight;
     const offsetTop = lineEl.offsetTop;
-    // Neo ở vị trí 40% từ đỉnh xuống
+    // Anchor at 40% vertical viewport position from the top
     const targetAnchor = containerHeight * 0.40;
     const scrollAmount = targetAnchor - offsetTop - (lineEl.clientHeight / 2);
     

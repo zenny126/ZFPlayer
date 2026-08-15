@@ -7,14 +7,20 @@ class LibraryAPI:
         self.library_service = library_service
         self.config = config
 
+    def get_bootstrap_data(self):
+        player_service = getattr(self, 'player_service', None)
+        return self.library_service.get_bootstrap_data(player_service)
+
     def get_tracks(self, offset=0, limit=50, search='', sort_by='title', sort_dir='ASC', playlist_id=None):
         is_favorites = str(playlist_id) in ['favorites', '-1']
-        real_playlist_id = int(playlist_id) if playlist_id is not None and str(playlist_id).isdigit() else None
+        is_album = isinstance(playlist_id, str) and playlist_id.startswith('album:')
+        real_playlist_id = playlist_id if is_album else (int(playlist_id) if playlist_id is not None and str(playlist_id).isdigit() else None)
         return self.library_service.get_tracks(offset, limit, search, sort_by, sort_dir, is_favorites, real_playlist_id)
 
     def get_track_count(self, search='', playlist_id=None):
         is_favorites = str(playlist_id) in ['favorites', '-1']
-        real_playlist_id = int(playlist_id) if playlist_id is not None and str(playlist_id).isdigit() else None
+        is_album = isinstance(playlist_id, str) and playlist_id.startswith('album:')
+        real_playlist_id = playlist_id if is_album else (int(playlist_id) if playlist_id is not None and str(playlist_id).isdigit() else None)
         return self.library_service.get_track_count(search, is_favorites, real_playlist_id)
 
     def get_recently_played(self, limit=20):
@@ -83,3 +89,6 @@ class LibraryAPI:
 
     def get_system_playlist_covers(self):
         return self.library_service.get_system_playlist_covers()
+
+    def clear_database(self, clear_cache=True):
+        return self.library_service.clear_database(clear_cache=clear_cache)

@@ -4,10 +4,9 @@ import os
 import json
 import queue
 import time
-import urllib.request
-import urllib.parse
-import urllib.error
-from mutagen.flac import FLAC
+import unicodedata
+import requests
+from requests.adapters import HTTPAdapter
 from typing import Optional, Dict, Any, List
 import logging
 
@@ -18,13 +17,23 @@ import syncedlyrics
 logger = logging.getLogger(__name__)
 
 class LyricsWorker:
-    def __init__(self, database: Database, cache_manager: CacheManager, throttle_delay: float = 0.5):
+    def __init__(self, database: Database, cache_manager: Optional[CacheManager] = None, throttle_delay: float = 0.4):
         self.database = database
         self.cache_manager = cache_manager
         self.throttle_delay = throttle_delay
         self._fetching_keys = set()
         self._fetching_lock = threading.Lock()
         self._fetching_condition = threading.Condition(self._fetching_lock)
+
+        # Persistent HTTP session with connection pooling and keep-alive
+        self._session = requests.Session()
+        self._session.headers.update({
+            'User-Agent': 'ZennyFLACPlayer/2.0 (AudioCraftsmanship/1.0; https://github.com/zenny126/ZFPlayer)',
+            'Accept': 'application/json'
+        })
+        adapter = HTTPAdapter(pool_connections=10, pool_maxsize=20, max_retries=1)
+        self._session.mount('https://', adapter)
+        self._session.mount('http://', adapter)
 
         # Background Priority Queue for low-impact background lyrics fetching
         # Item format: (priority_level, seq, track_info) where priority_level 1 = High, 10 = Low
@@ -39,7 +48,7 @@ class LyricsWorker:
         if self._worker_running:
             return
         self._worker_running = True
-        self._worker_thread = threading.Thread(target=self._queue_loop, daemon=True)
+        self._worker_thread = threading.Thread(target=self._queue_loop, daemon=True, name="LyricsQueueWorker")
         self._worker_thread.start()
 
     def _queue_loop(self):
@@ -55,13 +64,16 @@ class LyricsWorker:
                 
                 cache_key = self._get_cache_key(artist, title, album, duration)
                 
-                # Double check DB cache fast before calling fetch
+                # Check DB cache first before performing any fetch
                 db_cache = self.database.get_lyrics(cache_key)
                 if not db_cache:
                     prio_name = "High" if priority_val < 5 else "Low"
-                    logger.info(f"[Lyrics Queue Worker] Fetching [{prio_name} Priority]: {title} - {artist}")
+                    logger.info(f"[Lyrics Worker] Fetching [{prio_name}]: {title} - {artist}")
                     self.fetch_lyrics(artist, title, album, duration, path)
-                    time.sleep(self.throttle_delay)
+                    
+                    # Apply polite throttling only for bulk background scan tasks
+                    if priority_val >= 5:
+                        time.sleep(self.throttle_delay)
             except Exception as e:
                 logger.error(f"Error in lyrics queue worker: {e}")
             finally:
@@ -99,8 +111,18 @@ class LyricsWorker:
             priority_val = 1 if priority else 10
             self._queue.put((priority_val, self._seq, track_info))
 
-    def _get_cache_key(self, artist: str, title: str, album: str, duration: float) -> str:
-        s = f"{artist}|{title}|{album}|{duration}"
+    @staticmethod
+    def normalize_string(text: str) -> str:
+        if not text:
+            return ""
+        norm = unicodedata.normalize('NFKC', str(text)).strip().lower()
+        return " ".join(norm.split())
+
+    def _get_cache_key(self, artist: str, title: str, album: str = '', duration: float = 0.0) -> str:
+        norm_artist = self.normalize_string(artist)
+        norm_title = self.normalize_string(title)
+        norm_dur = round(float(duration or 0))
+        s = f"{norm_artist}|{norm_title}|{norm_dur}"
         return hashlib.sha256(s.encode('utf-8')).hexdigest()
 
     def _read_local_lrc(self, path: str) -> Optional[str]:
@@ -150,6 +172,61 @@ class LyricsWorker:
             logger.debug(f"Error extracting embedded lyrics from {path}: {e}")
         return None
 
+    def _fetch_lrclib_exact(self, artist: str, title: str, album: str = '', duration: float = 0.0) -> Optional[str]:
+        try:
+            params = {
+                'artist_name': artist,
+                'track_name': title
+            }
+            if album:
+                params['album_name'] = album
+            if duration > 0:
+                params['duration'] = round(duration)
+                
+            resp = self._session.get('https://lrclib.net/api/get', params=params, timeout=(1.5, 2.5))
+            if resp.status_code == 200:
+                data = resp.json()
+                if data and data.get('syncedLyrics'):
+                    return data['syncedLyrics']
+        except Exception as e:
+            logger.debug(f"LRCLIB exact get failed for {artist} - {title}: {e}")
+        return None
+
+    def _fetch_lrclib_search(self, artist: str, title: str, duration: float = 0.0) -> Optional[str]:
+        try:
+            params = {'artist_name': artist, 'track_name': title}
+            resp = self._session.get('https://lrclib.net/api/search', params=params, timeout=(1.5, 3.0))
+            if resp.status_code == 200:
+                results = resp.json()
+                if results and isinstance(results, list):
+                    best_match = None
+                    min_diff = float('inf')
+                    for res in results:
+                        synced = res.get('syncedLyrics')
+                        if not synced:
+                            continue
+                        res_dur = res.get('duration', 0)
+                        diff = abs(res_dur - duration) if duration > 0 else 0
+                        if diff < min_diff:
+                            min_diff = diff
+                            best_match = res
+                    
+                    if best_match and (duration == 0 or min_diff <= 3.5):
+                        return best_match.get('syncedLyrics')
+        except Exception as e:
+            logger.debug(f"LRCLIB search failed for {artist} - {title}: {e}")
+        return None
+
+    def _fetch_syncedlyrics_fallback(self, artist: str, title: str) -> Optional[str]:
+        try:
+            search_query = f"{title} {artist}"
+            lrc = syncedlyrics.search(search_query, providers=["Musixmatch", "NetEase", "Megalobiz"])
+            if lrc and ('[' in lrc and ':' in lrc):
+                return lrc
+        except Exception as e:
+            logger.debug(f"syncedlyrics fetch failed for {artist} - {title}: {e}")
+        return None
+
     def fetch_lyrics(self, artist: str, title: str, album: str = '', duration: float = 0.0, path: str = '') -> Optional[Dict[str, str]]:
         cache_key = self._get_cache_key(artist, title, album, duration)
         
@@ -172,6 +249,7 @@ class LyricsWorker:
             self._fetching_keys.add(cache_key)
             
         try:
+            # Re-check cache in case another thread just stored it
             db_cache = self.database.get_lyrics(cache_key)
             if db_cache:
                 if db_cache.get('synced_lyrics') == '[NO_LYRICS]':
@@ -182,77 +260,56 @@ class LyricsWorker:
             source_name = None
             api_reached = False
 
-            # Priority 1: Check Local .lrc Sidecar File (Same folder, same name)
+            # --- LOCAL-FIRST TIER 1: Check Local .lrc Sidecar File (< 1ms) ---
             if not lyrics_text and path:
                 lyrics_text = self._read_local_lrc(path)
                 if lyrics_text:
                     source_name = 'local_lrc'
 
-            # Priority 2: Try LRCLIB Search API (track_name & artist_name, min_diff <= 3.0s, max 2 attempts)
-            if not lyrics_text and artist and title and artist.strip().lower() not in ['unknown', 'unknown artist'] and title.strip().lower() != 'unknown':
-                for attempt in range(2):
-                    try:
-                        params = urllib.parse.urlencode({'track_name': title, 'artist_name': artist})
-                        url = f'https://lrclib.net/api/search?{params}'
-                        req = urllib.request.Request(url, headers={'User-Agent': 'ZennyFLACPlayer/2.0'})
-                        with urllib.request.urlopen(req, timeout=3) as resp:
-                            api_reached = True
-                            results = json.loads(resp.read().decode('utf-8'))
-                            if results:
-                                best_match = None
-                                min_diff = float('inf')
-                                for res in results:
-                                    if not res.get('syncedLyrics'):
-                                        continue
-                                    res_dur = res.get('duration', 0)
-                                    diff = abs(res_dur - duration) if duration > 0 else 0
-                                    if diff < min_diff:
-                                        min_diff = diff
-                                        best_match = res
-                                
-                                if best_match and (duration == 0 or min_diff <= 3.0):
-                                    lyrics_text = best_match['syncedLyrics']
-                                    source_name = 'lrclib_search'
-                        break
-                    except urllib.error.HTTPError as e:
-                        if e.code == 404:
-                            api_reached = True
-                        break
-                    except Exception:
-                        import time
-                        time.sleep(0.3)
-
-            # Priority 3: Check Embedded Audio Tags (FLAC/MP3 lyrics)
+            # --- LOCAL-FIRST TIER 2: Check Embedded Audio Tags (< 5ms) ---
             if not lyrics_text and path:
                 lyrics_text = self._read_embedded_lyrics(path)
                 if lyrics_text:
                     source_name = 'embedded_tag'
 
-            # Priority 4: Try syncedlyrics library (Musixmatch, NetEase, Megalobiz, max 2 attempts)
-            if not lyrics_text and artist and title and artist.strip().lower() not in ['unknown', 'unknown artist'] and title.strip().lower() != 'unknown':
-                for attempt in range(2):
-                    try:
-                        search_query = f"{title} {artist}"
-                        lrc = syncedlyrics.search(search_query, providers=["Musixmatch", "NetEase", "Megalobiz"])
-                        api_reached = True
-                        if lrc:
-                            lyrics_text = lrc
-                            source_name = 'syncedlyrics'
-                        break
-                    except Exception as e:
-                        logger.debug(f"syncedlyrics fetch failed attempt {attempt} for {artist} - {title}: {e}")
-                        import time
-                        time.sleep(0.3)
+            is_valid_meta = (
+                bool(artist) and bool(title) and
+                artist.strip().lower() not in ['unknown', 'unknown artist'] and
+                title.strip().lower() != 'unknown'
+            )
 
-            # Final Cache Decision
+            # --- NETWORK TIER 3: LRCLIB Exact Match Fast-Path (~30-100ms) ---
+            if not lyrics_text and is_valid_meta:
+                lyrics_text = self._fetch_lrclib_exact(artist, title, album, duration)
+                if lyrics_text:
+                    source_name = 'lrclib_exact'
+                    api_reached = True
+                else:
+                    # If exact match failed, we still reached the API server
+                    api_reached = True
+
+            # --- NETWORK TIER 4: LRCLIB Fuzzy Search Fallback (~200-500ms) ---
+            if not lyrics_text and is_valid_meta:
+                lyrics_text = self._fetch_lrclib_search(artist, title, duration)
+                if lyrics_text:
+                    source_name = 'lrclib_search'
+                    api_reached = True
+
+            # --- NETWORK TIER 5: Multi-provider fallback via syncedlyrics ---
+            if not lyrics_text and is_valid_meta:
+                lyrics_text = self._fetch_syncedlyrics_fallback(artist, title)
+                if lyrics_text:
+                    source_name = 'syncedlyrics'
+                    api_reached = True
+
+            # --- PERSIST RESULT TO CACHE ---
             if lyrics_text:
                 result = {'synced_lyrics': lyrics_text, 'plain_lyrics': '', 'source': source_name}
                 self.database.save_lyrics(cache_key, lyrics_text, '', source_name)
-                self.cache_manager.save_lyrics_cache(cache_key, result)
                 return result
             elif api_reached:
-                # Reached APIs successfully but no lyrics exist. Save negative cache.
-                logger.info(f"No lyrics found online for: {title} - {artist}. Saving negative cache.")
+                # Online lookup completed with no lyrics found -> Save negative cache with TTL
+                logger.info(f"No lyrics found for: {title} - {artist}. Saving negative cache.")
                 self.database.save_lyrics(cache_key, '[NO_LYRICS]', '', 'none')
                 return {'synced_lyrics': '', 'plain_lyrics': '', 'source': 'none'}
 

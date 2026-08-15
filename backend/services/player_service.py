@@ -19,6 +19,10 @@ class PlayerService:
         self._load_token = 0
         self._vol_save_timer = None
         
+        # In-memory active track cache (eliminates 3,600 SQLite queries/hour during polling)
+        self._cached_track_path = None
+        self._cached_track_info = None
+        
         # Restore saved volume level
         saved_vol = self.config.get('volume', 0.8)
         self.audio_engine.set_volume(saved_vol)
@@ -62,6 +66,7 @@ class PlayerService:
             logger.debug(f"Failed to enqueue next tracks lyrics: {e}")
 
     def _sync_playlists_and_index(self, path: str, playlist_id: Any = None):
+        prev_pid = getattr(self, 'current_playlist_id', None)
         if playlist_id is not None:
             self.current_playlist_id = playlist_id
             self.config.set('last_playlist_id', playlist_id)
@@ -70,22 +75,33 @@ class PlayerService:
                 self.current_playlist_id = self.config.get('last_playlist_id', 'all')
             playlist_id = self.current_playlist_id
 
-        is_favorites = str(playlist_id) in ['favorites', '-1']
-        real_playlist_id = int(playlist_id) if playlist_id is not None and str(playlist_id).isdigit() else None
-        
-        paths = self.library_service.get_all_track_paths(is_favorites=is_favorites, playlist_id=real_playlist_id)
-        if not paths:
-            paths = self.library_service.get_all_track_paths()
+        # Lazy check: If playlist ID hasn't changed and normal_playlist already has tracks and contains path, avoid querying SQLite
+        needs_reload = (
+            str(prev_pid) != str(playlist_id) or
+            not self.normal_playlist or
+            (path and path not in self.normal_playlist)
+        )
+
+        if needs_reload:
+            is_favorites = str(playlist_id) in ['favorites', '-1']
+            real_playlist_id = int(playlist_id) if playlist_id is not None and str(playlist_id).isdigit() else None
             
-        if not paths:
-            return
-            
-        shuffle_mode = self.config.get('shuffle', False)
-        
-        if self.normal_playlist != list(paths):
+            paths = self.library_service.get_all_track_paths(is_favorites=is_favorites, playlist_id=real_playlist_id)
+            if not paths:
+                paths = self.library_service.get_all_track_paths()
+                
+            if not paths:
+                return
+                
             self.normal_playlist = list(paths)
             self.shuffled_playlist = []
             
+        paths = self.normal_playlist
+        if not paths:
+            return
+
+        shuffle_mode = self.config.get('shuffle', False)
+        
         if not self.shuffled_playlist or len(self.shuffled_playlist) != len(paths) or set(self.shuffled_playlist) - set(paths):
             remaining = [p for p in paths if p != path]
             random.shuffle(remaining)
@@ -109,6 +125,10 @@ class PlayerService:
         
         self.current_path = path
         self.config.set('last_track', path)
+        
+        # Cache current track metadata in RAM immediately
+        self._cached_track_path = path
+        self._cached_track_info = self.library_service.get_track_info(path)
         
         # Record play history
         if hasattr(self.library_service, 'db'):
@@ -229,7 +249,6 @@ class PlayerService:
 
         return {"status": "success", "message": "Track queued as next"}
 
-
     def set_active_playlist(self, playlist_id: Any) -> Dict[str, Any]:
         logger.info(f"Setting active playlist scope to: {playlist_id}")
         self.current_playlist_id = playlist_id
@@ -247,9 +266,11 @@ class PlayerService:
             state['is_playing'] = True
             
         if self.current_path:
-            # Augment state with current track info
-            track_info = self.library_service.get_track_info(self.current_path)
-            state['track'] = track_info
+            # Use cached track metadata in memory (Zero SQLite queries during continuous 1Hz polling)
+            if self._cached_track_path != self.current_path or self._cached_track_info is None:
+                self._cached_track_info = self.library_service.get_track_info(self.current_path)
+                self._cached_track_path = self.current_path
+            state['track'] = self._cached_track_info
         else:
             state['track'] = None
         return state
