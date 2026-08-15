@@ -24,27 +24,7 @@ def main():
         print(f"[!] Error: {spec_file} not found!")
         sys.exit(1)
 
-    # 2. Ensure UPX Binary Compression Tool is present for maximum compression
-    upx_exe = project_root / "upx.exe"
-    if not upx_exe.exists():
-        try:
-            print("[*] Downloading UPX 4.2.4 for maximum binary compression...")
-            import urllib.request, zipfile, io
-            url = "https://github.com/upx/upx/releases/download/v4.2.4/upx-4.2.4-win64.zip"
-            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                zip_bytes = resp.read()
-            with zipfile.ZipFile(io.BytesIO(zip_bytes)) as z:
-                for member in z.namelist():
-                    if member.endswith("upx.exe"):
-                        with open(upx_exe, "wb") as f:
-                            f.write(z.read(member))
-                        print("[+] UPX installed successfully.")
-                        break
-        except Exception as e:
-            print(f"[!] Warning: Could not auto-download UPX: {e}")
-
-    # 3. Generate/Ensure all icon files exist
+    # 2. Generate/Ensure all icon files exist
     try:
         sys.path.insert(0, str(project_root))
         from generate_icon import create_zfp_icon
@@ -52,7 +32,7 @@ def main():
     except Exception as e:
         print(f"[!] Warning generating icons: {e}")
 
-    # Clean previous build file if unlocked
+    # 3. Clean previous build files & PyInstaller bincache
     old_exe = project_root / "dist" / "ZFPlayer.exe"
     if old_exe.exists():
         try:
@@ -61,7 +41,6 @@ def main():
         except Exception as e:
             print(f"[!] Warning: Could not remove old {old_exe}: {e}")
 
-    # Clean previous build directories
     build_temp = project_root / "build"
     if build_temp.exists():
         try:
@@ -69,6 +48,17 @@ def main():
             print("[+] Cleaned temporary build directory.")
         except Exception:
             pass
+
+    # Clear PyInstaller bincache in LocalAppData to avoid reusing UPX-corrupted binary stubs
+    appdata_local = os.getenv('LOCALAPPDATA')
+    if appdata_local:
+        bincache = Path(appdata_local) / 'pyinstaller'
+        if bincache.exists():
+            try:
+                shutil.rmtree(bincache, ignore_errors=True)
+                print("[+] Cleaned PyInstaller binary cache.")
+            except Exception:
+                pass
 
     print("\n[+] Running Optimized PyInstaller build (-OO bytecode)...")
     cmd = [
@@ -78,7 +68,6 @@ def main():
         "PyInstaller",
         "--noconfirm",
         "--clean",
-        "--upx-dir=" + str(project_root),
         str(spec_file)
     ]
 
