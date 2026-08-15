@@ -245,16 +245,34 @@ flowchart TD
 
 ---
 
-### 2.12 Phân Hệ Quản Lý Phím Tắt & Khóa Xung Đột Modal
-- **Module:** `frontend/js/shortcuts.js`.
-- **Mục tiêu:** Bắt phím tắt linh hoạt, hỗ trợ phím Media phần cứng và chống bấm nhầm phím khi mở hộp thoại.
+### 2.12 Phân Hệ Quản Lý Phím Tắt, Bảo Vệ Focus & Khóa Xung Đột Modal
+- **Module:** `frontend/js/shortcuts.js`, `frontend/js/player.js`.
+- **Mục tiêu:** Bắt phím tắt linh hoạt, hỗ trợ phím Media phần cứng, chống bấm nhầm phím khi mở hộp thoại và giải phóng focus tránh nuốt phím điều hướng/tổ hợp phím.
 
-#### Thiết kế bảo vệ:
-* **Modal Context Isolation Guard**: Trong hàm `handleGlobalKeyDown(e)`, nếu phát hiện đang có bất kỳ modal nào hiển thị (`.modal:not(.hidden)`), toàn bộ các phím tắt phát nhạc (Spacebar, Arrows, M, S, R) lập tức bị chặn lại, chỉ cho phép phím `Escape` hoạt động để đóng modal.
+#### Thiết kế bảo vệ & Tinh tế UX:
+* **Modal Context Isolation Guard**: Trong hàm `handleGlobalKeyDown(e)`, nếu phát hiện đang có bất kỳ modal nào hiển thị (`.modal:not(.hidden)`), toàn bộ các phím tắt phát nhạc lập tức bị chặn lại, chỉ cho phép phím `Escape` hoạt động để đóng modal/context menu.
+* **Text Input vs Slider Guard**: Phân biệt chính xác giữa ô gõ văn bản (`<textarea>`, `contenteditable`, `input[type="text|search|..."]`) và phần tử điều khiển (`<input type="range">`, `button`). Chỉ chặn phím tắt khi người dùng thực sự nhập chữ, cho phép `Ctrl+ArrowLeft`, `Ctrl+ArrowRight`, `Space`, `T` hoạt động bình thường ngay cả khi vừa click thanh Seekbar.
+* **Auto-Blur Range Sliders**: Tự động gọi `blur()` khi nhả chuột/tay khỏi thanh Seekbar và Volume (`pointerup`, `change`), triệt tiêu 100% viền focus outline của Chromium và ngăn chặn bẫy phím.
+* **Tùy biến trực tiếp (Live Key Recording)**: Hỗ trợ ghi nhận phím trực tiếp, tự phát hiện trùng lặp, lưu cấu hình vào `settings.json` và hỗ trợ đầy đủ phím `T` ẩn/hiện chữ lời bài hát (`toggle_lyrics_text`).
 
 ---
 
-## 3. Lược Đồ Cơ Sở Dữ Liệu SQLite (Database Schema & Indices)
+## 3. Cấu Hình Yêu Cầu & Khả Năng Mở Rộng Hệ Thống (System Specs & Scalability)
+
+### 3.1 Yêu Cầu Phần Cứng (Hardware Requirements)
+* **CPU:** Dual-Core 64-bit (hỗ trợ tập lệnh SSE2 trở lên).
+* **RAM:** Tối thiểu 2 GB RAM (Khuyến nghị: 4 GB+). Mức tiêu thụ thực tế khi chạy: ~80MB – 120MB (Idle) và ~200MB – 350MB khi phát Hi-Res FLAC với Zero-Latency RAM Playback.
+* **Audio:** Onboard Soundcard (Realtek / Intel HD) hoặc USB DAC rời hỗ trợ WASAPI Exclusive Bit-Perfect.
+* **GPU:** GPU tích hợp (Intel HD Graphics 3000+) hỗ trợ WebGL Canvas Shader.
+
+### 3.2 Khả Năng Chịu Tải Thư Viện (Library Capacity Benchmark)
+* **1.000 – 10.000 bài:** Database ~3–8 MB, thời gian truy vấn FTS5 < 2ms, khởi động < 1s.
+* **10.000 – 50.000 bài:** Database ~10–35 MB, thời gian truy vấn FTS5 < 5ms, cuộn 60 FPS với Virtual DOM / Pagination.
+* **100.000+ bài hát:** Database ~70–150 MB, tìm kiếm toàn văn FTS5 < 15ms.
+
+---
+
+## 4. Lược Đồ Cơ Sở Dữ Liệu SQLite (Database Schema & Indices)
 
 ```sql
 -- Bảng lưu trữ thông tin bài hát

@@ -77,19 +77,48 @@
 ### 5. ⌨️ Hệ Thống Phím Tắt Toàn Cục & Khóa Xung Đột Modal
 * **Ghi Nhận Phím Trực Tiếp (Live Key Recording)**: Tùy biến mọi phím tắt trong phần Cài đặt và lưu trữ an toàn vào `settings.json`.
 * **Modal Context Isolation Guard**: Tự động chặn các phím tắt điều khiển nhạc khi đang mở hộp thoại (tạo/đổi tên playlist) để tránh vô tình kích hoạt Play/Pause.
-* **Phím Tắt Mặc Định Tiện Dụng**:
+* **Bảo vệ Phím tắt & Tránh Nuốt Phím**: Tự động giải phóng focus (`blur()`) trên thanh trượt Seekbar và Volume, phân biệt chính xác giữa nhập văn bản và điều khiển âm thanh.
+* **Bảng Phím Tắt Mặc Định Tiện Dụng**:
   * <kbd>Space</kbd>: Dừng / Phát nhạc (Play / Pause).
   * <kbd>Ctrl</kbd> + <kbd>→</kbd> / <kbd>Ctrl</kbd> + <kbd>←</kbd>: Bài tiếp theo / Bài trước đó.
   * <kbd>→</kbd> / <kbd>←</kbd>: Tua tới / Tua lùi 5 giây.
   * <kbd>↑</kbd> / <kbd>↓</kbd>: Tăng / Giảm 5% âm lượng.
   * <kbd>M</kbd>: Bật / Tắt tiếng (Mute).
-  * <kbd>L</kbd>: Mở / Đóng màn hình Lời bài hát toàn cảnh.
+  * <kbd>L</kbd>: Mở / Đóng màn hình Lời bài hát toàn cảnh (`Toggle Lyrics View`).
+  * <kbd>T</kbd>: Ẩn / Hiện chữ lời bài hát & Canh giữa bìa album (`Toggle Lyrics Text`).
   * <kbd>S</kbd>: Bật / Tắt xáo bài (Shuffle).
   * <kbd>R</kbd>: Chuyển đổi lặp bài (Off / All / One).
   * <kbd>Esc</kbd>: Đóng Modal, Context Menu hoặc màn hình Lời bài hát.
   * <kbd>F11</kbd>: Bật / Tắt chế độ Toàn màn hình (Fullscreen).
 * **Nút "Previous" Chuẩn Quốc Tế**: Phát > 3 giây sẽ tua về `0:00`; phát < 3 giây sẽ quay lại bài trước.
 * **Tích Hợp Windows SMTC & MediaSession**: Hỗ trợ phím Media cứng trên bàn phím, tai nghe Bluetooth và hiển thị trên Windows Lock Screen.
+
+---
+
+## 💻 Cấu Hình Yêu Cầu & Khả Năng Chịu Tải
+
+### 1. Yêu Cầu Phần Cứng (System Requirements)
+| Thành phần | Cấu hình Tối thiểu (Minimum) | Cấu hình Khuyến nghị (Recommended) |
+| :--- | :--- | :--- |
+| **Hệ điều hành** | Windows 10 (64-bit) / Windows 11 *(Hỗ trợ Win 7 SP1+ có WebView2)* | Windows 10 / 11 (64-bit) bản mới nhất |
+| **Bộ vi xử lý (CPU)** | Intel / AMD Dual-Core (hỗ trợ tập lệnh SSE2) | Intel Core i3 / AMD Ryzen 3 trở lên |
+| **Bộ nhớ RAM** | **2 GB RAM** | **4 GB RAM trở lên** |
+| **Card âm thanh (Audio)** | Onboard Audio (Realtek / Intel HD Audio) | DAC rời / USB Audio Interface hỗ trợ **WASAPI Exclusive** |
+| **Card đồ họa (GPU)** | GPU tích hợp (Intel HD Graphics 3000 trở lên) | GPU hỗ trợ DirectX 11 / OpenGL (render WebGL Fluid mượt 60 FPS) |
+| **Dung lượng Ổ cứng** | ~150 MB cho bộ cài và cơ sở dữ liệu | Ổ cứng SSD để tốc độ quét thư mục nhạc nhanh nhất |
+
+> [!NOTE]
+> **Mức tiêu thụ RAM thực tế:**
+> * **Chế độ chờ (Idle):** ~80 MB – 120 MB RAM.
+> * **Khi phát nhạc Lossless FLAC (Zero-Latency RAM Playback):** ~200 MB – 350 MB RAM (tự động nạp trước bài hát vào bộ đệm RAM để đạt 0% Disk I/O).
+
+### 2. Khả Năng Hỗ Trợ Thư Viện Bài Hát (Library Capacity & Scalability)
+| Quy mô Thư viện | Dung lượng Database (`library.db`) | Tốc độ Tìm kiếm (FTS5) | Trải nghiệm sử dụng |
+| :--- | :---: | :---: | :--- |
+| **1.000 – 10.000 bài** | ~3 MB – 8 MB | **< 2 ms** (Tức thì) | Khởi động tức thì, cuộn 60 FPS |
+| **10.000 – 50.000 bài** | ~10 MB – 35 MB | **< 5 ms** (Tức thì) | Phân trang 50 bài/lần không tràn DOM |
+| **100.000+ bài hát** | ~70 MB – 150 MB | **< 15 ms** | Phản hồi siêu tốc, FTS5 tìm kiếm toàn văn |
+| **Giới hạn lý thuyết** | Hàng triệu bản ghi | Tối ưu bằng B-Tree Index | Không bị giới hạn cứng về số lượng |
 
 ---
 

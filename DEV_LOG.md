@@ -1,5 +1,35 @@
 # DEV LOG
 
+## Timestamp: 2026-08-15T08:15:00
+### Tác vụ thực hiện
+Tối ưu hóa kích thước Modal Settings (loại bỏ thanh cuộn thừa), khắc phục triệt để viền Focus Ring và lỗi bắt phím tắt trên thanh trượt Seekbar/Volume, bổ sung phím tắt `T` cho tính năng Ẩn/Hiện chữ lời bài hát (`toggle_lyrics_text`).
+
+### Danh sách tệp tin thay đổi
+- `frontend/css/main.css` (MODIFIED)
+- `frontend/js/shortcuts.js` (MODIFIED)
+- `frontend/js/player.js` (MODIFIED)
+- `frontend/js/lyrics.js` (MODIFIED)
+- `frontend/index.html` (MODIFIED)
+- `README.md` (MODIFIED)
+- `docs/ARCHITECTURE.md` (MODIFIED)
+- `architect.md` (MODIFIED)
+- `DEV_LOG.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Nâng cao kích thước Settings Modal & Khử Scrollbar ở Tab (`main.css`)**:
+   - Tăng chiều cao của `.settings-modal-content` từ `520px` lên `580px` (`max-height: 90vh`).
+   - Đảm bảo toàn bộ 3 khối nội dung trong tab `Library` (*Database Status*, *Rescan Library*, *Clear Data*) và tab `Audio Engine` hiển thị vừa vặn, thoáng đãng và loại bỏ hoàn toàn thanh cuộn dọc không mong muốn.
+2. **Khắc phục lỗi viền Focus Ring & Bẫy phím tắt trên Range Slider (`main.css`, `player.js`, `shortcuts.js`)**:
+   - Bổ sung CSS reset loại bỏ hoàn toàn viền focus outline của Chromium (`outline: none; border: none; box-shadow: none;` cho `input[type="range"]`, `:focus`, `:focus-visible`, `::-webkit-slider-thumb` và `::-moz-focus-outer`).
+   - Thêm cơ chế tự động nhả focus (`bar.blur()`) trên cả thanh Seekbar và Volume bar ngay khi người dùng nhả chuột/tay (`pointerup`, `change`).
+   - Tinh chỉnh bộ nhận diện phím tắt `isTextInput` trong `ShortcutsManager`: Phân biệt chính xác giữa ô gõ văn bản thực thụ (`<textarea>`, `contenteditable`, `input[type="text|search|..."]`) và thanh trượt điều khiển (`input[type="range"]`), ngăn chặn triệt để hiện tượng nuốt các tổ hợp phím như `Ctrl+ArrowLeft`, `Ctrl+ArrowRight`, `Space`, phím mũi tên khi vừa tương tác với seekbar.
+3. **Bổ sung phím tắt Ẩn/Hiện Chữ Lời Bài Hát (`toggle_lyrics_text`)**:
+   - Đăng ký action mới `toggle_lyrics_text` với phím tắt mặc định **`T`** trong `ShortcutsManager`.
+   - Kết nối trực tiếp với phương thức `lyricsRenderer.toggleLyricsView()`, cho phép người dùng chuyển đổi tức thì giữa chế độ hiển thị 2 cột (Kèm lời bài hát cuộn kinetic) và chế độ canh giữa bìa album.
+   - Cập nhật tooltip động trên nút điều khiển ở góc trên bên phải màn hình Lyrics và tích hợp đầy đủ vào giao diện quản lý tùy biến phím tắt trong Settings.
+
+---
+
 ## Timestamp: 2026-08-14T17:45:00
 ### Tác vụ thực hiện
 Xây dựng bộ công cụ tự động hóa môi trường phát triển (Developer Environment Setup & Workflow Automation): `requirements.txt`, `setup_env.bat`, `run_dev.bat`, `build.bat`.
