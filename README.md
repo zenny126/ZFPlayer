@@ -8,7 +8,7 @@
   [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
   [![Audio Engine](https://img.shields.io/badge/Audio-WASAPI_Bit--Perfect_100%25-0078D6.svg?logo=windows&logoColor=white)]()
   [![UI Engine](https://img.shields.io/badge/UI-Modern_Glassmorphism_%26_WebGL_Shader-8A2BE2.svg)]()
-  [![Architecture](https://img.shields.io/badge/Architecture-Top_1%25_Engineering-22C55E.svg)]()
+  [![Performance](https://img.shields.io/badge/Performance-Zero--Glitch-22C55E.svg)]()
   [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 </div>
 
@@ -16,7 +16,7 @@
 
 ## 📖 Giới Thiệu
 
-**ZennyFLAC Player (ZFPlayer)** là ứng dụng nghe nhạc Lossless & Hi-Res Audio cao cấp dành cho Windows, được phát triển theo tiêu chuẩn kỹ nghệ phần mềm **Top 1% Engineering & Software Craftsmanship**. Ứng dụng kết hợp sức mạnh vượt trội của **Động cơ âm thanh C-Streaming & WASAPI Bit-Perfect**, cơ sở dữ liệu SQLite FTS5 tốc độ cao, và **Giao diện Glassmorphism / Fluid Shader WebGL lộng lẫy**, đem lại trải nghiệm nghe nhạc hoàn mỹ, không giật lag và thuần khiết từng bit âm thanh.
+**ZennyFLAC Player (ZFPlayer)** là ứng dụng nghe nhạc Lossless & Hi-Res Audio cao cấp dành cho Windows. Ứng dụng kết hợp sức mạnh vượt trội của **Động cơ âm thanh C-Streaming & WASAPI Bit-Perfect**, cơ sở dữ liệu SQLite FTS5 tốc độ cao, và **Giao diện Glassmorphism / Fluid Shader WebGL lộng lẫy**, đem lại trải nghiệm nghe nhạc hoàn mỹ, không giật lag và thuần khiết từng bit âm thanh.
 
 ---
 

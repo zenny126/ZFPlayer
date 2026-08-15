@@ -104,5 +104,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  console.log("App initialized with top 1% engineering standards.");
+  console.log("App initialized successfully.");
 });
