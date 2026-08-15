@@ -1,23 +1,23 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-import sys
 import os
-from PyInstaller.utils.hooks import collect_data_files
+import sys
+from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 block_cipher = None
 
-# Bundle frontend assets, static files and icons
+# 1. Collect all data files (Frontend glassmorphism UI, icons, soundfile C-libraries)
 datas = [
     ('frontend', 'frontend'),
     ('app_icon.ico', '.'),
 ]
 
-# Collect soundfile DLLs if present
 try:
     datas += collect_data_files('soundfile')
 except Exception:
     pass
 
+# 2. Collect all hidden imports cleanly
 hiddenimports = [
     'bottle',
     'webview',
@@ -32,24 +32,9 @@ hiddenimports = [
     'wsgiref',
     'wsgiref.simple_server',
     'socketserver',
-    'backend.api.player_api',
-    'backend.api.library_api',
-    'backend.api.lyrics_api',
-    'backend.api.config_api',
-    'backend.audio.engine',
-    'backend.audio.decoder',
-    'backend.audio.buffer',
-    'backend.services.player_service',
-    'backend.services.library_service',
-    'backend.storage.database',
-    'backend.storage.config',
-    'backend.storage.cache',
-    'backend.workers.scanner',
-    'backend.workers.lyrics_worker',
-    'backend.workers.metadata_worker',
-    'backend.utils.path_utils',
-]
+] + collect_submodules('backend')
 
+# 3. PyInstaller Analysis
 a = Analysis(
     ['backend/app.py'],
     pathex=['.'],
@@ -70,8 +55,10 @@ a = Analysis(
     noarchive=False,
 )
 
+# 4. Pure Python Bytecode Archive
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
+# 5. Executable Binary Generation (upx=False for 100% WASAPI / PortAudio C-driver stability)
 exe = EXE(
     pyz,
     a.scripts,
@@ -79,13 +66,12 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='ZFPlayer',
+    name='ZennyFLAC_Player',
     icon=os.path.abspath('app_icon.ico'),
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
-    upx_exclude=[],
+    upx=False,
     runtime_tmpdir=None,
     console=False,
     disable_windowed_traceback=False,
