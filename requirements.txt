@@ -17,5 +17,10 @@ Pillow>=10.0.0
 requests>=2.31.0
 syncedlyrics>=0.7.0
 
+# Testing & Quality Assurance
+pytest>=7.4.0
+
 # Packaging & Build
 pyinstaller>=6.0.0
+
+

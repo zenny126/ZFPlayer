@@ -31,30 +31,63 @@ class Database:
         pass
 
     def _init(self, db_path: str = None):
-        if not hasattr(self, 'initialized'):
-            self.db_path = db_path or get_db_path()
-            db_dir = os.path.dirname(self.db_path)
-            if db_dir:
-                os.makedirs(db_dir, exist_ok=True)
-            self._local = threading.local()
-            self._check_and_heal_database()
-            self.init()
-            self.initialized = True
+        self.db_path = db_path or get_db_path()
+        db_dir = os.path.dirname(self.db_path)
+        if db_dir:
+            os.makedirs(db_dir, exist_ok=True)
+        self._local = threading.local()
+        self._check_and_heal_database()
+        self.init()
+        self.initialized = True
+
+    def close(self):
+        """Close thread-local database connection cleanly."""
+        if hasattr(self, '_local') and hasattr(self._local, 'conn'):
+            try:
+                self._local.conn.close()
+            except Exception:
+                pass
+            del self._local.conn
+
 
     def _check_and_heal_database(self):
         """Checks SQLite integrity and self-heals if corrupted."""
         if not os.path.exists(self.db_path):
             return
+        conn = None
+        cursor = None
+        is_healthy = False
         try:
             conn = sqlite3.connect(self.db_path, timeout=5.0)
             cursor = conn.cursor()
             res = cursor.execute('PRAGMA quick_check;').fetchone()
-            conn.close()
             if res and res[0] == 'ok':
+                is_healthy = True
                 return
             logger.error(f"Database quick_check failed: {res}. Rebuilding database...")
         except Exception as e:
             logger.error(f"Database check encountered error: {e}. Rebuilding database...")
+        finally:
+            if cursor:
+                try:
+                    cursor.close()
+                except Exception:
+                    pass
+                del cursor
+            if conn:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+                del conn
+            import gc
+            gc.collect()
+
+        if is_healthy:
+            return
+
+        # Give Windows OS filesystem handle 10ms to release
+        time.sleep(0.01)
 
         # Self-heal corrupted database
         try:
@@ -70,6 +103,8 @@ class Database:
             logger.info(f"Corrupted database backed up to {corrupt_backup}. Creating fresh library.")
         except Exception as ex:
             logger.critical(f"Failed to auto-heal database: {ex}")
+
+
 
     def _get_conn(self) -> sqlite3.Connection:
         if not hasattr(self._local, 'conn'):

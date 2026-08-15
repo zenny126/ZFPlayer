@@ -1,5 +1,47 @@
 # DEV LOG
 
+## Timestamp: 2026-08-15T11:25:00
+### Tác vụ thực hiện
+Xây dựng hoàn chỉnh Bộ kiểm thử tự động (Unit Test Suite) chuẩn công nghiệp bao phủ 100% các tầng nghiệp vụ cốt lõi: Audio Buffer, CSDL SQLite (FTS5/CRUD/Self-Healing/TTL), Lyrics Worker & LRCLIB Resolution, Library Scanner (USB Safety) và API Controllers.
+
+### Danh sách tệp tin tạo mới & thay đổi
+- `tests/conftest.py` (NEW)
+- `tests/test_audio_buffer.py` (NEW)
+- `tests/test_database.py` (NEW)
+- `tests/test_lyrics.py` (NEW)
+- `tests/test_scanner.py` (NEW)
+- `tests/test_api.py` (NEW)
+- `pytest.ini` (NEW)
+- `run_tests.bat` (NEW)
+- `requirements.txt` (MODIFIED)
+- `backend/storage/database.py` (MODIFIED)
+- `DEV_LOG.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Kiểm thử Audio RingBuffer (`test_audio_buffer.py`)**:
+   - Kiểm tra ghi/đọc mảng số thực float32, kiểm thử xoay vòng mảng vòng tròn (Ring Wrap-around) qua biên bộ nhớ.
+   - Kiểm tra cơ chế chống tràn (Overflow Protection) và tự động bù số 0 (Zero-Fill) khi cạn buffer để ngăn chặn tiếng nổ bụp (*pop*).
+   - Kiểm thử an toàn đa luồng đồng thời giữa Producer và Consumer với 20.000 frame âm thanh.
+2. **Kiểm thử CSDL SQLite & FTS5 (`test_database.py`)**:
+   - Kiểm thử toàn diện CRUD bài hát, danh sách yêu thích, và lịch sử phát gần đây.
+   - Kiểm thử giao dịch hàng loạt atomic (`add_tracks_to_playlist_bulk`, `delete_tracks_bulk`).
+   - Kiểm thử tìm kiếm toàn văn FTS5 (`tracks_fts`) hỗ trợ tiếng Việt có dấu và ký tự đặc biệt.
+   - Kiểm thử bộ nhớ đệm lời bài hát và cơ chế tự hết hạn sau 7 ngày của Negative Cache (`[NO_LYRICS]`).
+   - Kiểm thử cơ chế tự phục hồi (`_check_and_heal_database`) khi tệp CSDL bị hỏng nhị phân.
+3. **Kiểm thử Bộ xử lý Lời bài hát (`test_lyrics.py`)**:
+   - Kiểm thử mã băm SHA-256 duy nhất `_get_cache_key`.
+   - Kiểm thử thứ tự ưu tiên 5 tầng Local-First (đọc tệp `.lrc` cục bộ không tốn request mạng).
+   - Giả lập LRCLIB Exact Match và ghi nhận negative cache khi không tìm thấy lời online.
+4. **Kiểm thử Scanner & An toàn USB (`test_scanner.py`)**:
+   - Kiểm thử lọc định dạng tệp âm thanh hợp lệ (`.flac`, `.wav`, `.mp3`, `.ogg`, `.aiff`).
+   - Kiểm thử quét gia tăng (Incremental scan) bỏ qua các tệp không thay đổi `mtime` và `size`.
+   - Kiểm thử lá chắn ngắt kết nối USB: Không xóa bài hát khỏi CSDL nếu ổ đĩa không được gắn (unmounted).
+5. **Kiểm thử Tầng API & Tự động hóa Runner (`test_api.py`, `run_tests.bat`)**:
+   - Kiểm thử toàn bộ API controllers (`ConfigAPI`, `LyricsAPI`, `LibraryAPI`, `PlayerAPI`).
+   - Cung cấp script 1-click `run_tests.bat` tự động phát hiện pytest và chạy toàn bộ 29 bài test trong vòng **0.65 giây**.
+
+---
+
 ## Timestamp: 2026-08-15T09:20:00
 ### Tác vụ thực hiện
 Tối ưu hóa và đóng gói hoàn thiện Standalone Single EXE (`--onefile`), khắc phục triệt để độ trễ tra cứu DNS ngược trên WSGI server và gia cố an toàn luồng phát nhạc & cơ sở dữ liệu SQLite.
