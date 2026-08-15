@@ -203,6 +203,7 @@ class SilentMediaSessionBridge {
         album: track.album || 'ZennyFLAC Player',
         artwork: artworkList
       });
+      document.title = track.title ? `${track.title} • ${track.artist || 'ZennyFLAC Player'}` : 'ZennyFLAC Player';
     } catch (e) {
       console.warn('Failed to set MediaMetadata:', e);
     }

@@ -17,7 +17,7 @@ else:
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from backend.utils.path_utils import get_bundle_dir
+from backend.utils.path_utils import get_bundle_dir, get_cache_dir
 
 from backend.storage.database import Database
 from backend.storage.config import Config
@@ -166,7 +166,9 @@ def main():
 
     # Start PyWebView (Debug enabled only when --debug flag or ZFPLAYER_DEBUG=1 is set)
     debug_mode = "--debug" in sys.argv or os.environ.get("ZFPLAYER_DEBUG") == "1"
-    webview.start(debug=debug_mode)
+    webview_storage = Path(get_cache_dir()) / "webview"
+    os.makedirs(webview_storage, exist_ok=True)
+    webview.start(debug=debug_mode, private_mode=False, storage_path=str(webview_storage))
 
 if __name__ == '__main__':
     main()
