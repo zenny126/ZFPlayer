@@ -51,7 +51,7 @@ Tối ưu hóa và đóng gói hoàn thiện Standalone Single EXE (`--onefile`)
 - `backend/services/player_service.py` (MODIFIED)
 - `backend/storage/database.py` (MODIFIED)
 - `backend/utils/path_utils.py` (MODIFIED)
-- `build_exe.py` (MODIFIED)
+- `bbuild_exe.py` (MODIFIED)
 - `zfplayer.spec` (MODIFIED)
 - `version_info.txt` (NEW)
 - `DEV_LOG.md` (MODIFIED)
@@ -64,7 +64,7 @@ Tối ưu hóa và đóng gói hoàn thiện Standalone Single EXE (`--onefile`)
    - Tăng `busy_timeout` lên 30.000ms (`PRAGMA busy_timeout=30000`) và `sqlite3.connect(..., timeout=30.0)`.
    - Bổ sung cơ chế `_check_and_heal_database()` tự kiểm tra tính toàn vẹn `PRAGMA quick_check;` và tự tạo mới CSDL nếu phát hiện tệp bị malformed.
    - Bọc an toàn `update_last_played` và metadata caching trong khối `try/except` để đảm bảo `audio_engine.load()` và `play()` luôn được kích hoạt trơn tru.
-3. **Thu thập đầy đủ thư viện động & Metadata EXE (`zfplayer.spec`, `version_info.txt`, `build_exe.py`)**:
+3. **Thu thập đầy đủ thư viện động & Metadata EXE (`zfplayer.spec`, `version_info.txt`, `bbuild_exe.py`)**:
    - Thu thập 109 dynamic DLLs và 136 datas (`webview`, `clr_loader`, `pythonnet`, `_sounddevice_data`, `_soundfile_data`, `certifi`, `mutagen`).
    - Nhúng thông tin bản quyền và phiên bản `v2.0.0.0` qua `version_info.txt`.
    - Cập nhật `path_utils.py` tự động nhận diện dữ liệu di động (Portable Mode) và đồng bộ liền mạch.
@@ -84,7 +84,7 @@ Tối ưu hóa kích thước Modal Settings (loại bỏ thanh cuộn thừa), 
 - `frontend/index.html` (MODIFIED)
 - `README.md` (MODIFIED)
 - `docs/ARCHITECTURE.md` (MODIFIED)
-- `architect.md` (MODIFIED)
+- `aarchitect.md` (MODIFIED)
 - `DEV_LOG.md` (MODIFIED)
 
 ### Mô tả chi tiết kỹ thuật
@@ -117,7 +117,7 @@ Xây dựng bộ công cụ tự động hóa môi trường phát triển (Deve
 1. **`requirements.txt`**: Khai báo đầy đủ các phụ thuộc phân tầng âm thanh C-level (`sounddevice`, `soundfile`, `numpy`), metadata (`mutagen`), backend WSGI (`bottle`, `pywebview`), lời bài hát (`syncedlyrics`, `requests`, `Pillow`) và đóng gói nhị phân (`pyinstaller`).
 2. **`setup_env.bat`**: Script 1-click tự động kiểm tra Python hệ thống, tạo môi trường ảo `.venv`, nâng cấp pip và cài đặt 100% dependencies.
 3. **`run_dev.bat`**: Khởi chạy ứng dụng từ mã nguồn với chế độ `--debug` (hỗ trợ DevTools F12).
-4. **`build.bat`**: Tự động gọi `build_exe.py` đóng gói sản phẩm ra `dist/ZennyFLAC_Player.exe`.
+4. **`build.bat`**: Tự động gọi `bbuild_exe.py` đóng gói sản phẩm ra `dist/ZennyFLAC_Player.exe`.
 
 ---
 
@@ -164,16 +164,16 @@ Triệt tiêu 100% tiếng xì nền và bụp nổ khi hết bài hát / chuy�
 
 ## Timestamp: 2026-08-14T16:21:00
 ### Tác vụ thực hiện
-Bổ sung đặc tả kỹ thuật Auto-Restore Lyrics View & Lệnh khởi chạy vào rchitect.md / docs/ARCHITECTURE.md, và Đóng gói hoàn chỉnh bản cài đặt độc lập dist/ZennyFLAC_Player.exe.
+Bổ sung đặc tả kỹ thuật Auto-Restore Lyrics View & Lệnh khởi chạy vào aarchitect.md / docs/ARCHITECTURE.md, và Đóng gói hoàn chỉnh bản cài đặt độc lập dist/ZennyFLAC_Player.exe.
 
 ### Danh sách tệp tin thay đổi
-- rchitect.md (MODIFIED)
+- aarchitect.md (MODIFIED)
 - docs/ARCHITECTURE.md (MODIFIED)
-- uild_exe.py (MODIFIED)
+- bbuild_exe.py (MODIFIED)
 - zfplayer.spec (MODIFIED)
 - dist/ZennyFLAC_Player.exe (UPDATED)
 - dist/ZFPlayer.exe (UPDATED)
-- 	ask.md (MODIFIED)
+- task.md (MODIFIED)
 
 ### Mô tả chi tiết kỹ thuật
 - **Kiến trúc & Đặc tả**:
@@ -191,9 +191,9 @@ Bổ sung đặc tả kỹ thuật Auto-Restore Lyrics View & Lệnh khởi ch�
 Sửa lỗi không tự động mở lại cột Lời bài hát khi bài hát mới có lời sau khi bài trước đó tự động ẩn vào Center Mode do không có lời.
 
 ### Danh sách tệp tin thay đổi
-- rontend/js/lyrics.js (MODIFIED)
-- rontend/index.html (MODIFIED)
-- 	ask.md (MODIFIED)
+- frontend/js/lyrics.js (MODIFIED)
+- frontend/index.html (MODIFIED)
+- task.md (MODIFIED)
 
 ### Mô tả chi tiết kỹ thuật
 - **Nguyên nhân**: Khi bài trước không có lời, hệ thống tự động đưa giao diện vào Center Mode. Nhưng khi sang bài tiếp theo có lời trong nền (isUserAction = false), điều kiện if (!this.userDisabledLyrics && isUserAction) đã ngăn cản lệnh mở lại lời bài hát 	his.applyLyricsViewState(true).
@@ -218,11 +218,11 @@ Sửa dứt điểm lỗi `ModuleNotFoundError: No module named 'email'` khi ch�
 
 ## Timestamp: 2026-08-14T15:31:00
 ### Tác vụ thực hiện
-Hoàn tất tối ưu hóa toàn diện kịch bản đóng gói PyInstaller (`zfplayer.spec` & `build_exe.py`).
+Hoàn tất tối ưu hóa toàn diện kịch bản đóng gói PyInstaller (`zfplayer.spec` & `bbuild_exe.py`).
 
 ### Danh sách tệp tin tạo mới/cập nhật
 - `zfplayer.spec` (MODIFIED)
-- `build_exe.py` (MODIFIED)
+- `bbuild_exe.py` (MODIFIED)
 - `dist/ZennyFLAC_Player.exe` (UPDATED)
 
 ### Mô tả chi tiết kỹ thuật
@@ -285,7 +285,7 @@ Chuẩn hóa nhãn hiệu & thương hiệu bên thứ ba (Trademarks & Branding
 - frontend/css/main.css (MODIFIED)
 - frontend/css/lyrics.css (MODIFIED)
 - README.md (MODIFIED)
-- architect.md (MODIFIED)
+- aarchitect.md (MODIFIED)
 - docs/ARCHITECTURE.md (MODIFIED)
 - task.md (MODIFIED)
 
@@ -293,7 +293,7 @@ Chuẩn hóa nhãn hiệu & thương hiệu bên thứ ba (Trademarks & Branding
 - Loại bỏ hoàn toàn các tên gọi, tiền tố và class tham chiếu nhãn hiệu bên thứ ba (Apple, Apple Music, Spotify).
 - Đổi CSS selector layout #app.spotify-layout -> #app.zfp-layout.
 - Đổi biến CSS token --ease-apple-lyrics -> --ease-spring-lyrics trong toàn bộ hệ thống stylesheet (main.css, lyrics.css).
-- Chuẩn hóa tài liệu README.md, architect.md, docs/ARCHITECTURE.md sang các thuật ngữ kỹ thuật trung tính: Kinetic Spring Lyrics Engine, Glassmorphism Fluid Shader, Spring Easing.
+- Chuẩn hóa tài liệu README.md, aarchitect.md, docs/ARCHITECTURE.md sang các thuật ngữ kỹ thuật trung tính: Kinetic Spring Lyrics Engine, Glassmorphism Fluid Shader, Spring Easing.
 - Đảm bảo 100% mã nguồn và tài liệu thương mại sạch sẽ về mặt pháp lý quyền sở hữu trí tuệ mà không ảnh hưởng đến bất kỳ hiệu ứng chuyển động hay tính năng nào của ứng dụng.
 
 ---
@@ -303,9 +303,9 @@ Chuẩn hóa nhãn hiệu & thương hiệu bên thứ ba (Trademarks & Branding
 Bảo toàn trạng thái Cinema Idle khi tự động chuyển sang bài hát mới (Cinema Idle Track Change Preservation).
 
 ### Danh sách tệp tin thay đổi
-- rontend/js/lyrics.js (MODIFIED)
-- rontend/index.html (MODIFIED)
-- 	ask.md (MODIFIED)
+- frontend/js/lyrics.js (MODIFIED)
+- frontend/index.html (MODIFIED)
+- task.md (MODIFIED)
 
 ### Mô tả chi tiết kỹ thuật
 - **Nguyên nhân**: Khi currentTrack thay đổi, hàm show() được gọi lại và vô tình xóa class .cinema-idle và reset timer, làm UI hiện lại.
@@ -318,14 +318,14 @@ Bảo toàn trạng thái Cinema Idle khi tự động chuyển sang bài hát m
 
 ## Timestamp: 2026-08-14T14:50:00
 ### Tác vụ thực hiện
-Cô lập phím tắt bàn phím trong chế độ Cinema Idle (Keyboard Background Operation) và Cập nhật toàn diện tài liệu kiến trúc kỹ thuật (rchitect.md & docs/ARCHITECTURE.md).
+Cô lập phím tắt bàn phím trong chế độ Cinema Idle (Keyboard Background Operation) và Cập nhật toàn diện tài liệu kiến trúc kỹ thuật (aarchitect.md & docs/ARCHITECTURE.md).
 
 ### Danh sách tệp tin thay đổi
-- rontend/js/lyrics.js (MODIFIED)
-- rontend/index.html (MODIFIED)
-- rchitect.md (MODIFIED)
+- frontend/js/lyrics.js (MODIFIED)
+- frontend/index.html (MODIFIED)
+- aarchitect.md (MODIFIED)
 - docs/ARCHITECTURE.md (MODIFIED)
-- 	ask.md (MODIFIED)
+- task.md (MODIFIED)
 
 ### Mô tả chi tiết kỹ thuật
 1. **Cô lập Bàn phím trong Cinema Idle**:
@@ -552,16 +552,16 @@ Nâng cấp Động Cơ Vật Lý Quán Tính (Kinetic RAF Momentum & Exponentia
 Triển khai tính năng Cuộn Lời Bài Hát Tự Do (Manual Scroll & Auto-Resume sau 3.5s) chuẩn Apple Music.
 
 ### Danh sách tệp tin thay đổi
-- rontend/js/lyrics.js (MODIFIED)
-- rontend/css/lyrics.css (MODIFIED)
-- rontend/index.html (MODIFIED)
-- 	ask.md (MODIFIED)
+- frontend/js/lyrics.js (MODIFIED)
+- frontend/css/lyrics.css (MODIFIED)
+- frontend/index.html (MODIFIED)
+- task.md (MODIFIED)
 
 ### Mô tả chi tiết kỹ thuật
 - **Sự kiện cuộn tay wheel**: Bắt sự kiện con lăn chuột trực tiếp trên .lyrics-container. Tích lũy deltaY mượt mà kết hợp thuật toán giới hạn biên (clamping bounds + overscroll 100px) ngăn chặn cuộn tràn ra khoảng trống vô tận.
 - **Tạm dừng bám đuổi & Auto-Resume**:
   - Khi người dùng lăn chuột, kích hoạt isUserScrolling = true, tạm dừng việc tự động giật màn hình theo bài hát để người dùng thoải mái đọc lời.
-  - Khởi tạo timer tự động đếm lùi **3.5 giây**. Sau 3.5 giây không còn tương tác lăn chuột, hệ thống kích hoạt hoạt cảnh lò xo lướt êm ái trở lại câu đang phát sáng (ctiveIndex).
+  - Khởi tạo timer tự động đếm lùi **3.5 giây**. Sau 3.5 giây không còn tương tác lăn chuột, hệ thống kích hoạt hoạt cảnh lò xo lướt êm ái trở lại câu đang phát sáng (activeIndex).
   - Nếu người dùng click vào bất kỳ câu hát nào, hệ thống lập tức hủy timer, seek bài hát tới mốc đó và lướt ngay tới câu vừa chọn.
 - **CSS Phản hồi tức thì**: Thêm class .manual-scrolling giúp transform phản hồi nhạy bén theo từng khấc con lăn chuột (60ms easing) mà không bị trễ nhịp hay giật lag.
 
@@ -572,13 +572,13 @@ Triển khai tính năng Cuộn Lời Bài Hát Tự Do (Manual Scroll & Auto-Re
 Điều chỉnh vị trí neo câu hát đang phát (Active Line) lên 40% từ đỉnh khung chứa.
 
 ### Danh sách tệp tin thay đổi
-- rontend/js/lyrics.js (MODIFIED)
-- rontend/css/lyrics.css (MODIFIED)
-- rontend/index.html (MODIFIED)
+- frontend/js/lyrics.js (MODIFIED)
+- frontend/css/lyrics.css (MODIFIED)
+- frontend/index.html (MODIFIED)
 
 ### Mô tả chi tiết kỹ thuật
 - **Vị trí neo 40%**: Chuyển 	argetAnchor = containerHeight * 0.40; trong scrollToLine. Vị trí câu đang phát sáng nằm cân đối hoàn hảo ở 40% chiều cao (không quá cao như 35% và không quá thấp như 50%).
-- **Dải mờ đỉnh**: Cập nhật mask-image về lack 18% và padding #lyrics-content thành 30vh 0 45vh 0 để dòng chữ cuộn mượt mà từ đầu đến cuối.
+- **Dải mờ đỉnh**: Cập nhật mask-image về black 18% và padding #lyrics-content thành 30vh 0 45vh 0 để dòng chữ cuộn mượt mà từ đầu đến cuối.
 
 ---
 
@@ -587,10 +587,10 @@ Triển khai tính năng Cuộn Lời Bài Hát Tự Do (Manual Scroll & Auto-Re
 Nâng mốc neo câu hát đang phát (Active Line) lên 35% từ đỉnh xuống và làm chậm tốc độ trượt vào của lời bài hát khi mở.
 
 ### Danh sách tệp tin thay đổi
-- rontend/js/lyrics.js (MODIFIED)
-- rontend/css/lyrics.css (MODIFIED)
-- rontend/index.html (MODIFIED)
-- 	ask.md (MODIFIED)
+- frontend/js/lyrics.js (MODIFIED)
+- frontend/css/lyrics.css (MODIFIED)
+- frontend/index.html (MODIFIED)
+- task.md (MODIFIED)
 
 ### Mô tả chi tiết kỹ thuật
 - **Vị trí neo Active Line 35%**: Thay đổi công thức tính cuộn trong scrollToLine: const targetAnchor = containerHeight * 0.35;. Dòng đang phát sáng chuyển lên nằm ở vị trí 35% từ đỉnh khung hình (ngang tầm nửa trên ảnh bìa album), phía trên chỉ hiển thị 1-2 câu vừa hát qua, mở rộng tối đa tầm nhìn 4-5 câu sắp hát phía dưới.
@@ -604,10 +604,10 @@ Nâng mốc neo câu hát đang phát (Active Line) lên 35% từ đỉnh xuốn
 Triển khai hoạt cảnh chuyển đổi Opposite Slide-out (120px, 300ms) và Lò xo thác đổ (Staggered Waterfall Spring) khi Bật/Tắt Lời bài hát.
 
 ### Danh sách tệp tin thay đổi
-- rontend/css/lyrics.css (MODIFIED)
-- rontend/js/lyrics.js (MODIFIED)
-- rontend/index.html (MODIFIED)
-- 	ask.md (MODIFIED)
+- frontend/css/lyrics.css (MODIFIED)
+- frontend/js/lyrics.js (MODIFIED)
+- frontend/index.html (MODIFIED)
+- task.md (MODIFIED)
 
 ### Mô tả chi tiết kỹ thuật
 - **Khi Tắt Lyric**:
@@ -624,9 +624,9 @@ Triển khai hoạt cảnh chuyển đổi Opposite Slide-out (120px, 300ms) và
 Tối ưu UX chuyển cảnh Bật/Tắt Lời bài hát: Triệt tiêu hoàn toàn hiện tượng nhảy dòng và nén chữ thô cứng.
 
 ### Danh sách tệp tin thay đổi
-- rontend/css/lyrics.css (MODIFIED)
-- rontend/index.html (MODIFIED)
-- 	ask.md (MODIFIED)
+- frontend/css/lyrics.css (MODIFIED)
+- frontend/index.html (MODIFIED)
+- task.md (MODIFIED)
 
 ### Mô tả chi tiết kỹ thuật
 - **Nguyên nhân gốc rễ**: Trước đó chuyển động dùng margin-left làm biến dạng độ rộng (Reflow) của .lyrics-container liên tục trong 750ms, ép văn bản phải ngắt dòng lại nhiều lần tạo cảm giác giật cục và nhảy chữ.
@@ -643,16 +643,16 @@ Tối ưu UX chuyển cảnh Bật/Tắt Lời bài hát: Triệt tiêu hoàn to
 Thêm nút Bật/Tắt Lời bài hát (Lyrics Toggle) và hiệu ứng chuyển động về giữa màn hình (Center Album Art Mode) chuẩn Apple Music.
 
 ### Danh sách tệp tin thay đổi
-- rontend/index.html (MODIFIED)
-- rontend/css/lyrics.css (MODIFIED)
-- rontend/js/lyrics.js (MODIFIED)
-- 	ask.md (MODIFIED)
+- frontend/index.html (MODIFIED)
+- frontend/css/lyrics.css (MODIFIED)
+- frontend/js/lyrics.js (MODIFIED)
+- task.md (MODIFIED)
 
 ### Mô tả chi tiết kỹ thuật
 - **HTML**: Thêm nút #btn-toggle-lyrics-view góc trên bên phải (top: 32px; right: 32px;), đối xứng với nút Đóng X góc trái. Sử dụng icon thoại/trích dẫn Apple Music.
 - **CSS**:
   - Tạo kiểu dáng cho .lyrics-toggle-btn với trạng thái active (nền mờ sáng tròn) và hover mượt mà.
-  - Xây dựng hoạt cảnh Center Mode: Cụm .lyrics-track-info sử dụng margin-left: calc(50% - (var(--max-cover-size) / 2)) với transition 750ms ar(--ease-apple-lyrics) để lướt êm ái ra chính giữa màn hình.
+  - Xây dựng hoạt cảnh Center Mode: Cụm .lyrics-track-info sử dụng margin-left: calc(50% - (var(--max-cover-size) / 2)) với transition 750ms var(--ease-apple-lyrics) để lướt êm ái ra chính giữa màn hình.
   - Cột lời bài hát .lyrics-container mờ dần và trượt nhẹ 	ranslateX(36px) khi ẩn.
 - **Javascript**:
   - Quản lý trạng thái userDisabledLyrics: Ghi nhớ lựa chọn chủ động của người dùng.
@@ -868,9 +868,9 @@ Cập nhật tên thương hiệu ứng dụng chính thức thành ZennyFLAC Pl
 - `frontend/js/player.js` (MODIFIED)
 - `backend/workers/lyrics_worker.py` (MODIFIED)
 - `README.md` (MODIFIED)
-- `architect.md` (MODIFIED)
+- `aarchitect.md` (MODIFIED)
 - `docs/ARCHITECTURE.md` (MODIFIED)
-- `build_exe.py` (MODIFIED)
+- `bbuild_exe.py` (MODIFIED)
 - `task.md` (MODIFIED)
 - `dist/ZennyFLAC_Player.exe` (NEW)
 
@@ -881,7 +881,7 @@ Cập nhật tên thương hiệu ứng dụng chính thức thành ZennyFLAC Pl
    - Đổi fallback album metadata trong Windows SMTC thành `'ZennyFLAC Player'`.
    - Đổi User-Agent header trong Lyrics Worker thành `'ZennyFLACPlayer/2.0'`.
 2. **Cập nhật Kịch bản Đóng gói & Rebuild**:
-   - Cập nhật `build_exe.py` tự động tạo bản sao thực thi thương hiệu mới [`dist/ZennyFLAC_Player.exe`](file:///d:/ZFPlayer/dist/ZennyFLAC_Player.exe).
+   - Cập nhật `bbuild_exe.py` tự động tạo bản sao thực thi thương hiệu mới [`dist/ZennyFLAC_Player.exe`](file:///d:/ZFPlayer/dist/ZennyFLAC_Player.exe).
    - Đóng gói PyInstaller hoàn tất thành công 100%.
 
 ---
@@ -898,7 +898,7 @@ Tích hợp đầy đủ bộ Icon ZFP trên tất cả các vị trí hệ th�
 - `backend/app.py` (MODIFIED)
 - `frontend/index.html` (MODIFIED)
 - `zfplayer.spec` (MODIFIED)
-- `build_exe.py` (MODIFIED)
+- `bbuild_exe.py` (MODIFIED)
 - `task.md` (MODIFIED)
 
 ### Mô tả chi tiết kỹ thuật
@@ -1434,7 +1434,7 @@ Cập nhật `.gitignore` để loại bỏ các tệp build tạm (`build/`, `d
 Tối ưu UX quá trình Import bài hát vào Playlist: hiển thị tiến độ quét thực tế (Progress Modal) và tự động cập nhật danh sách bài hát ngay sau khi nhập hoàn tất.
 
 ### Danh sách tệp tin tạo mới & thay đổi
-- `build_exe.py` (MODIFIED)
+- `bbuild_exe.py` (MODIFIED)
 - `dist/ZFPlayer_v1.1.exe` (NEW)
 
 ### Mô tả chi tiết kỹ thuật
@@ -1460,7 +1460,7 @@ Hoàn tất nhúng Icon `app_icon.ico` tuyệt đối vào header của tệp th
 
 ### Danh sách tệp tin tạo mới & thay đổi
 - `zfplayer.spec` (MODIFIED)
-- `build_exe.py` (MODIFIED)
+- `bbuild_exe.py` (MODIFIED)
 - `dist/ZFPlayer_v1.0.exe` (NEW)
 
 ### Mô tả chi tiết kỹ thuật
@@ -1478,15 +1478,15 @@ Tạo tệp Icon ứng dụng `app_icon.ico` với chữ "ZFP" chuẩn đa độ
 - `generate_icon.py` (NEW)
 - `app_icon.ico` (NEW)
 - `zfplayer.spec` (MODIFIED)
-- `build_exe.py` (MODIFIED)
+- `bbuild_exe.py` (MODIFIED)
 
 ### Mô tả chi tiết kỹ thuật
 1. **Tạo Icon Đa Độ Phân Giải (`generate_icon.py`, `app_icon.ico`)**:
    - Sử dụng Pillow vẽ icon chất lượng cao 512x512 thiết kế chuẩn Apple Glassmorphism với chữ "ZFP" màu trắng sáng trên nền tối `#121318`, có hiệu ứng viền phát sáng (Glow border) và 3 nốt chấm âm thanh bên dưới.
    - Đóng gói file `app_icon.ico` chứa đầy đủ 6 độ phân giải chuẩn của Windows: `16x16`, `32x32`, `48x48`, `64x64`, `128x128`, `256x256`.
-2. **Cấu hình Icon & Rebuild PyInstaller (`zfplayer.spec`, `build_exe.py`)**:
+2. **Cấu hình Icon & Rebuild PyInstaller (`zfplayer.spec`, `bbuild_exe.py`)**:
    - Bổ sung `icon='app_icon.ico'` vào khối `EXE()` trong `zfplayer.spec`.
-   - Bổ sung logic tự dọn dẹp file `.exe` cũ trước khi build trong `build_exe.py`.
+   - Bổ sung logic tự dọn dẹp file `.exe` cũ trước khi build trong `bbuild_exe.py`.
    - Biên dịch thành công tệp đơn duy nhất [`dist/ZFPlayer.exe`](file:///d:/ZFPlayer/dist/ZFPlayer.exe).
 
 ---
@@ -1498,17 +1498,17 @@ Tắt chế độ DevTools window tự nảy khi khởi chạy ứng dụng PyWe
 ### Danh sách tệp tin thay đổi
 - `backend/app.py` (MODIFIED)
 - `zfplayer.spec` (MODIFIED)
-- `build_exe.py` (MODIFIED)
+- `bbuild_exe.py` (MODIFIED)
 - `task.md` (MODIFIED)
 
 ### Mô tả chi tiết kỹ thuật
 1. **Tắt chế độ DevTools (`backend/app.py`)**:
    - Chuyển `webview.start(debug=True)` thành `debug_mode = "--debug" in sys.argv or os.environ.get("ZFPLAYER_DEBUG") == "1"`.
    - Giúp ứng dụng khi mở chỉ hiển thị cửa sổ giao diện chính của ZeroFLAC Player, không bị nảy cửa sổ Edge DevTools (`DevTools - 127.0.0.1:...`).
-2. **Cấu hình Đóng gói Đơn Tệp `--onefile` (`zfplayer.spec`, `build_exe.py`)**:
+2. **Cấu hình Đóng gói Đơn Tệp `--onefile` (`zfplayer.spec`, `bbuild_exe.py`)**:
    - Cập nhật khối `EXE()` trong `zfplayer.spec` gom trực tiếp `a.binaries`, `a.zipfiles`, và `a.datas` vào 1 file thực thi duy nhất.
    - Loại bỏ khối `COLLECT()`.
-   - Cập nhật `build_exe.py` trỏ và kiểm tra đầu ra tại `dist/ZFPlayer.exe`.
+   - Cập nhật `bbuild_exe.py` trỏ và kiểm tra đầu ra tại `dist/ZFPlayer.exe`.
 
 ---
 
@@ -1519,7 +1519,7 @@ Tắt chế độ DevTools window tự nảy khi khởi chạy ứng dụng PyWe
 ### Danh sách tệp tin thay đổi/tạo mới
 - `backend/utils/path_utils.py` (NEW)
 - `zfplayer.spec` (NEW)
-- `build_exe.py` (NEW)
+- `bbuild_exe.py` (NEW)
 - `backend/app.py` (MODIFIED)
 - `backend/storage/config.py` (MODIFIED)
 - `backend/storage/database.py` (MODIFIED)
@@ -1535,10 +1535,10 @@ Tắt chế độ DevTools window tự nảy khi khởi chạy ứng dụng PyWe
    - Khởi tạo đồng bộ `navigator.mediaSession` trong WebView2 Chromium.
    - Cập nhật thông tin `MediaMetadata` (Tên bài, Ca sĩ, Album, Cover Art) và `playbackState` (`playing`/`paused`) khi chuyển bài/phát/dừng.
    - Đăng ký `setActionHandler` cho các sự kiện phím Multimedia phần cứng Windows (`play`, `pause`, `previoustrack`, `nexttrack`, `seekto`).
-3. **Cấu hình Đóng gói & Kịch bản Build (`zfplayer.spec`, `build_exe.py`)**:
+3. **Cấu hình Đóng gói & Kịch bản Build (`zfplayer.spec`, `bbuild_exe.py`)**:
    - Thiết lập PyInstaller spec bao gồm đầy đủ folder `frontend/`, C-DLLs của `soundfile` (`libsndfile`) và `sounddevice`.
    - Cấu hình `console=False` để ẩn hoàn toàn cửa sổ CMD khi người dùng mở ứng dụng.
-   - Script `build_exe.py` thực thi đóng gói thành công tệp thực thi `dist/ZFPlayer/ZFPlayer.exe`.
+   - Script `bbuild_exe.py` thực thi đóng gói thành công tệp thực thi `dist/ZFPlayer/ZFPlayer.exe`.
 
 ---
 
@@ -1624,17 +1624,17 @@ Tối ưu hóa phản hồi hiển thị lời bài hát (Optimistic UI Update) 
 
 ## Timestamp: 2026-08-13T16:28:00
 ### Tác vụ thực hiện
-Viết lại toàn bộ `README.md` và `docs/ARCHITECTURE.md` (`architect.md`) chuẩn hóa cấu trúc hệ thống, 5 luồng dữ liệu cốt lõi và các yêu cầu kỹ thuật chuyên sâu.
+Viết lại toàn bộ `README.md` và `docs/ARCHITECTURE.md` (`aarchitect.md`) chuẩn hóa cấu trúc hệ thống, 5 luồng dữ liệu cốt lõi và các yêu cầu kỹ thuật chuyên sâu.
 
 ### Danh sách tệp tin thay đổi
 - `README.md` (MODIFIED)
 - `docs/ARCHITECTURE.md` (MODIFIED)
-- `architect.md` (CREATED)
+- `aarchitect.md` (CREATED)
 - `task.md` (MODIFIED)
 
 ### Mô tả chi tiết kỹ thuật
 1. **Chuẩn hóa `README.md`**: Cập nhật mô tả dự án, 4 nhóm tính năng nổi bật (WASAPI Shared Mode, Glassmorphic UI, Synced Lyrics 4-level fallback, VirtualList 60fps), công nghệ sử dụng, cấu trúc thư mục và hướng dẫn cài đặt/sử dụng đầy đủ không có icon thừa.
-2. **Chi Tiết Luồng Hệ Thống (`docs/ARCHITECTURE.md` & `architect.md`)**: Mô tả chi tiết 5 luồng dữ liệu cốt lõi (Khởi chạy IPC/REST Bridge, Giải mã & Phát nhạc PCM Zero-Latency, Quét nhạc ngầm & FTS5 Indexing, Priority Queue Synced Lyrics 4 cấp, Frontend State & Virtual Scrolling) chia làm 2 mục: Công nghệ/Module sử dụng và Quy trình xử lý từng bước.
+2. **Chi Tiết Luồng Hệ Thống (`docs/ARCHITECTURE.md` & `aarchitect.md`)**: Mô tả chi tiết 5 luồng dữ liệu cốt lõi (Khởi chạy IPC/REST Bridge, Giải mã & Phát nhạc PCM Zero-Latency, Quét nhạc ngầm & FTS5 Indexing, Priority Queue Synced Lyrics 4 cấp, Frontend State & Virtual Scrolling) chia làm 2 mục: Công nghệ/Module sử dụng và Quy trình xử lý từng bước.
 3. **Bổ Sung Yêu Cầu Kỹ Thuật Chuyên Sâu**: Xây dựng bảng quy chuẩn kỹ thuật đầy đủ bao gồm: Phần cứng & OS (Windows 10/11 64-bit, RAM Caching), Thư viện phụ thuộc C-level (`sounddevice`, `soundfile`, `numpy`), Cơ sở dữ liệu WAL Mode & chỉ mục FTS5, Thuật toán Virtual Scrolling math (`scrollTop - offsetTop`), Quy tắc đa luồng & cách ly Thread an toàn (Non-blocking audio thread callback, Single-thread Priority Queue throttle 0.5s), và các chỉ số SLA (0ms seek latency, CPU Idle < 0.5%).
 
 ---
@@ -1802,9 +1802,9 @@ Xóa nút 3 chấm ở Màn hình Lời bài hát & Kích hoạt các tính năn
 ---
 
 ### Danh sách tệp tin thay đổi
-- rontend/index.html (MODIFIED)
-- rontend/js/playlists.js (MODIFIED)
-- 	ask.md (MODIFIED)
+- frontend/index.html (MODIFIED)
+- frontend/js/playlists.js (MODIFIED)
+- task.md (MODIFIED)
 
 ### Mô tả chi tiết kỹ thuật
 1. **Modals & Context Menus (index.html)**: Chuyển đổi toàn bộ các văn bản tiếng Việt sang Tiếng Anh: Edit Playlist, Change Cover Image, Playlist Name:, Delete Playlist, Save Changes, Cancel, Rename Playlist, Confirm Playlist Deletion.
@@ -1817,7 +1817,7 @@ Xóa nút 3 chấm ở Màn hình Lời bài hát & Kích hoạt các tính năn
 Fix lỗi cú pháp JavaScript SyntaxError unexpected token ')' trong playlists.js.
 
 ### Danh sách tệp tin thay đổi
-- rontend/js/playlists.js (MODIFIED)
+- frontend/js/playlists.js (MODIFIED)
 
 ### Mô tả chi tiết kỹ thuật
 1. Sửa thiếu đóng ngoặc nhọn } tại khối else gán svgContent trong phương thức init(), giải quyết triệt để lỗi syntax khi tải file playlists.js trên browser console.
@@ -1829,11 +1829,11 @@ Fix lỗi cú pháp JavaScript SyntaxError unexpected token ')' trong playlists.
 Ẩn 2 nút 'IMPORT FOLDER' và 'SELECT FILES' trên Playlist Header đối với riêng playlist Favorite Songs.
 
 ### Danh sách tệp tin thay đổi
-- rontend/js/playlists.js (MODIFIED)
+- frontend/js/playlists.js (MODIFIED)
 
 ### Mô tả chi tiết kỹ thuật
 1. Trong PlaylistManager.init() (lắng nghe sự kiện đổi view playlist), kiểm tra nếu state.playlistId === 'favorites', thiết lập display: none cho #btn-playlist-import-folder và #btn-playlist-import-files.
-2. Với các playlist khác (ll và custom playlists), duy trì hiển thị inline-flex như bình thường.
+2. Với các playlist khác (all và custom playlists), duy trì hiển thị inline-flex như bình thường.
 
 ---
 
@@ -1842,9 +1842,9 @@ Fix lỗi cú pháp JavaScript SyntaxError unexpected token ')' trong playlists.
 Tối ưu giao diện Playlist Header: Thay thế 3 nút chức năng riêng lẻ bằng 1 Nút Bánh Răng duy nhất mở Modal Popup 'Chỉnh sửa Playlist' hợp nhất.
 
 ### Danh sách tệp tin thay đổi
-- rontend/index.html (MODIFIED)
-- rontend/js/playlists.js (MODIFIED)
-- 	ask.md (MODIFIED)
+- frontend/index.html (MODIFIED)
+- frontend/js/playlists.js (MODIFIED)
+- task.md (MODIFIED)
 
 ### Mô tả chi tiết kỹ thuật
 1. **Playlist Header (index.html)**: Rút gọn 3 nút riêng biệt (Đổi tên, Đổi ảnh, Xóa) thành 1 nút Bánh Răng duy nhất (#btn-playlist-edit-header, icon ⚙️).
@@ -1858,19 +1858,19 @@ Tối ưu giao diện Playlist Header: Thay thế 3 nút chức năng riêng l�
 Triển khai tính năng quản lý Custom Playlist (Đổi tên, Đổi ảnh đại diện, Xóa Playlist) trên giao diện Header và Sidebar Context Menu.
 
 ### Danh sách tệp tin thay đổi
-- rontend/index.html (MODIFIED)
-- rontend/css/main.css (MODIFIED)
-- rontend/js/api.js (MODIFIED)
-- rontend/js/playlists.js (MODIFIED)
-- ackend/api/library_api.py (MODIFIED)
-- ackend/services/library_service.py (MODIFIED)
-- 	ask.md (MODIFIED)
+- frontend/index.html (MODIFIED)
+- frontend/css/main.css (MODIFIED)
+- frontend/js/api.js (MODIFIED)
+- frontend/js/playlists.js (MODIFIED)
+- backend/api/library_api.py (MODIFIED)
+- backend/services/library_service.py (MODIFIED)
+- task.md (MODIFIED)
 
 ### Mô tả chi tiết kỹ thuật
 1. **HTML & Modals (index.html)**: Thêm các nút thao tác trên Playlist Header (#btn-playlist-rename-header, #btn-playlist-cover-header, #btn-playlist-delete-header), Modal Đổi tên (#rename-playlist-modal), Modal Xác nhận Xóa (#delete-playlist-modal), và Menu chuột phải Sidebar (#playlist-item-context-menu).
 2. **CSS Styles (main.css)**: Thêm kiểu dáng .btn-icon-large và .context-menu-item.danger cho các nút bấm hành động và menu xóa màu đỏ với Bezier Curves.
 3. **Frontend Logic (playlists.js)**: Bắt sự kiện contextmenu trên playlist sidebar item, mở Modal Đổi tên và Modal Cảnh báo Xóa, gọi các API 
-enamePlaylist, deletePlaylist, updatePlaylistCover. Tự động bảo vệ danh sách hệ thống (ll, avorites) chỉ cho đổi ảnh bìa, khóa nút Đổi tên/Xóa.
+enamePlaylist, deletePlaylist, updatePlaylistCover. Tự động bảo vệ danh sách hệ thống (all, favorites) chỉ cho đổi ảnh bìa, khóa nút Đổi tên/Xóa.
 4. **Backend API (library_service.py, library_api.py)**: Nâng cấp update_playlist_cover lưu ảnh bìa cho system playlists vào Config và hỗ trợ cả int/str playlist IDs.
 
 ---
@@ -1880,8 +1880,8 @@ enamePlaylist, deletePlaylist, updatePlaylistCover. Tự động bảo vệ danh
 Sửa lỗi hiển thị trào lẹm và xô lệch khung của Sidebar khi thu nhỏ (Collapsed 72px state).
 
 ### Danh sách tệp tin thay đổi
-- rontend/css/main.css (MODIFIED)
-- 	ask.md (MODIFIED)
+- frontend/css/main.css (MODIFIED)
+- task.md (MODIFIED)
 
 ### Mô tả chi tiết kỹ thuật
 1. **#sidebar.collapsed CSS Fix (main.css)**:
@@ -1896,19 +1896,19 @@ Sửa lỗi hiển thị trào lẹm và xô lệch khung của Sidebar khi thu 
 Nâng cấp toàn bộ hệ thống chuyển động UI/UX bằng đường cong Bezier (Bezier Curve Motion Design System).
 
 ### Danh sách tệp tin thay đổi
-- rontend/css/main.css (MODIFIED)
-- rontend/css/player.css (MODIFIED)
-- rontend/css/lyrics.css (MODIFIED)
-- rontend/css/library.css (MODIFIED)
-- rontend/css/albums.css (MODIFIED)
-- 	ask.md (MODIFIED)
+- frontend/css/main.css (MODIFIED)
+- frontend/css/player.css (MODIFIED)
+- frontend/css/lyrics.css (MODIFIED)
+- frontend/css/library.css (MODIFIED)
+- frontend/css/albums.css (MODIFIED)
+- task.md (MODIFIED)
 
 ### Mô tả chi tiết kỹ thuật
 1. **Design System Curve Tokens (main.css)**: Khai báo các hằng số đường cong cubic-bezier chuyên nghiệp (--ease-out-quint, --ease-out-expo, --ease-spring, --ease-spring-soft, --ease-in-out-smooth) và các biến transition có thời gian & đường cong phanh mượt.
-2. **Core Layout & Components (main.css)**: Nâng cấp hiệu ứng nảy nhẹ & phanh mượt cho Sidebar collapse/expand, Top Bar Nav Buttons, Search Container focus/hover, Filter Chips, Seekbar/Volume slider thumb expansion, Buttons (Primary, Outline, Ghost) và keyframe animations cho Modal (ackdropFadeIn, modalScaleUp) & Context Menu (contextMenuPop).
+2. **Core Layout & Components (main.css)**: Nâng cấp hiệu ứng nảy nhẹ & phanh mượt cho Sidebar collapse/expand, Top Bar Nav Buttons, Search Container focus/hover, Filter Chips, Seekbar/Volume slider thumb expansion, Buttons (Primary, Outline, Ghost) và keyframe animations cho Modal (backdropFadeIn, modalScaleUp) & Context Menu (contextMenuPop).
 3. **Player Bar (player.css)**: Áp dụng spring bounce curves cho nút Play/Pause vòng tròn (.btn-play-pause-circle), Like button, và hiệu ứng zoom ảnh bìa bài hát đang phát.
 4. **Lyrics Overlay & Text Scrolling (lyrics.css)**: Nâng cấp trượt xuất hiện Lyrics Overlay bằng --ease-out-expo, Close button nảy xoay góc -90deg, hiệu ứng cuộn lời bài hát #lyrics-content lướt êm ái với cubic-bezier(0.16, 1, 0.3, 1), và dòng chữ active nâng cấp hiệu ứng scale 1.08 + dreamy glow text-shadow + blur focus.
-5. **Library & Album Grid (library.css, lbums.css)**: Thêm hiệu ứng hover slide/highlight cho track rows, nút Play lớn, playlist cover zoom và album card elevation 	ranslateY(-4px) với spring bounce curves.
+5. **Library & Album Grid (library.css, albums.css)**: Thêm hiệu ứng hover slide/highlight cho track rows, nút Play lớn, playlist cover zoom và album card elevation 	ranslateY(-4px) với spring bounce curves.
 
 ---
 
@@ -2103,11 +2103,11 @@ Trang trí lại giao diện Trang chủ (Home View) cho các danh sách phát.
    - Khi phát trong Playlist (ví dụ "Charlie Puth" gồm 7 bài), các thao tác chuyển bài tiếp theo / lùi lại / xáo trộn / tự động chuyển bài khi hết nhạc đều được khoanh vùng trong 7 bài của "Charlie Puth".
    - Khi `repeat: 'off'`, sau khi hát xong bài cuối cùng của Playlist, trình phát tự động dừng (`audio_engine.stop()`), không nhảy sang nhạc của Playlist khác.
 ## [2026-08-13] Bust PyWebView Cache
-- **Files modified:** rontend/index.html`n- **Details:** Added ?v=2 query parameters to all CSS and JS imports to prevent Chromium/PyWebView from caching older versions of styles and scripts. This ensures the UI aesthetic updates and Play button logic from the previous patch are actually loaded.
+- **Files modified:** frontend/index.html`n- **Details:** Added ?v=2 query parameters to all CSS and JS imports to prevent Chromium/PyWebView from caching older versions of styles and scripts. This ensures the UI aesthetic updates and Play button logic from the previous patch are actually loaded.
 ## [2026-08-13] Fixed Playlist State Bug
-- **Files modified:** rontend/js/playlists.js, rontend/js/library.js, rontend/index.html`n- **Details:** Fixed a state bug where clicking the 'All Songs' or 'Favorite Songs' pseudo-playlists would leave the previous playlist's header (e.g. Charlie Puth) rendered on the screen due to a missing mock object in the store.subscribe handler. Updated cache-busters to ?v=3.
+- **Files modified:** frontend/js/playlists.js, frontend/js/library.js, frontend/index.html`n- **Details:** Fixed a state bug where clicking the 'All Songs' or 'Favorite Songs' pseudo-playlists would leave the previous playlist's header (e.g. Charlie Puth) rendered on the screen due to a missing mock object in the store.subscribe handler. Updated cache-busters to ?v=3.
 ## [2026-08-13] Redesign Modal UI
-- **Files modified:** rontend/css/main.css, rontend/index.html`n- **Details:** Redesigned the 'Create Playlist' modal to match the dark theme and eliminate the jarring 'glassmorphism' bug that ruined text legibility. Added .text-input class to style the input box properly. Added .btn-ghost for subtle cancel buttons. Adjusted margins and gaps for a premium layout. Bumped cache buster to ?v=4.
+- **Files modified:** frontend/css/main.css, frontend/index.html`n- **Details:** Redesigned the 'Create Playlist' modal to match the dark theme and eliminate the jarring 'glassmorphism' bug that ruined text legibility. Added .text-input class to style the input box properly. Added .btn-ghost for subtle cancel buttons. Adjusted margins and gaps for a premium layout. Bumped cache buster to ?v=4.
 ## [2026-08-13] Global Immersive Glass UI
 gba(0,0,0,0.2), 
 gba(255,255,255,0.04), 
@@ -2144,39 +2144,38 @@ gba(255,255,255,0.15)). Replaced hardcoded occurrences in library.css and main.c
 - **Details:** Replaced white background cards and colored gradient covers for "All Songs" and "Favorite Songs" system playlists with crisp, monochrome white SVG icons (`#ffffff`). Added `.system-icon` CSS class for transparent backgrounds and no borders in sidebar and home playlist cards. Bumped cache-buster version to `?v=23`.
 
 ## [2026-08-13] Sửa Lỗi Bootstrap sys.path Khi Chạy Python Direct
-- **Files modified:** ackend/app.py
-- **Details:** Di chuyển đoạn lệnh kiểm tra và bổ sung PROJECT_ROOT vào sys.path lên đầu ackend/app.py trước khi import ackend.*. Giúp khởi chạy python backend/app.py thành công từ bất kỳ thư mục làm việc nào.
+- **Files modified:** backend/app.py
+- **Details:** Di chuyển đoạn lệnh kiểm tra và bổ sung PROJECT_ROOT vào sys.path lên đầu backend/app.py trước khi import backend.*. Giúp khởi chạy python backend/app.py thành công từ bất kỳ thư mục làm việc nào.
+
 ## [2026-08-13T23:58:00+07:00] Fix P0/P1 Critical Bugs (Startup Crash, OOM, Thread-Safety)
-- **T�c v? th?c hi?n**: Kh?c ph?c l?i crash ?ng d?ng khi kh?i d?ng, l?i tr�n RAM khi t?i file nh?c l?n, v� l?i Race Condition.
-- **Danh s�ch t?p tin thay d?i**:
-  - ackend/services/library_service.py
-  - ackend/app.py
-  - ackend/audio/engine.py
-  - ackend/audio/decoder.py
-  - ackend/storage/database.py
-  - ackend/storage/config.py
-- **M� t? chi ti?t k? thu?t**:
-  1. **Startup Crash**: X�a m� g?i h�m th?a self.db.update_track() trong library_service.py n?m ngo�i method g�y l?i NameError. B? sung tham s? config v�o __init__ d? tr�nh l?i AttributeError khi scan thu vi?n.
-  2. **OOM Audio (T?i uu RAM)**: T�ch h?p StreamingDecoder v� AudioRingBuffer v�o AudioEngine. Thay v� d?c to�n b? file loat32 v�o RAM (chi?m h�ng GB v?i file l?n), AudioEngine hi?n t?i buffer v� stream li�n t?c t? file d? d?m b?o an to�n b? nh?. S?a class StreamingDecoder d? lu�n tr? v? loat32 tuong th�ch v?i co ch? Volume DSP c?a Engine.
-  3. **Thread-Safety & Race Condition**: C?u tr�c l?i phuong th?c kh?i t?o Singleton __new__ cho Database v� Config d? ngan ch?n Race Condition. Th�m 	hreading.Lock v�o thao t�c d?c/ghi trong Config d? ngan ng?a l?i ghi d� v� RuntimeError: dictionary changed size during iteration.
+- **Tác vụ thực hiện**: Khắc phục lỗi crash ứng dụng khi khởi động, lỗi tràn RAM khi tải file nhạc lớn, và lỗi Race Condition.
+- **Danh sách tệp tin thay đổi**:
+  - backend/services/library_service.py
+  - backend/app.py
+  - backend/audio/engine.py
+  - backend/audio/decoder.py
+  - backend/storage/database.py
+  - backend/storage/config.py
+- **Mô tả chi tiết kỹ thuật**:
+  1. **Startup Crash**: Xóa mã gọi hàm thừa `self.db.update_track()` trong `library_service.py` nằm ngoài method gây lỗi `NameError`. Bổ sung tham số `config` vào `__init__` để tránh lỗi `AttributeError` khi scan thư viện.
+  2. **OOM Audio (Tối ưu RAM)**: Tích hợp `StreamingDecoder` và `AudioRingBuffer` vào `AudioEngine`. Thay vì đọc toàn bộ file float32 vào RAM (chiếm hàng GB với file lớn), `AudioEngine` hiện tại buffer và stream liên tục từ file để đảm bảo an toàn bộ nhớ. Sửa class `StreamingDecoder` để luôn trả về float32 tương thích với cơ chế Volume DSP của Engine.
+  3. **Thread-Safety & Race Condition**: Cấu trúc lại phương thức khởi tạo Singleton `__new__` cho `Database` và `Config` để ngăn chặn Race Condition. Thêm `threading.Lock` vào thao tác đọc/ghi trong `Config` để ngăn ngừa lỗi ghi đè và `RuntimeError: dictionary changed size during iteration`.
 
 ## [2026-08-14T00:04:00+07:00] Fix Audio Mode Change Crash
-- **T�c v? th?c hi?n**: S?a l?i crash (deadlock) khi thay d?i Audio Mode trong l�c dang ph�t nh?c.
-- **Danh s�ch t?p tin thay d?i**:
-  - ackend/audio/engine.py
-- **M� t? chi ti?t k? thu?t**: H�m set_audio_mode g?i self.stream.stop() b�n trong self._lock. Khi nh?c dang ph�t, PortAudio s? ch? cho callback hi?n t?i ho�n th�nh tru?c khi stop stream. Tuy nhi�n callback _audio_callback l?i c?n acquire self._lock (dang b? gi? b?i set_audio_mode), g�y ra Deadlock l�m ?ng d?ng treo v� crash. �� dua logic stop/close stream ra ngo�i block with self._lock: tuong t? nhu stop_immediate(), v� th�m micro-fade-in sau khi kh?i t?o l?i stream d? ch?ng ti?ng n? (pop/click).
+- **Tác vụ thực hiện**: Sửa lỗi crash (deadlock) khi thay đổi Audio Mode trong lúc đang phát nhạc.
+- **Danh sách tệp tin thay đổi**:
+  - backend/audio/engine.py
+- **Mô tả chi tiết kỹ thuật**: Hàm `set_audio_mode` gọi `self.stream.stop()` bên trong `self._lock`. Khi nhạc đang phát, PortAudio sẽ chờ cho callback hiện tại hoàn thành trước khi stop stream. Tuy nhiên callback `_audio_callback` lại cần acquire `self._lock` (đang bị giữ bởi `set_audio_mode`), gây ra Deadlock làm ứng dụng treo và crash. Đã đưa logic stop/close stream ra ngoài block `with self._lock:` tương tự như `stop_immediate()`, và thêm micro-fade-in sau khi khởi tạo lại stream để chống tiếng nổ (pop/click).
 
 ## [2026-08-14T00:13:00+07:00] Fix UX and Logic Bugs (Play Next, Rapid Skip, UI Polling)
-- **T�c v? th?c hi?n**: S?a 3 l?i uu ti�n cao ?nh hu?ng d?n UX v� logic lu?ng ph�t.
-- **Danh s�ch t?p tin thay d?i**:
-  - ackend/services/player_service.py
-  - rontend/js/player.js
-- **M� t? chi ti?t k? thu?t**:
-  1. **Play Next Array Shift**: S?a h�m insert_play_next trong player_service.py. N?u track d�ch d� c� s?n trong danh s�ch, ph?i ti?n h�nh 
-emove track d� kh?i danh s�ch TRU?C, r?i m?i l?y index c?a track hi?n t?i d? insert track d�ch v�o. �?o ngu?c logic cu v?n d? g�y ch?ch index.
-  2. **Race Condition Rapid Skip**: B? sung co ch? self._load_token v�o h�m play(). M?i khi b?m Next/Prev/Play, token du?c sinh m?i. Trong lu?ng do_load background, th?c hi?n validate token 2 l?n (tru?c khi load v� sau khi load). N?u token d� cu (do user b?m n�t qu� nhanh g?i lu?ng kh�c), lu?ng s? t? h?y v� gi?i ph�ng engine thay v� ti?p t?c play v� d� l�n lu?ng m?i.
-  3. **Polling Request Pile-up**: S?a h�m startSyncLoop trong player.js. Thay th? setInterval 500ms b?ng m� h�nh setTimeout d? quy k?t h?p v?i flag 	his._isPolling = false. �i?u n�y d?m b?o m?i tick polling (bao g?m fetch API) ph?i ho�n t?t to�n b? (ho?c throw error) th� m?i du?c h?n gi? 500ms sau g?i l?i, ch?ng k?t ngh?n h�ng d?i HTTP request l�m lag UI.
-
+- **Tác vụ thực hiện**: Sửa 3 lỗi ưu tiên cao ảnh hưởng đến UX và logic luồng phát.
+- **Danh sách tệp tin thay đổi**:
+  - backend/services/player_service.py
+  - frontend/js/player.js
+- **Mô tả chi tiết kỹ thuật**:
+  1. **Play Next Array Shift**: Sửa hàm `insert_play_next` trong `player_service.py`. Nếu track đích đã có sẵn trong danh sách, phải tiến hành remove track đó khỏi danh sách TRƯỚC, rồi mới lấy index của track hiện tại để insert track đích vào. Đảo ngược logic cũ vốn dễ gây chệch index.
+  2. **Race Condition Rapid Skip**: Bổ sung cơ chế `self._load_token` vào hàm `play()`. Mỗi khi bấm Next/Prev/Play, token được sinh mới. Trong luồng `do_load` background, thực hiện validate token 2 lần (trước khi load và sau khi load). Nếu token đã cũ (do user bấm nút quá nhanh gọi luồng khác), luồng sẽ tự hủy và giải phóng engine thay vì tiếp tục play và đè lên luồng mới.
+  3. **Polling Request Pile-up**: Sửa hàm `startSyncLoop` trong `player.js`. Thay thế `setInterval` 500ms bằng mô hình `setTimeout` đệ quy kết hợp với flag `this._isPolling = false`. Điều này đảm bảo mỗi tick polling (bao gồm fetch API) phải hoàn tất toàn bộ (hoặc throw error) thì mới được hẹn giờ 500ms sau gọi lại, chống kẹt nghẽn hàng đợi HTTP request làm lag UI.
 
 ## [2026-08-14T00:41:00+07:00] Thêm Giấy phép Apache 2.0
 - **Tác vụ thực hiện**: Thêm tệp giấy phép Apache License 2.0.
@@ -2189,44 +2188,36 @@ emove track d� kh?i danh s�ch TRU?C, r?i m?i l?y index c?a track hi?n t?i d?
 - **Danh sách tệp tin thay đổi**:
   - LICENSE (Sửa đổi)
 - **Mô tả chi tiết kỹ thuật**: Thay thế thông tin bản quyền chung bằng năm 2026 và tên chủ sở hữu Zenny126 ở cuối tệp LICENSE.
+
 ## [2026-08-14T01:43:00+07:00] Fix Audio Speedup on Resume
-- **T�c v? th?c hi?n**: S?a l?i nh?c b? tua nhanh (speedup) khi ?n Play sau khi d� Pause m?t th?i gian.
-- **Danh s�ch t?p tin thay d?i**:
-  - ackend/audio/engine.py
-- **M� t? chi ti?t k? thu?t**:
-  S?a l?i h�m play() g?i _create_stream() t?o ra m?t stream WASAPI ho�n to�n m?i d� l�n stream cu chua du?c gi?i ph�ng sau khi pause(). Khi c� 2 stream c�ng k�o d? li?u t? m?t AudioRingBuffer duy nh?t, t?c d? tr�ch xu?t d? li?u tang g?p d�i, l�m gi?m 1 n?a frame v� g�y ra hi?n tu?ng tua nhanh. �� b? sung c? ki?m tra if self.stream is None: tru?c khi t?o stream m?i.
-
-
-
-
-
-
-
+- **Tác vụ thực hiện**: Sửa lỗi nhạc bị tua nhanh (speedup) khi ấn Play sau khi đã Pause một thời gian.
+- **Danh sách tệp tin thay đổi**:
+  - backend/audio/engine.py
+- **Mô tả chi tiết kỹ thuật**:
+  Sửa lỗi hàm `play()` gọi `_create_stream()` tạo ra một stream WASAPI hoàn toàn mới đè lên stream cũ chưa được giải phóng sau khi `pause()`. Khi có 2 stream cùng kéo dữ liệu từ một `AudioRingBuffer` duy nhất, tốc độ trích xuất dữ liệu tăng gấp đôi, làm giảm 1 nửa frame và gây ra hiện tượng tua nhanh. Đã bổ sung cờ kiểm tra `if self.stream is None:` trước khi tạo stream mới.
 
 ## [2026-08-14T12:22:00+07:00] Comprehensive User-Interaction & Hardware Edge-Case Hardening
-- **Tc v? th?c hi?n**: Kh?c ph?c 7 v?n d? ti?m ?n v nng c?p tr?i nghi?m ngu?i dng theo chu?n ?ng d?ng m nh?c thuong m?i.
-- **Danh sch t?p tin thay d?i**:
-  - ackend/audio/engine.py
-  - ackend/services/player_service.py
-  - ackend/workers/scanner.py
-  - rontend/js/lyrics.js
-  - rontend/js/player.js
-  - rontend/js/main.js
-- **M t? chi ti?t k? thu?t**:
-  1. **Audio Device Reconnect Recovery (engine.py)**: S?a play() ki?m tra if self.stream is None or not getattr(self.stream, 'active', False): d? t? d?ng kh?i t?o l?i stream n?u thi?t b? ph?n c?ng (tai nghe/Bluetooth/DAC) b? ng?t k?t n?i ho?c l?i.
-  2. **Corrupt / VBR Early EOF Freeze Fix (engine.py)**: Trong _audio_callback, b? sung di?u ki?n k?t thc bi if remaining <= 0 or (self.decoder and self.decoder.eof_reached and self.ring_buffer.available() == 0) d? auto-next khng bao gi? b? treo khi file m thanh c header frame count l?ch th?c t?.
-  3. **Industry Standard Prev-Track UX (player_service.py)**: Nt Previous ki?m tra position_seconds > 3.0s $\rightarrow$ tua v?  .0s d? ngu?i dng nghe l?i d?u bi; n?u $\le 3.0s$ m?i nh?y v? bi tru?c.
-  4. **Auto-Skip Unplayable Files (player_service.py)**: Trong do_load, khi b?t exception n?p file (file b? xa, h?ng d?nh d?ng), t? d?ng nh?y 
-ext_track() khng lm d?ng lu?ng pht nh?c.
-  5. **Volume Config Debounce (player_service.py)**: Tch bi?t vi?c p d?ng m lu?ng t?c th trn RAM/AudioEngine v?i vi?c luu dia config.json qua debounce 300ms, lo?i b? ngh?n I/O SSD khi ko thanh slider.
-  6. **External USB / Unmounted Drive Protection (scanner.py)**: LibraryScanner ki?m tra ccessible_dirs = [d for d in music_dirs if os.path.exists(d)], khng xa cc bi ht thu?c ? dia ngoi khi USB dang rt.
-  7. **Lyrics Fast-Switching Race Guard (lyrics.js)**: Ki?m tra 	his._currentTrackPath === track.path tru?c khi render l?i bi ht tr? v? t? async API.
-  8. **Global Keyboard Shortcuts (main.js & player.js)**: H? tr? Spacebar (Play/Pause), Mui tn Tri/Ph?i (Seek 5s), Mui tn Ln/Xu?ng (Volume 5%), M (Mute/Unmute), Escape (ng Lyrics/Modals).
+- **Tác vụ thực hiện**: Khắc phục 7 vấn đề tiềm ẩn và nâng cấp trải nghiệm người dùng theo chuẩn ứng dụng âm nhạc thương mại.
+- **Danh sách tệp tin thay đổi**:
+  - backend/audio/engine.py
+  - backend/services/player_service.py
+  - backend/workers/scanner.py
+  - frontend/js/lyrics.js
+  - frontend/js/player.js
+  - frontend/js/main.js
+- **Mô tả chi tiết kỹ thuật**:
+  1. **Audio Device Reconnect Recovery (`engine.py`)**: Sửa `play()` kiểm tra `if self.stream is None or not getattr(self.stream, 'active', False):` để tự động khởi tạo lại stream nếu thiết bị phần cứng (tai nghe/Bluetooth/DAC) bị ngắt kết nối hoặc lỗi.
+  2. **Corrupt / VBR Early EOF Freeze Fix (`engine.py`)**: Trong `_audio_callback`, bổ sung điều kiện kết thúc bài `if remaining <= 0 or (self.decoder and self.decoder.eof_reached and self.ring_buffer.available() == 0)` để auto-next không bao giờ bị treo khi file âm thanh có header frame count lệch thực tế.
+  3. **Industry Standard Prev-Track UX (`player_service.py`)**: Nút Previous kiểm tra `position_seconds > 3.0s` $ightarrow$ tua về `0.0s` để người dùng nghe lại đầu bài; nếu $\le 3.0s$ mới nhảy về bài trước.
+  4. **Auto-Skip Unplayable Files (`player_service.py`)**: Trong `do_load`, khi bắt exception nạp file (file bị xóa, hỏng định dạng), tự động nhảy `next_track()` không làm dừng luồng phát nhạc.
+  5. **Volume Config Debounce (`player_service.py`)**: Tách biệt việc áp dụng âm lượng tức thì trên RAM/AudioEngine với việc lưu đĩa `config.json` qua debounce 300ms, loại bỏ nghẽn I/O SSD khi kéo thanh slider.
+  6. **External USB / Unmounted Drive Protection (`scanner.py`)**: `LibraryScanner` kiểm tra `accessible_dirs = [d for d in music_dirs if os.path.exists(d)]`, không xóa các bài hát thuộc ổ đĩa ngoài khi USB đang rút.
+  7. **Lyrics Fast-Switching Race Guard (`lyrics.js`)**: Kiểm tra `this._currentTrackPath === track.path` trước khi render lời bài hát trả về từ async API.
+  8. **Global Keyboard Shortcuts (`main.js` & `player.js`)**: Hỗ trợ Spacebar (Play/Pause), Mũi tên Trái/Phải (Seek 5s), Mũi tên Lên/Xuống (Volume 5%), M (Mute/Unmute), Escape (Đóng Lyrics/Modals).
 
 ## [2026-08-14T14:59:00+07:00] Comprehensive Documentation & Feature Showcase Update
-- **Tc v? th?c hi?n**: C?p nh?t ton di?n t?p README.md trnh by d?y d? t?t c? cc tnh nang, ki?n trc k? thu?t v h? th?ng phm t?t c?a ZFPlayer.
-- **Danh sch t?p tin thay d?i**:
+- **Tác vụ thực hiện**: Cập nhật toàn diện tệp README.md trình bày đầy đủ tất cả các tính năng, kiến trúc kỹ thuật và hệ thống phím tắt của ZFPlayer.
+- **Danh sách tệp tin thay đổi**:
   - README.md
-- **M t? chi ti?t k? thu?t**:
-  B? sung chi ti?t 5 tr? c?t tnh nang: (1) ?ng co m thanh Streaming & WASAPI Bit-Perfect; (2) Mn hnh l?i bi ht Apple Music & Cinema Idle Mode; (3) Qu?n l thu vi?n, b?o v? USB & Auto-skip; (4) Trnh qu?n l phm t?t ty bi?n ShortcutsManager; (5) T?i uu ha hi?u nang render & b?o v? SSD.
-
+- **Mô tả chi tiết kỹ thuật**:
+  Bổ sung chi tiết 5 trụ cột tính năng: (1) Động cơ âm thanh Streaming & WASAPI Bit-Perfect; (2) Màn hình lời bài hát Apple Music & Cinema Idle Mode; (3) Quản lý thư viện, bảo vệ USB & Auto-skip; (4) Trình quản lý phím tắt tùy biến ShortcutsManager; (5) Tối ưu hóa hiệu năng render & bảo vệ SSD.
