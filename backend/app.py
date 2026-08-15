@@ -17,7 +17,19 @@ else:
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from backend.utils.path_utils import get_bundle_dir, get_cache_dir
+# Safe stdio redirection for GUI / windowed mode on Windows
+class NullWriter:
+    def write(self, text):
+        pass
+    def flush(self):
+        pass
+
+if sys.stdout is None:
+    sys.stdout = NullWriter()
+if sys.stderr is None:
+    sys.stderr = NullWriter()
+
+from backend.utils.path_utils import get_bundle_dir, get_cache_dir, get_app_data_dir
 
 from backend.storage.database import Database
 from backend.storage.config import Config
@@ -35,21 +47,48 @@ from backend.api.library_api import LibraryAPI
 from backend.api.lyrics_api import LyricsAPI
 from backend.api.config_api import ConfigAPI
 
-# Setup Logging
+# Setup Dual Logging (Persistent File + Safe Stream)
 _is_debug = "--debug" in sys.argv or os.environ.get("ZFPLAYER_DEBUG") == "1"
+log_handlers = []
+
+try:
+    log_dir = get_app_data_dir() / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_file = log_dir / "app.log"
+    file_handler = logging.FileHandler(str(log_file), mode='a', encoding='utf-8')
+    log_handlers.append(file_handler)
+except Exception:
+    pass
+
+if sys.stdout and not isinstance(sys.stdout, NullWriter):
+    log_handlers.append(logging.StreamHandler(sys.stdout))
+
 logging.basicConfig(
     level=logging.DEBUG if _is_debug else logging.INFO,
     format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
-    handlers=[logging.StreamHandler()]
+    handlers=log_handlers or [logging.NullHandler()]
 )
 logger = logging.getLogger(__name__)
 
-# --- Threading WSGI Server for Bottle ---
+
+# --- Fast Threading WSGI Server for Bottle (Zero DNS lookup delay) ---
+from wsgiref.simple_server import WSGIRequestHandler
+
+class QuietWSGIRequestHandler(WSGIRequestHandler):
+    def address_string(self):
+        # Avoid blocking reverse DNS resolution (getfqdn) which delays requests by 1-2s on Windows
+        return self.client_address[0]
+    
+    def log_message(self, format, *args):
+        # Eliminate synchronous stderr / file logging overhead on every static asset request
+        pass
+
 class ThreadingWSGIServer(ThreadingMixIn, WSGIServer):
     daemon_threads = True
 
 def make_threaded_server(host, port, app):
-    return make_server(host, port, app, ThreadingWSGIServer)
+    return make_server(host, port, app, server_class=ThreadingWSGIServer, handler_class=QuietWSGIRequestHandler)
+
 
 # --- Unified API Class ---
 class ZFPlayerAPI(PlayerAPI, LibraryAPI, LyricsAPI, ConfigAPI):
@@ -171,4 +210,27 @@ def main():
     webview.start(debug=debug_mode, private_mode=False, storage_path=str(webview_storage))
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception as e:
+        import traceback
+        tb = traceback.format_exc()
+        logger.critical(f"Fatal unhandled exception in main: {tb}")
+        try:
+            from backend.utils.path_utils import get_app_data_dir
+            crash_file = get_app_data_dir() / "logs" / "crash.log"
+            crash_file.parent.mkdir(parents=True, exist_ok=True)
+            with open(str(crash_file), "w", encoding="utf-8") as f:
+                f.write(tb)
+        except Exception:
+            pass
+
+        # If on Windows, pop up an error box so it never crashes silently
+        try:
+            import ctypes
+            msg = f"ZennyFLAC Player encountered an unexpected error:\n\n{e}\n\nDetailed traceback written to:\n%APPDATA%\\ZFPlayer\\logs\\crash.log"
+            ctypes.windll.user32.MessageBoxW(0, msg, "ZennyFLAC Player Error", 0x10)
+        except Exception:
+            pass
+        sys.exit(1)
+

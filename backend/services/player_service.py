@@ -126,16 +126,26 @@ class PlayerService:
         self.current_path = path
         self.config.set('last_track', path)
         
-        # Cache current track metadata in RAM immediately
+        # Cache current track metadata in RAM safely
         self._cached_track_path = path
-        self._cached_track_info = self.library_service.get_track_info(path)
+        try:
+            self._cached_track_info = self.library_service.get_track_info(path)
+        except Exception as e:
+            logger.debug(f"Non-fatal track_info cache error: {e}")
         
-        # Record play history
-        if hasattr(self.library_service, 'db'):
-            self.library_service.db.update_last_played(path)
+        # Record play history safely
+        try:
+            if hasattr(self.library_service, 'db'):
+                self.library_service.db.update_last_played(path)
+        except Exception as e:
+            logger.debug(f"Non-fatal update_last_played error: {e}")
         
         # Keep playlist indices in sync for the scoped playlist
-        self._sync_playlists_and_index(path, playlist_id)
+        try:
+            self._sync_playlists_and_index(path, playlist_id)
+        except Exception as e:
+            logger.warning(f"Error syncing playlist in play(): {e}")
+
 
         # Cancel any existing load timer
         if hasattr(self, '_load_timer') and self._load_timer:

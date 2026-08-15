@@ -11,13 +11,21 @@ def get_bundle_dir() -> Path:
     return Path(__file__).resolve().parent.parent.parent
 
 def get_app_data_dir() -> Path:
-    """Returns the writable directory for app data (config, db, cache)."""
+    """Returns the writable directory for app data (config, db, cache).
+    Prefers portable data next to the executable if present, then project root, then %APPDATA%/ZFPlayer.
+    """
     if getattr(sys, 'frozen', False):
+        exe_dir = Path(sys.executable).parent
+        # Check if run directly inside dist/ next to project root
+        parent_dir = exe_dir.parent
+        if (parent_dir / "data" / "library.db").exists() or (parent_dir / "config" / "config.json").exists():
+            return parent_dir
+        # Check if portable data folder exists right beside the .exe
+        if (exe_dir / "data").exists() or (exe_dir / "config").exists():
+            return exe_dir
+            
         appdata = os.getenv('APPDATA')
-        if appdata:
-            data_dir = Path(appdata) / "ZFPlayer"
-        else:
-            data_dir = Path(sys.executable).parent / "data_user"
+        data_dir = Path(appdata) / "ZFPlayer" if appdata else exe_dir / "data_user"
     else:
         # Development mode: use project root if writable or fallback to APPDATA
         project_root = Path(__file__).resolve().parent.parent.parent
@@ -29,6 +37,7 @@ def get_app_data_dir() -> Path:
 
     data_dir.mkdir(parents=True, exist_ok=True)
     return data_dir
+
 
 def get_config_path() -> str:
     path = get_app_data_dir() / "config" / "config.json"

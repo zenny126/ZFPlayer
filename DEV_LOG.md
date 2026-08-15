@@ -1,6 +1,36 @@
 # DEV LOG
 
+## Timestamp: 2026-08-15T09:20:00
+### Tác vụ thực hiện
+Tối ưu hóa và đóng gói hoàn thiện Standalone Single EXE (`--onefile`), khắc phục triệt để độ trễ tra cứu DNS ngược trên WSGI server và gia cố an toàn luồng phát nhạc & cơ sở dữ liệu SQLite.
+
+### Danh sách tệp tin thay đổi
+- `backend/app.py` (MODIFIED)
+- `backend/services/player_service.py` (MODIFIED)
+- `backend/storage/database.py` (MODIFIED)
+- `backend/utils/path_utils.py` (MODIFIED)
+- `build_exe.py` (MODIFIED)
+- `zfplayer.spec` (MODIFIED)
+- `version_info.txt` (NEW)
+- `DEV_LOG.md` (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật
+1. **Triệt tiêu độ trễ WSGI Reverse DNS (`backend/app.py`)**:
+   - Bổ sung `QuietWSGIRequestHandler` ghi đè `address_string()` trả về trực tiếp IP `127.0.0.1`, loại bỏ việc gọi `socket.getfqdn()` gây nghẽn 1-2s trên mỗi request HTTP tĩnh ở môi trường Windows Windowed.
+   - Thêm lớp bọc an toàn `NullWriter` chống lỗi `NoneType` stdio khi chạy `console=False` và kích hoạt luồng log kép ra file.
+2. **Gia cố phòng thủ CSDL & Tự phục hồi (`backend/storage/database.py`, `backend/services/player_service.py`)**:
+   - Tăng `busy_timeout` lên 30.000ms (`PRAGMA busy_timeout=30000`) và `sqlite3.connect(..., timeout=30.0)`.
+   - Bổ sung cơ chế `_check_and_heal_database()` tự kiểm tra tính toàn vẹn `PRAGMA quick_check;` và tự tạo mới CSDL nếu phát hiện tệp bị malformed.
+   - Bọc an toàn `update_last_played` và metadata caching trong khối `try/except` để đảm bảo `audio_engine.load()` và `play()` luôn được kích hoạt trơn tru.
+3. **Thu thập đầy đủ thư viện động & Metadata EXE (`zfplayer.spec`, `version_info.txt`, `build_exe.py`)**:
+   - Thu thập 109 dynamic DLLs và 136 datas (`webview`, `clr_loader`, `pythonnet`, `_sounddevice_data`, `_soundfile_data`, `certifi`, `mutagen`).
+   - Nhúng thông tin bản quyền và phiên bản `v2.0.0.0` qua `version_info.txt`.
+   - Cập nhật `path_utils.py` tự động nhận diện dữ liệu di động (Portable Mode) và đồng bộ liền mạch.
+
+---
+
 ## Timestamp: 2026-08-15T08:15:00
+
 ### Tác vụ thực hiện
 Tối ưu hóa kích thước Modal Settings (loại bỏ thanh cuộn thừa), khắc phục triệt để viền Focus Ring và lỗi bắt phím tắt trên thanh trượt Seekbar/Volume, bổ sung phím tắt `T` cho tính năng Ẩn/Hiện chữ lời bài hát (`toggle_lyrics_text`).
 

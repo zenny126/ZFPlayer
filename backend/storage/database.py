@@ -2,8 +2,13 @@ import sqlite3
 import threading
 from typing import List, Dict, Any, Optional
 import os
+import shutil
+import time
+import logging
 
 from backend.utils.path_utils import get_db_path
+
+logger = logging.getLogger(__name__)
 
 ALLOWED_TRACK_COLUMNS = {
     'path', 'mtime', 'size', 'title', 'artist', 'album',
@@ -32,15 +37,47 @@ class Database:
             if db_dir:
                 os.makedirs(db_dir, exist_ok=True)
             self._local = threading.local()
+            self._check_and_heal_database()
             self.init()
             self.initialized = True
 
+    def _check_and_heal_database(self):
+        """Checks SQLite integrity and self-heals if corrupted."""
+        if not os.path.exists(self.db_path):
+            return
+        try:
+            conn = sqlite3.connect(self.db_path, timeout=5.0)
+            cursor = conn.cursor()
+            res = cursor.execute('PRAGMA quick_check;').fetchone()
+            conn.close()
+            if res and res[0] == 'ok':
+                return
+            logger.error(f"Database quick_check failed: {res}. Rebuilding database...")
+        except Exception as e:
+            logger.error(f"Database check encountered error: {e}. Rebuilding database...")
+
+        # Self-heal corrupted database
+        try:
+            corrupt_backup = f"{self.db_path}.corrupt_{int(time.time())}"
+            shutil.move(self.db_path, corrupt_backup)
+            # Remove wal/shm if present
+            for ext in ['-wal', '-shm']:
+                if os.path.exists(self.db_path + ext):
+                    try:
+                        os.remove(self.db_path + ext)
+                    except Exception:
+                        pass
+            logger.info(f"Corrupted database backed up to {corrupt_backup}. Creating fresh library.")
+        except Exception as ex:
+            logger.critical(f"Failed to auto-heal database: {ex}")
+
     def _get_conn(self) -> sqlite3.Connection:
         if not hasattr(self._local, 'conn'):
-            conn = sqlite3.connect(self.db_path, check_same_thread=False)
+            conn = sqlite3.connect(self.db_path, timeout=30.0, check_same_thread=False)
             conn.row_factory = sqlite3.Row
             conn.execute('PRAGMA journal_mode=WAL')
             conn.execute('PRAGMA synchronous=NORMAL')
+            conn.execute('PRAGMA busy_timeout=30000')
             conn.execute('PRAGMA cache_size=-64000')  # 64MB memory cache
             conn.execute('PRAGMA temp_store=MEMORY')
             self._local.conn = conn
@@ -217,10 +254,13 @@ class Database:
         conn.commit()
 
     def update_last_played(self, path: str):
-        conn = self._get_conn()
-        cursor = conn.cursor()
-        cursor.execute('UPDATE tracks SET last_played = CURRENT_TIMESTAMP WHERE path = ?', (path,))
-        conn.commit()
+        try:
+            conn = self._get_conn()
+            cursor = conn.cursor()
+            cursor.execute('UPDATE tracks SET last_played = CURRENT_TIMESTAMP WHERE path = ?', (path,))
+            conn.commit()
+        except Exception as e:
+            logger.debug(f"Non-fatal: update_last_played failed for {path}: {e}")
 
     def get_recently_played(self, limit: int = 20) -> List[Dict[str, Any]]:
         conn = self._get_conn()
