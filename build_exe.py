@@ -32,7 +32,7 @@ def main():
     except Exception as e:
         print(f"[!] Warning generating icons: {e}")
 
-    # 3. Clean previous build files & PyInstaller bincache
+    # Clean previous build file if unlocked
     old_exe = project_root / "dist" / "ZFPlayer.exe"
     if old_exe.exists():
         try:
@@ -41,6 +41,7 @@ def main():
         except Exception as e:
             print(f"[!] Warning: Could not remove old {old_exe}: {e}")
 
+    # Clean previous build directories
     build_temp = project_root / "build"
     if build_temp.exists():
         try:
@@ -48,17 +49,6 @@ def main():
             print("[+] Cleaned temporary build directory.")
         except Exception:
             pass
-
-    # Clear PyInstaller bincache in LocalAppData to avoid reusing UPX-corrupted binary stubs
-    appdata_local = os.getenv('LOCALAPPDATA')
-    if appdata_local:
-        bincache = Path(appdata_local) / 'pyinstaller'
-        if bincache.exists():
-            try:
-                shutil.rmtree(bincache, ignore_errors=True)
-                print("[+] Cleaned PyInstaller binary cache.")
-            except Exception:
-                pass
 
     print("\n[+] Running Optimized PyInstaller build (-OO bytecode)...")
     cmd = [
