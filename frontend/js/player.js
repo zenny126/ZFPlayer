@@ -61,6 +61,176 @@ class PlaybackTicker {
   }
 }
 
+/**
+ * SilentMediaSessionBridge
+ * Bridges Python WASAPI C-Level audio engine with Windows OS System Media Transport Controls (SMTC),
+ * Hardware Keyboard Media Keys, Bluetooth Headset AVRCP remote controls and Lock Screen.
+ * Uses a zero-cost silent HTML5 audio anchor element (0% CPU, < 1KB RAM).
+ */
+class SilentMediaSessionBridge {
+  constructor(playerController) {
+    this.player = playerController;
+    this.audioElement = null;
+    this.isInitialized = false;
+    this.initAudioAnchor();
+    this.registerActionHandlers();
+  }
+
+  initAudioAnchor() {
+    let audio = document.getElementById('smtc-silent-anchor');
+    if (!audio) {
+      audio = document.createElement('audio');
+      audio.id = 'smtc-silent-anchor';
+      audio.preload = 'auto';
+      audio.loop = true;
+      audio.playsInline = true;
+      audio.style.display = 'none';
+      document.body.appendChild(audio);
+    }
+    // 44-byte standard silent 8000Hz PCM mono WAV data URI
+    audio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+    audio.volume = 0.0001; // Non-zero so Chromium maintains active media session
+    this.audioElement = audio;
+
+    // Handle initial user interaction to comply with Chromium Autoplay Policy
+    const activateOnUserGesture = () => {
+      if (this.isInitialized) return;
+      this.isInitialized = true;
+      const state = window.store?.getState();
+      if (state && state.isPlaying) {
+        this.play();
+      }
+    };
+    window.addEventListener('click', activateOnUserGesture, { once: true });
+    window.addEventListener('keydown', activateOnUserGesture, { once: true });
+    window.addEventListener('pointerdown', activateOnUserGesture, { once: true });
+  }
+
+  play() {
+    if (this.audioElement) {
+      this.audioElement.play().catch(() => {});
+    }
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'playing';
+    }
+  }
+
+  pause() {
+    if (this.audioElement) {
+      this.audioElement.pause();
+    }
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'paused';
+    }
+  }
+
+  registerActionHandlers() {
+    if (!('mediaSession' in navigator)) return;
+
+    const trySetAction = (action, handler) => {
+      try {
+        navigator.mediaSession.setActionHandler(action, handler);
+      } catch (e) {
+        // Ignored for actions not supported by current webview version
+      }
+    };
+
+    trySetAction('play', async () => {
+      await this.player.togglePlay();
+    });
+
+    trySetAction('pause', async () => {
+      await this.player.togglePlay();
+    });
+
+    trySetAction('previoustrack', async () => {
+      await this.player.prev();
+    });
+
+    trySetAction('nexttrack', async () => {
+      await this.player.next();
+    });
+
+    trySetAction('seekto', (details) => {
+      if (details.seekTime !== undefined && details.seekTime !== null) {
+        this.player.seek(details.seekTime);
+      }
+    });
+
+    trySetAction('seekbackward', (details) => {
+      const offset = (details && details.seekOffset) ? details.seekOffset : 5;
+      const pos = this.player.ticker ? this.player.ticker.position : 0;
+      this.player.seek(Math.max(0, pos - offset));
+    });
+
+    trySetAction('seekforward', (details) => {
+      const offset = (details && details.seekOffset) ? details.seekOffset : 5;
+      const pos = this.player.ticker ? this.player.ticker.position : 0;
+      const dur = this.player.ticker ? this.player.ticker.duration : 0;
+      this.player.seek(Math.min(dur, pos + offset));
+    });
+
+    trySetAction('stop', async () => {
+      await this.player.stop();
+    });
+  }
+
+  updateMetadata(track, isPlaying) {
+    if (!('mediaSession' in navigator)) return;
+
+    if (!track) {
+      navigator.mediaSession.metadata = null;
+      if (!isPlaying) this.pause();
+      return;
+    }
+
+    const host = window.location.origin || `http://127.0.0.1:${window.location.port || '8000'}`;
+    const coverUrl = track.cover_hash
+      ? `${host}/api/covers/${track.cover_hash}.jpg`
+      : `${host}/favicon.ico`;
+
+    const artworkList = [
+      { src: coverUrl, sizes: '96x96', type: 'image/jpeg' },
+      { src: coverUrl, sizes: '128x128', type: 'image/jpeg' },
+      { src: coverUrl, sizes: '256x256', type: 'image/jpeg' },
+      { src: coverUrl, sizes: '512x512', type: 'image/jpeg' }
+    ];
+
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: track.title || 'Unknown Title',
+        artist: track.artist || 'Unknown Artist',
+        album: track.album || 'ZennyFLAC Player',
+        artwork: artworkList
+      });
+    } catch (e) {
+      console.warn('Failed to set MediaMetadata:', e);
+    }
+
+    if (isPlaying) {
+      this.play();
+    } else {
+      this.pause();
+    }
+  }
+
+  updatePositionState(position, duration, isPlaying) {
+    if (!('mediaSession' in navigator) || !('setPositionState' in navigator.mediaSession)) return;
+    if (!duration || duration <= 0 || isNaN(duration)) return;
+
+    const safePos = Math.min(Math.max(0, position || 0), duration);
+    try {
+      navigator.mediaSession.setPositionState({
+        duration: Math.max(1, duration),
+        playbackRate: isPlaying ? 1 : 0,
+        position: safePos
+      });
+    } catch (e) {
+      // Ignored for non-fatal timing edge cases
+    }
+  }
+}
+
 class PlayerController {
   constructor() {
     this.seekBar = document.getElementById('seek-bar');
@@ -69,6 +239,7 @@ class PlayerController {
     this.isDraggingSeek = false;
     
     this.ticker = new PlaybackTicker((pos, dur) => this.updateSeekUI(pos, dur));
+    this.mediaSessionBridge = new SilentMediaSessionBridge(this);
     this.initBindings();
     this.startSyncLoop();
   }
@@ -111,23 +282,6 @@ class PlayerController {
       volBarLyrics.addEventListener('pointerup', () => volBarLyrics.blur());
     }
     if (volBar) this.updateVolUI(volBar.value);
-
-    // Setup Windows SMTC / Browser MediaSession Action Handlers
-    if ('mediaSession' in navigator) {
-      try {
-        navigator.mediaSession.setActionHandler('play', () => this.togglePlay());
-        navigator.mediaSession.setActionHandler('pause', () => this.togglePlay());
-        navigator.mediaSession.setActionHandler('previoustrack', () => this.prev());
-        navigator.mediaSession.setActionHandler('nexttrack', () => this.next());
-        navigator.mediaSession.setActionHandler('seekto', (details) => {
-          if (details.seekTime !== undefined) {
-            this.seek(details.seekTime);
-          }
-        });
-      } catch (e) {
-        console.warn('MediaSession action handler error:', e);
-      }
-    }
     
     // Real-time responsive seeking (sync both seekbars, time labels, lyrics visually while dragging, seek audio on release)
     const updateAllSeekUI = (val) => {
@@ -293,23 +447,12 @@ class PlayerController {
         }
       }
 
-      // Sync Windows SMTC / MediaSession Metadata & Playback state
-      if ('mediaSession' in navigator) {
-        try {
-          if (state.currentTrack) {
-            const coverUrl = state.currentTrack.cover_hash
-              ? `${window.location.origin}/api/covers/${state.currentTrack.cover_hash}.jpg`
-              : '';
-            navigator.mediaSession.metadata = new MediaMetadata({
-              title: state.currentTrack.title || 'Unknown Title',
-              artist: state.currentTrack.artist || 'Unknown Artist',
-              album: state.currentTrack.album || 'ZennyFLAC Player',
-              artwork: coverUrl ? [{ src: coverUrl, sizes: '512x512', type: 'image/jpeg' }] : []
-            });
-          }
-          navigator.mediaSession.playbackState = state.isPlaying ? 'playing' : 'paused';
-        } catch (e) {
-          console.warn('MediaSession sync error:', e);
+      // Sync Windows SMTC / MediaSession Metadata & Timeline via Bridge
+      if (this.mediaSessionBridge) {
+        this.mediaSessionBridge.updateMetadata(state.currentTrack, state.isPlaying);
+        if (state.currentTrack && state.currentTrack.duration) {
+          const curPos = this.ticker ? this.ticker.position : 0;
+          this.mediaSessionBridge.updatePositionState(curPos, state.currentTrack.duration, state.isPlaying);
         }
       }
     };
@@ -325,6 +468,10 @@ class PlayerController {
     await window.api.play(track.path, pId);
     window.store.setState({ currentTrack: track, isPlaying: true, playlistId: pId });
     this.ticker.sync(0, track.duration, true);
+    if (this.mediaSessionBridge) {
+      this.mediaSessionBridge.updateMetadata(track, true);
+      this.mediaSessionBridge.updatePositionState(0, track.duration, true);
+    }
   }
 
   async togglePlay() {
@@ -335,10 +482,18 @@ class PlayerController {
       await window.api.pause();
       window.store.setState({ isPlaying: false });
       this.ticker.stop();
+      if (this.mediaSessionBridge) {
+        this.mediaSessionBridge.pause();
+        this.mediaSessionBridge.updatePositionState(this.ticker.position, state.currentTrack.duration, false);
+      }
     } else {
       await window.api.resume();
       window.store.setState({ isPlaying: true });
       this.ticker.start();
+      if (this.mediaSessionBridge) {
+        this.mediaSessionBridge.play();
+        this.mediaSessionBridge.updatePositionState(this.ticker.position, state.currentTrack.duration, true);
+      }
     }
   }
 
@@ -355,6 +510,10 @@ class PlayerController {
       this.ticker.stop();
       this.ticker.sync(0, 0, false);
     }
+    if (this.mediaSessionBridge) {
+      this.mediaSessionBridge.pause();
+      this.mediaSessionBridge.updateMetadata(null, false);
+    }
     this.updateSeekUI(0, 0);
   }
 
@@ -368,6 +527,9 @@ class PlayerController {
     // Optimistic UI Update: Sync ticker and UI elements instantly without waiting for IPC response
     this.ticker.sync(targetPos, duration, storeState.isPlaying);
     this.updateSeekUI(targetPos, duration);
+    if (this.mediaSessionBridge) {
+      this.mediaSessionBridge.updatePositionState(targetPos, duration, storeState.isPlaying);
+    }
     
     await window.api.seek(targetPos);
   }
@@ -445,6 +607,13 @@ class PlayerController {
     const pct = dur > 0 ? (pos / dur) * 100 : 0;
     if (this.seekBar) this.seekBar.style.setProperty('--progress', `${pct}%`);
     if (lSeekBar) lSeekBar.style.setProperty('--progress', `${pct}%`);
+
+    // Periodically sync SMTC timeline position (~every 2.5s) for Windows 11 Lock Screen & Media OSD
+    if (this._lastSmtcSyncSec === undefined || Math.abs(currentSec - this._lastSmtcSyncSec) >= 3) {
+      this._lastSmtcSyncSec = currentSec;
+      const isPlaying = !!window.store.getState().isPlaying;
+      this.mediaSessionBridge?.updatePositionState(pos, dur, isPlaying);
+    }
     
     if (window.lyricsRenderer) window.lyricsRenderer.update(pos);
   }

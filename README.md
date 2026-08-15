@@ -169,8 +169,9 @@ ZFPlayer/
 │       └── fluid-shader.js   # Nền nước động WebGL GLSL Shader
 │
 ├── docs/                     # Tài liệu chuyên sâu
-│   └── ARCHITECTURE.md       # Đặc tả kiến trúc kỹ thuật toàn diện
-├── architect.md              # Bản sao kiến trúc chi tiết
+│   ├── ARCHITECTURE.md       # Đặc tả kiến trúc kỹ thuật toàn diện
+│   ├── API_REFERENCE.md      # Đặc tả 28 API Endpoints hợp nhất
+│   └── adr/                  # Sổ tay Architecture Decision Records
 ├── requirements.txt          # Danh sách gói phụ thuộc Python
 └── build_exe.py              # Script đóng gói file .exe độc lập qua PyInstaller
 ```
