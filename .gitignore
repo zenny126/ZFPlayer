@@ -9,3 +9,5 @@ dist/
 config/
 .venv/
 python
+upx.exe
+*.exe
