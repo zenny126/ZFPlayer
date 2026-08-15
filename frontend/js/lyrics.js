@@ -187,11 +187,13 @@ class LyricsRenderer {
       }
       this.overlayContainer?.classList.remove('center-mode');
       this.toggleLyricsBtn?.classList.add('active');
-      if (this.toggleLyricsBtn) this.toggleLyricsBtn.title = 'Hide Lyrics';
+      const shortcutLabel = window.shortcutsManager?.formatComboText(window.shortcutsManager?.shortcuts?.toggle_lyrics_text) || 'T';
+      if (this.toggleLyricsBtn) this.toggleLyricsBtn.title = `Hide Lyrics Text (${shortcutLabel})`;
     } else {
       this.overlayContainer?.classList.add('center-mode');
       this.toggleLyricsBtn?.classList.remove('active');
-      if (this.toggleLyricsBtn) this.toggleLyricsBtn.title = 'Show Lyrics';
+      const shortcutLabel = window.shortcutsManager?.formatComboText(window.shortcutsManager?.shortcuts?.toggle_lyrics_text) || 'T';
+      if (this.toggleLyricsBtn) this.toggleLyricsBtn.title = `Show Lyrics Text (${shortcutLabel})`;
       this.container?.classList.remove('stagger-in');
     }
   }

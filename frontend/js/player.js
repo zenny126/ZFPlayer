@@ -99,12 +99,16 @@ class PlayerController {
         this.setVolume(e.target.value);
         this.updateVolUI(e.target.value);
       });
+      volBar.addEventListener('change', () => volBar.blur());
+      volBar.addEventListener('pointerup', () => volBar.blur());
     }
     if (volBarLyrics) {
       volBarLyrics.addEventListener('input', (e) => {
         this.setVolume(e.target.value);
         this.updateVolUI(e.target.value);
       });
+      volBarLyrics.addEventListener('change', () => volBarLyrics.blur());
+      volBarLyrics.addEventListener('pointerup', () => volBarLyrics.blur());
     }
     if (volBar) this.updateVolUI(volBar.value);
 
@@ -175,12 +179,16 @@ class PlayerController {
 
         // Seek audio in background
         this.seek(val);
+
+        // Remove focus so keyboard shortcuts aren't trapped or blocked
+        bar.blur();
       };
 
       bar.addEventListener('mousedown', startDrag);
       bar.addEventListener('touchstart', startDrag, { passive: true });
       bar.addEventListener('input', handleInput);
       bar.addEventListener('change', handleEnd);
+      bar.addEventListener('pointerup', () => bar.blur());
     };
 
     bindSeek(this.seekBar);

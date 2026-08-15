@@ -29,6 +29,7 @@ class ShortcutsManager {
       volume_down: 'ArrowDown',
       toggle_mute: 'KeyM',
       toggle_lyrics: 'KeyL',
+      toggle_lyrics_text: 'KeyT',
       toggle_shuffle: 'KeyS',
       toggle_repeat: 'KeyR',
       toggle_fullscreen: 'F11'
@@ -43,7 +44,8 @@ class ShortcutsManager {
       { id: 'volume_up', name: 'Volume Up (+5%)', desc: 'Increase output volume' },
       { id: 'volume_down', name: 'Volume Down (-5%)', desc: 'Decrease output volume' },
       { id: 'toggle_mute', name: 'Mute / Unmute', desc: 'Toggle sound output' },
-      { id: 'toggle_lyrics', name: 'Toggle Lyrics', desc: 'Open / close full-screen lyrics' },
+      { id: 'toggle_lyrics', name: 'Toggle Lyrics View', desc: 'Open / close full-screen lyrics' },
+      { id: 'toggle_lyrics_text', name: 'Toggle Lyrics Text', desc: 'Hide / show lyric text in lyrics view (center album cover)' },
       { id: 'toggle_shuffle', name: 'Toggle Shuffle', desc: 'Switch random playback mode' },
       { id: 'toggle_repeat', name: 'Toggle Repeat', desc: 'Cycle repeat mode (Off / All / One)' },
       { id: 'toggle_fullscreen', name: 'Toggle Fullscreen', desc: 'Switch full screen window' }
@@ -331,9 +333,10 @@ class ShortcutsManager {
       return;
     }
 
-    // 2. Ignore keystrokes when typing inside inputs, textareas or contenteditable elements
+    // 2. Ignore keystrokes when typing inside text inputs, textareas or contenteditable elements
     const targetTag = e.target.tagName ? e.target.tagName.toLowerCase() : '';
-    if (targetTag === 'input' || targetTag === 'textarea' || e.target.isContentEditable) {
+    const isTextInput = (targetTag === 'textarea' || e.target.isContentEditable || (targetTag === 'input' && !['range', 'button', 'checkbox', 'radio'].includes(e.target.type)));
+    if (isTextInput) {
       if (e.key === 'Escape') {
         e.target.blur();
         document.querySelectorAll('.context-menu').forEach(m => m.classList.add('hidden'));
@@ -375,6 +378,7 @@ class ShortcutsManager {
       volume_down: () => player?.adjustVolume(-5),
       toggle_mute: () => player?.toggleMute(),
       toggle_lyrics: () => lyrics?.toggle(),
+      toggle_lyrics_text: () => lyrics?.toggleLyricsView(),
       toggle_shuffle: () => player?.toggleShuffle(),
       toggle_repeat: () => player?.toggleRepeat(),
       toggle_fullscreen: () => window.api?.toggleFullscreen?.()
@@ -383,6 +387,9 @@ class ShortcutsManager {
     for (const [actionId, handler] of Object.entries(actions)) {
       if (this.matchesEvent(this.shortcuts[actionId], e)) {
         e.preventDefault();
+        if (document.activeElement && typeof document.activeElement.blur === 'function' && document.activeElement !== document.body) {
+          document.activeElement.blur();
+        }
         await handler();
         break;
       }
