@@ -108,3 +108,29 @@ def test_player_api_delegation():
     assert state["is_playing"] is True
     assert state["position"] == 15.5
 
+
+def test_library_service_cache_coherence_and_bounding(temp_db, temp_cache, sample_track_batch):
+    """Verify LibraryService track cache coherence, capacity bounding, and clean invalidation."""
+    temp_db.bulk_insert_tracks(sample_track_batch)
+    mock_scanner = MagicMock()
+    lib_service = LibraryService(database=temp_db, cache_manager=temp_cache, scanner=mock_scanner)
+
+    track_path = sample_track_batch[0]["path"]
+    info = lib_service.get_track_info(track_path)
+    assert info is not None
+    assert track_path in lib_service._track_info_cache
+
+    # Verify cache update coherence
+    lib_service.update_track(track_path, {"is_liked": 1})
+    assert lib_service._track_info_cache[track_path]["is_liked"] == 1
+
+    # Verify capacity bounding (max 2000)
+    for i in range(2100):
+        lib_service._cache_track_info(f"/path/song_{i}.flac", {"title": f"Song {i}"})
+    assert len(lib_service._track_info_cache) <= 2000
+
+    # Verify cache invalidation on clear_database
+    lib_service.clear_database(clear_cache=False)
+    assert len(lib_service._track_info_cache) == 0
+
+

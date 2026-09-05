@@ -16,6 +16,7 @@ class LyricsRenderer {
     this.cinemaIdleTimer = null;
     this.lastMouseX = -1;
     this.lastMouseY = -1;
+    this.isVisible = false;
     this.bindEvents();
   }
 
@@ -207,6 +208,7 @@ class LyricsRenderer {
   }
 
   async show(isUserAction = true) {
+    this.isVisible = true;
     this.overlay.classList.remove('hidden');
     
     if (isUserAction) {
@@ -303,6 +305,7 @@ class LyricsRenderer {
   }
 
   hide() {
+    this.isVisible = false;
     this.overlay.classList.add('hidden');
     if (this.noLyricsTimer) {
       clearTimeout(this.noLyricsTimer);
@@ -451,7 +454,7 @@ class LyricsRenderer {
   }
 
   update(currentTime) {
-    if (!this.lyrics.length || this.overlay.classList.contains('hidden')) return;
+    if (!this.isVisible || !this.lyrics.length) return;
 
     const newIndex = this.findLyricIndex(currentTime);
 

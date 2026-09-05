@@ -100,14 +100,20 @@ class CacheManager:
         except Exception as e:
             logger.error(f"Error saving lyrics cache: {e}")
 
+    def _clear_directory_files(self, folder: str) -> None:
+        """Safely delete all cached files within a single directory."""
+        if not os.path.exists(folder):
+            return
+        for f in os.listdir(folder):
+            p = os.path.join(folder, f)
+            if not os.path.isfile(p):
+                continue
+            try:
+                os.remove(p)
+            except OSError as e:
+                logger.debug("Error removing cached file %s: %s", f, e)
+
     def clear_all(self):
         self._cover_path_cache.clear()
         for folder in [self.covers_dir, self.lyrics_dir]:
-            if os.path.exists(folder):
-                for f in os.listdir(folder):
-                    try:
-                        p = os.path.join(folder, f)
-                        if os.path.isfile(p):
-                            os.remove(p)
-                    except Exception as e:
-                        logger.debug(f"Error removing cached file {f}: {e}")
+            self._clear_directory_files(folder)

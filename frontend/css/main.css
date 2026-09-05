@@ -118,6 +118,26 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 14px; font-weight: 500; width: 100%; outline: none; font-family: inherit;
 }
 #search-input::placeholder { color: var(--text-secondary); font-weight: 400; }
+.btn-clear-search {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  margin-left: 6px;
+  transition: color var(--transition-fast), transform var(--transition-fast);
+}
+.btn-clear-search:hover {
+  color: var(--text-primary);
+  transform: scale(1.1);
+}
+.btn-clear-search.hidden {
+  display: none !important;
+}
 
 #sidebar {
   transition: width 350ms var(--ease-out-expo), min-width 350ms var(--ease-out-expo);
@@ -179,7 +199,13 @@ h1, h2, h3, h4, h5, h6 {
 
 .left-panel { width: 320px; flex-shrink: 0; }
 .right-panel { width: 320px; flex-shrink: 0; }
-.main-panel { flex: 1; background-color: rgba(0, 0, 0, 0.2); }
+.main-panel {
+  flex: 1;
+  min-width: 0;
+  background-color: rgba(0, 0, 0, 0.2);
+  container-type: inline-size;
+  container-name: mainPanel;
+}
 
 /* Left panel library */
 .library-header-bar {
@@ -206,6 +232,7 @@ h1, h2, h3, h4, h5, h6 {
 .library-list li {
   display: flex; align-items: center; padding: 8px; border-radius: var(--border-radius-sm);
   cursor: pointer; transition: background-color var(--transition-fast), transform var(--transition-spring-soft); gap: 12px;
+  user-select: none; -webkit-user-select: none;
 }
 .library-list li:hover { background-color: var(--bg-elevated); }
 .library-list li:active { transform: scale(0.98); }

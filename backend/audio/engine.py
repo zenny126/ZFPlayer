@@ -2,21 +2,22 @@ import enum
 import logging
 import threading
 import numpy as np
+from typing import Optional, Dict, Any, Tuple
 import sounddevice as sd
 import soundfile as sf
 from backend.storage.config import Config
 from backend.audio.buffer import AudioRingBuffer
 from backend.audio.decoder import StreamingDecoder
 
+logger = logging.getLogger(__name__)
+
 # Default to WASAPI Shared Mode for stability
 try:
     wasapi_info = next((api for api in sd.query_hostapis() if 'WASAPI' in api['name']), None)
     if wasapi_info and wasapi_info['default_output_device'] >= 0:
         sd.default.device = wasapi_info['default_output_device']
-except Exception:
-    pass # Fallback to default if WASAPI is not available
-
-logger = logging.getLogger(__name__)
+except Exception as ex:
+    logger.debug("WASAPI device detection note: %s", ex)
 
 class AudioState(enum.Enum):
     IDLE = 1
@@ -105,8 +106,8 @@ class AudioEngine:
                 if stream_to_close.active:
                     stream_to_close.stop()
                 stream_to_close.close()
-            except Exception:
-                pass
+            except Exception as ex:
+                logger.debug("Error closing old audio stream: %s", ex)
 
         if is_playing:
             with self._lock:
@@ -167,34 +168,80 @@ class AudioEngine:
             self.state = AudioState.IDLE
             raise e
 
-    def _create_stream(self):
-        sr = self._current_samplerate
-        ch = self._current_channels
-        mode = getattr(self, 'audio_mode', 'shared')
-        dev_id = self._get_wasapi_device_id()
-        
-        logger.info(f"Opening persistent WASAPI stream (mode={mode}, device={dev_id}, sr={sr}, dtype=float32)")
-
+    def _build_wasapi_settings(self, mode: str) -> Tuple[sd.WasapiSettings, str]:
+        """Build WASAPI host settings and optimal latency profile based on mode."""
         if mode in ('exclusive', 'exclusive_push', 'exclusive_event'):
             wasapi_settings = sd.WasapiSettings(exclusive=True)
             try:
                 if hasattr(sd, '_lib') and hasattr(sd._lib, 'paWinWasapiPolling'):
                     wasapi_settings._streaminfo.flags |= sd._lib.paWinWasapiPolling
             except Exception as e:
-                logger.warning(f"Failed to set paWinWasapiPolling flag: {e}")
-            latency_setting = 'low'
-        else: # 'shared'
+                logger.warning("Failed to set paWinWasapiPolling flag: %s", e)
+            return wasapi_settings, 'low'
+
+        try:
+            wasapi_settings = sd.WasapiSettings(exclusive=False, auto_convert=True)
+        except TypeError:
+            wasapi_settings = sd.WasapiSettings(exclusive=False)
+        try:
+            if hasattr(sd, '_lib') and hasattr(sd._lib, 'paWinWasapiAutoConvert'):
+                wasapi_settings._streaminfo.flags |= sd._lib.paWinWasapiAutoConvert
+        except Exception as ex:
+            logger.debug("AutoConvert flag note: %s", ex)
+        return wasapi_settings, 'high'
+
+    def _open_shared_fallback(self, sr: int, ch: int, dev_id: Optional[int]) -> None:
+        """Fallback to WASAPI Shared Mode with AutoConvert enabled."""
+        shared_settings, _ = self._build_wasapi_settings('shared')
+        fallback_kwargs = {
+            'samplerate': sr,
+            'channels': ch,
+            'dtype': 'float32',
+            'latency': 'high',
+            'extra_settings': shared_settings,
+            'callback': self._audio_callback,
+        }
+        if dev_id is not None:
+            fallback_kwargs['device'] = dev_id
+        self.stream = sd.OutputStream(**fallback_kwargs)
+        self.stream.start()
+        logger.info("Successfully opened audio stream via WASAPI Shared fallback.")
+
+    def _open_generic_fallback(self, sr: int, ch: int) -> None:
+        """Universal Fallback: standard PortAudio software mixer & resampler."""
+        try:
+            generic_kwargs = {
+                'samplerate': sr,
+                'channels': ch,
+                'dtype': 'float32',
+                'latency': 'high',
+                'callback': self._audio_callback,
+            }
+            self.stream = sd.OutputStream(**generic_kwargs)
+            self.stream.start()
+            logger.info("Successfully opened audio stream via generic PortAudio fallback.")
+        except Exception as final_e:
+            logger.error("All audio stream initialization attempts failed: %s", final_e)
+            raise final_e
+
+    def _attempt_stream_fallback(self, sr: int, ch: int, dev_id: Optional[int], mode: str) -> None:
+        """Attempt progressive fallbacks if primary stream opening fails."""
+        if mode != 'shared':
             try:
-                wasapi_settings = sd.WasapiSettings(exclusive=False, auto_convert=True)
-            except TypeError:
-                wasapi_settings = sd.WasapiSettings(exclusive=False)
-            
-            try:
-                if hasattr(sd, '_lib') and hasattr(sd._lib, 'paWinWasapiAutoConvert'):
-                    wasapi_settings._streaminfo.flags |= sd._lib.paWinWasapiAutoConvert
-            except Exception as e:
-                logger.warning(f"Failed to set paWinWasapiAutoConvert flag: {e}")
-            latency_setting = 'high'
+                self._open_shared_fallback(sr, ch, dev_id)
+                return
+            except Exception as ex_shared:
+                logger.warning("WASAPI Shared fallback failed: %s. Proceeding to generic fallback...", ex_shared)
+        self._open_generic_fallback(sr, ch)
+
+    def _create_stream(self):
+        sr = self._current_samplerate
+        ch = self._current_channels
+        mode = getattr(self, 'audio_mode', 'shared')
+        dev_id = self._get_wasapi_device_id()
+        
+        logger.info("Opening persistent WASAPI stream (mode=%s, device=%s, sr=%d, dtype=float32)", mode, dev_id, sr)
+        wasapi_settings, latency_setting = self._build_wasapi_settings(mode)
 
         try:
             kwargs = {
@@ -211,54 +258,8 @@ class AudioEngine:
             self.stream = sd.OutputStream(**kwargs)
             self.stream.start()
         except Exception as e:
-            logger.warning(f"Failed to open audio stream (mode={mode}, sr={sr}): {e}. Attempting smart fallback...")
-            
-            # Step 1: If exclusive mode failed, fallback to WASAPI Shared Mode with AutoConvert
-            if mode != 'shared':
-                try:
-                    try:
-                        shared_settings = sd.WasapiSettings(exclusive=False, auto_convert=True)
-                    except TypeError:
-                        shared_settings = sd.WasapiSettings(exclusive=False)
-                    try:
-                        if hasattr(sd, '_lib') and hasattr(sd._lib, 'paWinWasapiAutoConvert'):
-                            shared_settings._streaminfo.flags |= sd._lib.paWinWasapiAutoConvert
-                    except Exception:
-                        pass
-                    
-                    fallback_kwargs = {
-                        'samplerate': sr,
-                        'channels': ch,
-                        'dtype': 'float32',
-                        'latency': 'high',
-                        'extra_settings': shared_settings,
-                        'callback': self._audio_callback,
-                    }
-                    if dev_id is not None:
-                        fallback_kwargs['device'] = dev_id
-                        
-                    self.stream = sd.OutputStream(**fallback_kwargs)
-                    self.stream.start()
-                    logger.info("Successfully opened audio stream via WASAPI Shared fallback.")
-                    return
-                except Exception as ex_shared:
-                    logger.warning(f"WASAPI Shared fallback failed: {ex_shared}. Proceeding to generic audio fallback...")
-            
-            # Step 2: Universal Fallback - Standard PortAudio output stream without extra_settings (allows PortAudio software mixer & auto-resampler)
-            try:
-                generic_kwargs = {
-                    'samplerate': sr,
-                    'channels': ch,
-                    'dtype': 'float32',
-                    'latency': 'high',
-                    'callback': self._audio_callback,
-                }
-                self.stream = sd.OutputStream(**generic_kwargs)
-                self.stream.start()
-                logger.info("Successfully opened audio stream via generic PortAudio fallback.")
-            except Exception as final_e:
-                logger.error(f"All audio stream initialization attempts failed: {final_e}")
-                raise final_e
+            logger.warning("Failed to open audio stream (mode=%s, sr=%d): %s. Attempting smart fallback...", mode, sr, e)
+            self._attempt_stream_fallback(sr, ch, dev_id, mode)
 
     def play(self):
         if self.state in (AudioState.PLAYING, AudioState.LOADING):
@@ -295,7 +296,7 @@ class AudioEngine:
         if self.state == AudioState.PAUSED:
             self.play()
 
-    def stop(self, close_hardware: bool = False):
+    def stop(self, close_hardware=False):
         if self.state in (AudioState.PLAYING, AudioState.PAUSED):
             with self._lock:
                 fade_samples = int(self._current_samplerate * 0.015)
@@ -308,7 +309,7 @@ class AudioEngine:
             
         self.stop_immediate(close_hardware=close_hardware)
 
-    def stop_immediate(self, close_hardware: bool = False):
+    def stop_immediate(self, close_hardware=False):
         """Stop playback and optionally close the hardware stream.
         By default close_hardware=False keeps the active WASAPI stream alive
         feeding 0.0f to maintain 0V reference voltage on DAC and eliminate hiss."""
@@ -338,8 +339,8 @@ class AudioEngine:
                 if stream_to_close.active:
                     stream_to_close.stop()
                 stream_to_close.close()
-            except Exception:
-                pass
+            except Exception as ex:
+                logger.debug("Error closing stream in stop_immediate: %s", ex)
 
     def shutdown_hardware_stream(self):
         """Close the PortAudio hardware output stream completely."""
@@ -353,8 +354,8 @@ class AudioEngine:
                 if stream_to_close.active:
                     stream_to_close.stop()
                 stream_to_close.close()
-            except Exception:
-                pass
+            except Exception as ex:
+                logger.debug("Error shutting down hardware stream: %s", ex)
 
     def seek(self, seconds: float):
         sr = self._current_samplerate
@@ -404,83 +405,89 @@ class AudioEngine:
         self._ramp_buf[:length] += start_val
         out_slice[:length] *= self._ramp_buf[:length]
 
+    def _handle_callback_fade_out(self, outdata: np.ndarray, frames: int) -> bool:
+        """Handle active fade-out state during manual pause/stop. Returns True if handled."""
+        if self._fade_out_remaining <= 0:
+            return False
+            
+        fade_len = min(frames, self._fade_out_remaining)
+        remaining = self.total_frames - self.play_pos
+        frames_to_copy = min(fade_len, max(0, remaining))
+
+        if self.ring_buffer is not None and frames_to_copy > 0:
+            read_frames = self.ring_buffer.read_into(outdata[:frames_to_copy])
+            self.play_pos += read_frames
+            if read_frames < fade_len:
+                outdata[read_frames:fade_len].fill(0)
+        else:
+            outdata[:fade_len].fill(0)
+
+        start_ratio = self._fade_out_remaining / self._fade_out_total
+        end_ratio = max(0.0, (self._fade_out_remaining - fade_len) / self._fade_out_total)
+        self._apply_linear_ramp(outdata, start_ratio, end_ratio, fade_len)
+
+        if self.volume != 1.0:
+            outdata[:fade_len] *= self.volume
+
+        if fade_len < frames:
+            outdata[fade_len:].fill(0)
+
+        self._fade_out_remaining -= fade_len
+        if self._fade_out_remaining <= 0:
+            self.state = self._target_state_after_fade or AudioState.STOPPED
+        return True
+
+    def _handle_callback_playback(self, outdata: np.ndarray, frames: int) -> None:
+        """Read audio frames from ring buffer and apply tail fade-out and head fade-in ramps."""
+        if self.ring_buffer is None or self.state != AudioState.PLAYING:
+            outdata.fill(0)
+            return
+
+        remaining = self.total_frames - self.play_pos
+        is_eof = (self.decoder is not None and getattr(self.decoder, 'eof_reached', False) and self.ring_buffer.available() == 0)
+        if remaining <= 0 or is_eof:
+            outdata.fill(0)
+            if self.state == AudioState.PLAYING:
+                self.state = AudioState.STOPPED
+                if self.on_track_end:
+                    self._track_end_event.set()
+            return
+
+        frames_to_copy = min(frames, remaining)
+        read_frames = self.ring_buffer.read_into(outdata[:frames_to_copy]) if frames_to_copy > 0 else 0
+        self.play_pos += read_frames
+
+        if read_frames < frames:
+            outdata[read_frames:].fill(0)
+
+        # Tail Micro Fade-Out: If approaching the end of track, smooth out last 20ms to prevent DC cut-off pop
+        tail_remaining = self.total_frames - self.play_pos
+        tail_threshold = int(self._current_samplerate * 0.020)
+        if read_frames > 0 and tail_remaining <= tail_threshold:
+            start_r = max(0.0, min(1.0, (tail_remaining + read_frames) / max(1, tail_threshold)))
+            end_r = max(0.0, min(1.0, tail_remaining / max(1, tail_threshold)))
+            self._apply_linear_ramp(outdata[:read_frames], start_r, end_r, read_frames)
+
+        # Handle Micro Fade-In phase when starting/seeking
+        if self._fade_in_remaining > 0 and read_frames > 0:
+            fade_len = min(read_frames, self._fade_in_remaining)
+            done = self._fade_in_total - self._fade_in_remaining
+            start_ratio = done / self._fade_in_total
+            end_ratio = (done + fade_len) / self._fade_in_total
+            self._apply_linear_ramp(outdata, start_ratio, end_ratio, fade_len)
+            self._fade_in_remaining -= fade_len
+
+        if self.volume != 1.0:
+            outdata *= self.volume
+
     def _audio_callback(self, outdata, frames, time_info, status):
         if status:
-            logger.debug(f"Audio callback status: {status}")
+            logger.debug("Audio callback status: %s", status)
 
         try:
             with self._lock:
-                # Handle Fade-Out phase when pausing/stopping manually
-                if self._fade_out_remaining > 0:
-                    fade_len = min(frames, self._fade_out_remaining)
-                    remaining = self.total_frames - self.play_pos
-                    frames_to_copy = min(fade_len, max(0, remaining))
-
-                    if self.ring_buffer is not None and frames_to_copy > 0:
-                        read_frames = self.ring_buffer.read_into(outdata[:frames_to_copy])
-                        self.play_pos += read_frames
-                        if read_frames < fade_len:
-                            outdata[read_frames:fade_len].fill(0)
-                    else:
-                        outdata[:fade_len].fill(0)
-
-                    start_ratio = self._fade_out_remaining / self._fade_out_total
-                    end_ratio = max(0.0, (self._fade_out_remaining - fade_len) / self._fade_out_total)
-                    self._apply_linear_ramp(outdata, start_ratio, end_ratio, fade_len)
-
-                    if self.volume != 1.0:
-                        outdata[:fade_len] *= self.volume
-
-                    if fade_len < frames:
-                        outdata[fade_len:].fill(0)
-
-                    self._fade_out_remaining -= fade_len
-                    if self._fade_out_remaining <= 0:
-                        self.state = self._target_state_after_fade or AudioState.STOPPED
-                    return
-
-                if self.ring_buffer is None or self.state != AudioState.PLAYING:
-                    outdata.fill(0)
-                    return
-
-                remaining = self.total_frames - self.play_pos
-                is_eof = (self.decoder is not None and getattr(self.decoder, 'eof_reached', False) and self.ring_buffer.available() == 0)
-                if remaining <= 0 or is_eof:
-                    outdata.fill(0)
-                    if self.state == AudioState.PLAYING:
-                        self.state = AudioState.STOPPED
-                        if self.on_track_end:
-                            self._track_end_event.set()
-                    return
-
-                frames_to_copy = min(frames, remaining)
-                read_frames = 0
-                if frames_to_copy > 0:
-                    read_frames = self.ring_buffer.read_into(outdata[:frames_to_copy])
-                    self.play_pos += read_frames
-
-                if read_frames < frames:
-                    outdata[read_frames:].fill(0)
-
-                # Tail Micro Fade-Out: If approaching the end of track, smooth out last 20ms to prevent DC cut-off pop
-                tail_remaining = self.total_frames - self.play_pos
-                tail_threshold = int(self._current_samplerate * 0.020)
-                if read_frames > 0 and tail_remaining <= tail_threshold:
-                    start_r = max(0.0, min(1.0, (tail_remaining + read_frames) / max(1, tail_threshold)))
-                    end_r = max(0.0, min(1.0, tail_remaining / max(1, tail_threshold)))
-                    self._apply_linear_ramp(outdata[:read_frames], start_r, end_r, read_frames)
-
-                # Handle Micro Fade-In phase when starting/seeking
-                if self._fade_in_remaining > 0 and read_frames > 0:
-                    fade_len = min(read_frames, self._fade_in_remaining)
-                    done = self._fade_in_total - self._fade_in_remaining
-                    start_ratio = done / self._fade_in_total
-                    end_ratio = (done + fade_len) / self._fade_in_total
-                    self._apply_linear_ramp(outdata, start_ratio, end_ratio, fade_len)
-                    self._fade_in_remaining -= fade_len
-
-                if self.volume != 1.0:
-                    outdata *= self.volume
+                if not self._handle_callback_fade_out(outdata, frames):
+                    self._handle_callback_playback(outdata, frames)
         except Exception as e:
-            logger.debug(f"Audio callback exception: {e}")
+            logger.debug("Audio callback exception: %s", e)
             outdata.fill(0)

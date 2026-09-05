@@ -38,6 +38,9 @@ class ApiWrapper {
 
   play(path, playlistId = null) { return this.call('play', path, playlistId); }
   playNext(path) { return this.call('play_next', path); }
+  getQueue(limit = 50) { return this.call('get_queue', limit); }
+  removeFromQueue(path) { return this.call('remove_from_queue', path); }
+  clearQueue() { return this.call('clear_queue'); }
   pause() { return this.call('pause'); }
   resume() { return this.call('resume'); }
   stop() { return this.call('stop'); }
@@ -46,6 +49,8 @@ class ApiWrapper {
   getPlayerState() { return this.call('get_player_state'); }
   nextTrack() { return this.call('next_track'); }
   prevTrack() { return this.call('prev_track'); }
+  setShuffle(enabled) { return this.call('set_shuffle', enabled); }
+  toggleShuffle() { return this.call('toggle_shuffle'); }
   scanLibrary() { return this.call('scan_library'); }
   getScanProgress() { return this.call('get_scan_progress'); }
   getAlbums() { return this.call('get_albums'); }
@@ -83,6 +88,7 @@ class ApiWrapper {
     if (method === 'get_track_count') return Promise.resolve(0);
     if (method === 'get_tracks') return Promise.resolve([]);
     if (method === 'get_player_state') return Promise.resolve({ position: 0, duration: 0, is_playing: false, volume: 80, track_path: null });
+    if (method === 'get_queue') return Promise.resolve({ current: null, user_queue: [], upcoming: [] });
     return Promise.resolve(null);
   }
 }

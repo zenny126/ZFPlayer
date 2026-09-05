@@ -118,15 +118,7 @@ class StreamingDecoder:
             with self.lock:
                 if not self.sf_file or self.eof_reached:
                     continue
-                try:
-                    if self._read_buffer is not None and len(self._read_buffer) >= frames_to_read:
-                        target_slice = self._read_buffer[:frames_to_read]
-                        read_data = self.sf_file.read(out=target_slice, dtype=self._read_dtype)
-                        data = target_slice[:len(read_data)] if read_data is not None else []
-                    else:
-                        data = self.sf_file.read(frames_to_read, dtype=self._read_dtype)
-                except Exception:
-                    data = []
+                data = self._read_chunk_from_file(frames_to_read)
             
             if len(data) == 0:
                 with self.lock:
@@ -140,6 +132,19 @@ class StreamingDecoder:
             while written < len(data) and not self.stop_event.is_set():
                 w = self.ring_buffer.write(data[written:])
                 written += w
-                if w == 0:
-                    if not self.ring_buffer.wait_for_space(1, timeout=0.02):
-                        time.sleep(0.001)
+                if w > 0:
+                    continue
+                if not self.ring_buffer.wait_for_space(1, timeout=0.02):
+                    time.sleep(0.001)
+
+    def _read_chunk_from_file(self, frames_to_read: int) -> np.ndarray:
+        """Read chunk of audio frames using pre-allocated slice or dynamic buffer."""
+        try:
+            if self._read_buffer is not None and len(self._read_buffer) >= frames_to_read:
+                target_slice = self._read_buffer[:frames_to_read]
+                read_data = self.sf_file.read(out=target_slice, dtype=self._read_dtype)
+                return target_slice[:len(read_data)] if read_data is not None else np.empty((0, self.channels), dtype=self._read_dtype)
+            return self.sf_file.read(frames_to_read, dtype=self._read_dtype)
+        except Exception as ex:
+            logger.debug("Soundfile chunk read exception: %s", ex)
+            return np.empty((0, self.channels), dtype=self._read_dtype)

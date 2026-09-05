@@ -20,8 +20,14 @@ def get_app_data_dir() -> Path:
         parent_dir = exe_dir.parent
         if (parent_dir / "data" / "library.db").exists() or (parent_dir / "config" / "config.json").exists():
             return parent_dir
-        # Check if portable data folder exists right beside the .exe
-        if (exe_dir / "data").exists() or (exe_dir / "config").exists():
+        # Check if portable data folder or marker exists right beside the .exe
+        is_portable = (
+            (exe_dir / "data").exists()
+            or (exe_dir / "config").exists()
+            or (exe_dir / "portable").exists()
+            or (exe_dir / "portable.txt").exists()
+        )
+        if is_portable:
             return exe_dir
             
         appdata = os.getenv('APPDATA')

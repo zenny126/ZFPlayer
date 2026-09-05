@@ -32,6 +32,7 @@ class ShortcutsManager {
       toggle_lyrics_text: 'KeyT',
       toggle_shuffle: 'KeyS',
       toggle_repeat: 'KeyR',
+      toggle_queue: 'KeyQ',
       toggle_fullscreen: 'F11'
     };
 
@@ -46,6 +47,7 @@ class ShortcutsManager {
       { id: 'toggle_mute', name: 'Mute / Unmute', desc: 'Toggle sound output' },
       { id: 'toggle_lyrics', name: 'Toggle Lyrics View', desc: 'Open / close full-screen lyrics' },
       { id: 'toggle_lyrics_text', name: 'Toggle Lyrics Text', desc: 'Hide / show lyric text in lyrics view (center album cover)' },
+      { id: 'toggle_queue', name: 'Toggle Play Queue', desc: 'Open / close playback queue drawer' },
       { id: 'toggle_shuffle', name: 'Toggle Shuffle', desc: 'Switch random playback mode' },
       { id: 'toggle_repeat', name: 'Toggle Repeat', desc: 'Cycle repeat mode (Off / All / One)' },
       { id: 'toggle_fullscreen', name: 'Toggle Fullscreen', desc: 'Switch full screen window' }
@@ -362,6 +364,10 @@ class ShortcutsManager {
         if (window.lyricsRenderer) window.lyricsRenderer.hide();
         return;
       }
+      if (window.queueManager && window.queueManager.isOpen) {
+        window.queueManager.close();
+        return;
+      }
       return;
     }
 
@@ -379,6 +385,7 @@ class ShortcutsManager {
       toggle_mute: () => player?.toggleMute(),
       toggle_lyrics: () => lyrics?.toggle(),
       toggle_lyrics_text: () => lyrics?.toggleLyricsView(),
+      toggle_queue: () => window.queueManager?.toggle(),
       toggle_shuffle: () => player?.toggleShuffle(),
       toggle_repeat: () => player?.toggleRepeat(),
       toggle_fullscreen: () => window.api?.toggleFullscreen?.()

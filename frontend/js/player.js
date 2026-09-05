@@ -237,7 +237,11 @@ class PlayerController {
     this.seekBar = document.getElementById('seek-bar');
     this.timeCurrent = document.getElementById('seek-time-current');
     this.timeTotal = document.getElementById('seek-time-total');
+    this.lyricsSeekBar = document.getElementById('lyrics-seek-bar');
+    this.lyricsTimeCurrent = document.getElementById('lyrics-seek-time-current');
+    this.lyricsOverlay = document.getElementById('lyrics-overlay');
     this.isDraggingSeek = false;
+    this._lastSeekPct = undefined;
     
     this.ticker = new PlaybackTicker((pos, dur) => this.updateSeekUI(pos, dur));
     this.mediaSessionBridge = new SilentMediaSessionBridge(this);
@@ -255,6 +259,11 @@ class PlayerController {
     
     const volBar = document.getElementById('volume-bar');
     const volBarLyrics = document.getElementById('lyrics-volume-bar');
+    const btnVol = document.getElementById('btn-volume');
+    const btnLyricsVol = document.getElementById('btn-lyrics-volume');
+    const volControl = document.querySelector('.volume-control');
+    const lyricsVolControl = document.querySelector('.lyrics-volume-container');
+
     this.updateVolUI = (val) => {
       const num = parseFloat(val);
       if (volBar) {
@@ -265,24 +274,40 @@ class PlayerController {
         volBarLyrics.value = num;
         volBarLyrics.style.setProperty('--progress', `${num}%`);
       }
+      const iconMarkup = this.getVolumeIcon(num);
+      if (btnVol) btnVol.innerHTML = iconMarkup;
+      if (btnLyricsVol) btnLyricsVol.innerHTML = iconMarkup;
     };
-    if (volBar) {
-      volBar.addEventListener('input', (e) => {
+
+    const attachBarEvents = (bar) => {
+      if (!bar) return;
+      bar.addEventListener('input', (e) => {
         this.setVolume(e.target.value);
         this.updateVolUI(e.target.value);
       });
-      volBar.addEventListener('change', () => volBar.blur());
-      volBar.addEventListener('pointerup', () => volBar.blur());
-    }
-    if (volBarLyrics) {
-      volBarLyrics.addEventListener('input', (e) => {
-        this.setVolume(e.target.value);
-        this.updateVolUI(e.target.value);
-      });
-      volBarLyrics.addEventListener('change', () => volBarLyrics.blur());
-      volBarLyrics.addEventListener('pointerup', () => volBarLyrics.blur());
-    }
-    if (volBar) this.updateVolUI(volBar.value);
+      bar.addEventListener('change', () => bar.blur());
+      bar.addEventListener('pointerup', () => bar.blur());
+    };
+
+    attachBarEvents(volBar);
+    attachBarEvents(volBarLyrics);
+
+    // Mouse wheel volume scroll (+-5%) with preventDefault
+    const onVolumeWheel = (e) => {
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 5 : -5;
+      this.adjustVolume(delta);
+    };
+
+    if (volControl) volControl.addEventListener('wheel', onVolumeWheel, { passive: false });
+    if (lyricsVolControl) lyricsVolControl.addEventListener('wheel', onVolumeWheel, { passive: false });
+
+    // Click volume icon to toggle mute
+    if (btnVol) btnVol.addEventListener('click', () => this.toggleMute());
+    if (btnLyricsVol) btnLyricsVol.addEventListener('click', () => this.toggleMute());
+
+    const initialVol = window.store?.getState()?.volume ?? (volBar ? volBar.value : 80);
+    this.updateVolUI(initialVol);
     
     // Real-time responsive seeking (sync both seekbars, time labels, lyrics visually while dragging, seek audio on release)
     const updateAllSeekUI = (val) => {
@@ -367,6 +392,10 @@ class PlayerController {
         // Create a NEW object reference so the store detects a change and fires syncUI
         const updatedTrack = { ...track, is_liked: res.is_liked };
         window.store.setState({ currentTrack: updatedTrack });
+        if (window.uiController?.showToast) {
+          const msg = res.is_liked ? 'Added to Favorite Songs' : 'Removed from Favorite Songs';
+          window.uiController.showToast(msg);
+        }
       }
     };
 
@@ -455,6 +484,10 @@ class PlayerController {
           const curPos = this.ticker ? this.ticker.position : 0;
           this.mediaSessionBridge.updatePositionState(curPos, state.currentTrack.duration, state.isPlaying);
         }
+      }
+
+      if (window.queueManager && window.queueManager.isOpen) {
+        window.queueManager.onTrackChange();
       }
     };
 
@@ -548,29 +581,54 @@ class PlayerController {
     await this.setVolume(target);
   }
 
+  getVolumeIcon(level) {
+    if (level <= 0) {
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon" style="width: 16px; height: 16px;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
+    }
+    if (level < 50) {
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon" style="width: 16px; height: 16px;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`;
+    }
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon" style="width: 16px; height: 16px;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`;
+  }
+
   async toggleMute() {
     const current = window.store.getState().volume !== undefined ? window.store.getState().volume : 80;
     if (current > 0) {
       this._unmuteVolume = current;
       await this.setVolume(0);
+      window.uiController?.showToast?.('Muted');
     } else {
-      await this.setVolume(this._unmuteVolume || 80);
+      const restored = this._unmuteVolume || 80;
+      await this.setVolume(restored);
+      window.uiController?.showToast?.(`Volume: ${restored}%`);
     }
   }
 
   async next() {
-    const state = await window.api.nextTrack();
-    if (state && state.track) {
-      window.store.setState({ currentTrack: state.track, isPlaying: true });
-      this.ticker.sync(0, state.track.duration, true);
+    if (this._isNavigating) return;
+    this._isNavigating = true;
+    try {
+      const state = await window.api.nextTrack();
+      if (state && state.track) {
+        window.store.setState({ currentTrack: state.track, isPlaying: true });
+        this.ticker.sync(0, state.track.duration, true);
+      }
+    } finally {
+      this._isNavigating = false;
     }
   }
 
   async prev() {
-    const state = await window.api.prevTrack();
-    if (state && state.track) {
-      window.store.setState({ currentTrack: state.track, isPlaying: true });
-      this.ticker.sync(0, state.track.duration, true);
+    if (this._isNavigating) return;
+    this._isNavigating = true;
+    try {
+      const state = await window.api.prevTrack();
+      if (state && state.track) {
+        window.store.setState({ currentTrack: state.track, isPlaying: true });
+        this.ticker.sync(0, state.track.duration, true);
+      }
+    } finally {
+      this._isNavigating = false;
     }
   }
   
@@ -578,7 +636,15 @@ class PlayerController {
     const state = window.store.getState();
     const newShuffle = !state.shuffle;
     window.store.setState({ shuffle: newShuffle });
-    await window.api.setConfig('shuffle', newShuffle);
+    if (window.api.setShuffle) {
+      await window.api.setShuffle(newShuffle);
+    } else {
+      await window.api.setConfig('shuffle', newShuffle);
+    }
+    if (window.uiController?.showToast) {
+      const msg = newShuffle ? 'Shuffle: On (New Order)' : 'Shuffle: Off';
+      window.uiController.showToast(msg);
+    }
   }
   
   async toggleRepeat() {
@@ -587,13 +653,24 @@ class PlayerController {
     const nextMode = modes[(modes.indexOf(current) + 1) % modes.length];
     window.store.setState({ repeat: nextMode });
     await window.api.setConfig('repeat', nextMode);
+    if (window.uiController?.showToast) {
+      const toastMsgs = {
+        off: 'Repeat: Off',
+        all: 'Repeat: All',
+        one: 'Repeat: One'
+      };
+      window.uiController.showToast(toastMsgs[nextMode] || `Repeat: ${nextMode}`);
+    }
   }
 
   updateSeekUI(pos, dur) {
     if (this.isDraggingSeek) return;
     if (this.seekBar) this.seekBar.value = pos;
-    const lSeekBar = document.getElementById('lyrics-seek-bar');
-    if (lSeekBar) lSeekBar.value = pos;
+
+    const isLyricsVisible = window.lyricsRenderer?.isVisible ?? false;
+    if (isLyricsVisible && this.lyricsSeekBar) {
+      this.lyricsSeekBar.value = pos;
+    }
 
     // Cache current second integer to avoid redundant DOM textContent writes on every 60/144Hz frame
     const currentSec = Math.floor(pos || 0);
@@ -601,13 +678,20 @@ class PlayerController {
       this._lastDisplaySec = currentSec;
       const formatted = this.formatTime(pos);
       if (this.timeCurrent) this.timeCurrent.textContent = formatted;
-      const lTimeCurrent = document.getElementById('lyrics-seek-time-current');
-      if (lTimeCurrent) lTimeCurrent.textContent = formatted;
+      if (isLyricsVisible && this.lyricsTimeCurrent) {
+        this.lyricsTimeCurrent.textContent = formatted;
+      }
     }
     
     const pct = dur > 0 ? (pos / dur) * 100 : 0;
-    if (this.seekBar) this.seekBar.style.setProperty('--progress', `${pct}%`);
-    if (lSeekBar) lSeekBar.style.setProperty('--progress', `${pct}%`);
+    if (this._lastSeekPct === undefined || Math.abs(pct - this._lastSeekPct) >= 0.05) {
+      this._lastSeekPct = pct;
+      const pctStr = `${pct.toFixed(2)}%`;
+      if (this.seekBar) this.seekBar.style.setProperty('--progress', pctStr);
+      if (isLyricsVisible && this.lyricsSeekBar) {
+        this.lyricsSeekBar.style.setProperty('--progress', pctStr);
+      }
+    }
 
     // Periodically sync SMTC timeline position (~every 2.5s) for Windows 11 Lock Screen & Media OSD
     if (this._lastSmtcSyncSec === undefined || Math.abs(currentSec - this._lastSmtcSyncSec) >= 3) {
@@ -616,7 +700,9 @@ class PlayerController {
       this.mediaSessionBridge?.updatePositionState(pos, dur, isPlaying);
     }
     
-    if (window.lyricsRenderer) window.lyricsRenderer.update(pos);
+    if (isLyricsVisible && window.lyricsRenderer) {
+      window.lyricsRenderer.update(pos);
+    }
   }
 
   formatTime(sec) {

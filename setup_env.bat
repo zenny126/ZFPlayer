@@ -6,6 +6,8 @@ echo   ZennyFLAC Player - Automated Environment Setup
 echo ========================================================
 echo.
 
+cd /d "%~dp0"
+
 where python >nul 2>nul
 if %errorlevel% neq 0 (
     echo [!] ERROR: Python not found in system PATH.

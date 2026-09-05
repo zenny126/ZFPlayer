@@ -312,6 +312,10 @@ class UIController {
       const path = menu?.dataset.trackPath;
       if (path && window.api && window.api.playNext) {
         await window.api.playNext(path);
+        this.showToast('Queued as next track');
+        if (window.queueManager) {
+          window.queueManager.refreshQueue();
+        }
       }
       menu?.classList.add('hidden');
     });
@@ -446,7 +450,7 @@ class UIController {
     }
   }
 
-  showToast(message, duration = 3000) {
+  showToast(message, duration = 2000) {
     let toastContainer = document.getElementById('toast-container');
     if (!toastContainer) {
       toastContainer = document.createElement('div');
@@ -454,8 +458,14 @@ class UIController {
       toastContainer.style.cssText = 'position: fixed; bottom: 84px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none;';
       document.body.appendChild(toastContainer);
     }
+
+    // Dismiss older toasts if more than 1 are currently active
+    while (toastContainer.children.length >= 2) {
+      toastContainer.firstElementChild.remove();
+    }
+
     const toast = document.createElement('div');
-    toast.style.cssText = 'background: rgba(24, 24, 27, 0.95); color: #fff; border: 1px solid rgba(255, 255, 255, 0.15); backdrop-filter: blur(12px); border-radius: 8px; padding: 12px 20px; font-size: 0.9rem; font-weight: 500; box-shadow: 0 8px 24px rgba(0,0,0,0.4); opacity: 0; transform: translateY(10px); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto;';
+    toast.style.cssText = 'background: rgba(24, 24, 27, 0.92); color: #f4f4f5; border: 1px solid rgba(255, 255, 255, 0.12); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 8px; padding: 10px 18px; font-size: 0.875rem; font-weight: 500; font-family: inherit; box-shadow: 0 8px 30px rgba(0,0,0,0.5); opacity: 0; transform: translateY(8px); transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto; user-select: none; -webkit-user-select: none;';
     toast.textContent = message;
     toastContainer.appendChild(toast);
 
@@ -466,8 +476,8 @@ class UIController {
 
     setTimeout(() => {
       toast.style.opacity = '0';
-      toast.style.transform = 'translateY(10px)';
-      setTimeout(() => toast.remove(), 300);
+      toast.style.transform = 'translateY(8px)';
+      setTimeout(() => toast.remove(), 250);
     }, duration);
   }
 }

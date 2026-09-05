@@ -2,10 +2,12 @@ import os
 import sys
 import logging
 import threading
-import webview
+from dataclasses import dataclass
 from pathlib import Path
 from socketserver import ThreadingMixIn
-from wsgiref.simple_server import make_server, WSGIServer
+from typing import Tuple, List, Optional
+from wsgiref.simple_server import make_server, WSGIServer, WSGIRequestHandler
+import webview
 from bottle import Bottle, static_file, request, response
 
 # Ensure project root is in sys.path when run directly
@@ -17,11 +19,22 @@ else:
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+# Auto-bootstrap virtual environment if executed via global Python lacking dependencies
+if not getattr(sys, 'frozen', False):
+    _venv_py = PROJECT_ROOT / '.venv' / 'Scripts' / 'python.exe'
+    if _venv_py.is_file() and Path(sys.executable).resolve() != _venv_py.resolve():
+        try:
+            import sounddevice  # noqa: F401
+            import webview  # noqa: F401
+        except ImportError:
+            import subprocess
+            sys.exit(subprocess.call([str(_venv_py)] + sys.argv))
+
 # Safe stdio redirection for GUI / windowed mode on Windows
 class NullWriter:
-    def write(self, text):
+    def write(self, text: str) -> None:
         pass
-    def flush(self):
+    def flush(self) -> None:
         pass
 
 if sys.stdout is None:
@@ -47,64 +60,80 @@ from backend.api.library_api import LibraryAPI
 from backend.api.lyrics_api import LyricsAPI
 from backend.api.config_api import ConfigAPI
 
-# Setup Dual Logging (Persistent File + Safe Stream)
-_is_debug = "--debug" in sys.argv or os.environ.get("ZFPLAYER_DEBUG") == "1"
-log_handlers = []
 
-try:
-    log_dir = get_app_data_dir() / "logs"
-    log_dir.mkdir(parents=True, exist_ok=True)
-    log_file = log_dir / "app.log"
-    file_handler = logging.FileHandler(str(log_file), mode='a', encoding='utf-8')
-    log_handlers.append(file_handler)
-except Exception:
-    pass
+# --- Setup Dual Logging (Persistent File + Safe Stream) ---
+def setup_logging() -> logging.Logger:
+    """Configure dual logging: persistent file handler and safe stdout stream."""
+    is_debug = "--debug" in sys.argv or os.environ.get("ZFPLAYER_DEBUG") == "1"
+    handlers: List[logging.Handler] = []
+    file_init_error: Optional[Exception] = None
 
-if sys.stdout and not isinstance(sys.stdout, NullWriter):
-    log_handlers.append(logging.StreamHandler(sys.stdout))
+    try:
+        log_dir = get_app_data_dir() / "logs"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        log_file = log_dir / "app.log"
+        handlers.append(logging.FileHandler(str(log_file), mode='a', encoding='utf-8'))
+    except OSError as err:
+        file_init_error = err
 
-logging.basicConfig(
-    level=logging.DEBUG if _is_debug else logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
-    handlers=log_handlers or [logging.NullHandler()]
-)
-logger = logging.getLogger(__name__)
+    if sys.stdout and not isinstance(sys.stdout, NullWriter):
+        handlers.append(logging.StreamHandler(sys.stdout))
+
+    logging.basicConfig(
+        level=logging.DEBUG if is_debug else logging.INFO,
+        format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+        handlers=handlers or [logging.NullHandler()]
+    )
+    app_logger = logging.getLogger(__name__)
+    if file_init_error:
+        app_logger.warning("Failed to initialize file logging handler: %s", file_init_error)
+    return app_logger
+
+
+logger = setup_logging()
 
 
 # --- Fast Threading WSGI Server for Bottle (Zero DNS lookup delay) ---
-from wsgiref.simple_server import WSGIRequestHandler
-
 class QuietWSGIRequestHandler(WSGIRequestHandler):
-    def address_string(self):
+    def address_string(self) -> str:
         # Avoid blocking reverse DNS resolution (getfqdn) which delays requests by 1-2s on Windows
         return self.client_address[0]
     
-    def log_message(self, format, *args):
-        # Eliminate synchronous stderr / file logging overhead on every static asset request
-        pass
+    def log_message(self, format: str, *args) -> None:
+        # Route synchronous request logging to debug logger instead of bare pass
+        logger.debug("WSGI: " + format, *args)
+
 
 class ThreadingWSGIServer(ThreadingMixIn, WSGIServer):
     daemon_threads = True
 
-def make_threaded_server(host, port, app):
+
+def make_threaded_server(host: str, port: int, app: Bottle) -> WSGIServer:
     return make_server(host, port, app, server_class=ThreadingWSGIServer, handler_class=QuietWSGIRequestHandler)
 
 
 # --- Unified API Class ---
 class ZFPlayerAPI(PlayerAPI, LibraryAPI, LyricsAPI, ConfigAPI):
-    def __init__(self, player_service, library_service, lyrics_worker, config, audio_engine):
+    def __init__(
+        self,
+        player_service: PlayerService,
+        library_service: LibraryService,
+        lyrics_worker: LyricsWorker,
+        config: Config,
+        audio_engine: AudioEngine,
+    ):
         self.player_service = player_service
         PlayerAPI.__init__(self, player_service)
         LibraryAPI.__init__(self, library_service, config)
         LyricsAPI.__init__(self, lyrics_worker)
-        ConfigAPI.__init__(self, config, audio_engine)
+        ConfigAPI.__init__(self, config, audio_engine, player_service)
 
-    def toggle_fullscreen(self):
-        import webview
+    def toggle_fullscreen(self) -> None:
         if webview.windows:
             webview.windows[0].toggle_fullscreen()
 
-def get_free_port():
+
+def get_free_port() -> int:
     import socket
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind(('127.0.0.1', 0))
@@ -112,86 +141,110 @@ def get_free_port():
     s.close()
     return port
 
-def main():
-    logger.info("Starting ZennyFLAC Player Backend...")
 
-    # 1. Initialize Core Infrastructure
+# --- Modular Decomposed Helpers for Main Application ---
+@dataclass(frozen=True)
+class AppServices:
+    """Core domain services, workers, and unified API instance."""
+    database: Database
+    config: Config
+    cache_manager: CacheManager
+    audio_engine: AudioEngine
+    lyrics_worker: LyricsWorker
+    metadata_worker: MetadataWorker
+    scanner: LibraryScanner
+    library_service: LibraryService
+    player_service: PlayerService
+    api: ZFPlayerAPI
+
+
+def _init_core_services() -> AppServices:
+    """Instantiate core database, workers, audio engine, and domain services."""
     database = Database()
     config = Config()
     cache_manager = CacheManager()
     audio_engine = AudioEngine()
-    
-    # 2. Initialize Workers
+
     lyrics_worker = LyricsWorker(database, cache_manager)
     metadata_worker = MetadataWorker()
     scanner = LibraryScanner(database, cache_manager, lyrics_worker)
 
-    # 3. Initialize Services
     library_service = LibraryService(database, cache_manager, scanner, lyrics_worker, config)
     player_service = PlayerService(audio_engine, library_service, config, lyrics_worker)
 
-    # 4. Initialize Unified API
     api = ZFPlayerAPI(player_service, library_service, lyrics_worker, config, audio_engine)
+    return AppServices(
+        database=database,
+        config=config,
+        cache_manager=cache_manager,
+        audio_engine=audio_engine,
+        lyrics_worker=lyrics_worker,
+        metadata_worker=metadata_worker,
+        scanner=scanner,
+        library_service=library_service,
+        player_service=player_service,
+        api=api,
+    )
 
-    # 5. Setup Bottle Server
-    app = Bottle()
-    
-    # Frontend Paths
-    frontend_dir = PROJECT_ROOT / 'frontend'
-    covers_dir = Path(cache_manager.cache_dir) / 'covers' if hasattr(cache_manager, 'cache_dir') else PROJECT_ROOT / 'cache' / 'covers'
-    
-    # Create covers dir if not exists
-    os.makedirs(covers_dir, exist_ok=True)
 
+def _setup_routes(app: Bottle, frontend_dir: Path, covers_dir: Path) -> None:
+    """Register HTTP static file serving routes for frontend UI assets and covers."""
     @app.route('/')
     def serve_index():
         return static_file('index.html', root=str(frontend_dir), headers={'Cache-Control': 'no-cache'})
 
     @app.route('/css/<filename:path>')
-    def serve_css(filename):
+    def serve_css(filename: str):
         return static_file(filename, root=str(frontend_dir / 'css'), headers={'Cache-Control': 'public, max-age=86400'})
 
     @app.route('/js/<filename:path>')
-    def serve_js(filename):
+    def serve_js(filename: str):
         return static_file(filename, root=str(frontend_dir / 'js'), headers={'Cache-Control': 'public, max-age=86400'})
 
     @app.route('/api/covers/<filename:path>')
-    def serve_covers(filename):
+    def serve_covers(filename: str):
         return static_file(filename, root=str(covers_dir), headers={'Cache-Control': 'public, max-age=31536000, immutable'})
 
     @app.route('/favicon.ico')
     def serve_favicon():
         return static_file('favicon.ico', root=str(frontend_dir), headers={'Cache-Control': 'public, max-age=604800'})
 
-    # Start Bottle Server in background thread
+
+def _start_server(app: Bottle) -> Tuple[WSGIServer, int]:
+    """Start background threaded WSGI server on an available localhost port."""
     port = get_free_port()
     server = make_threaded_server('127.0.0.1', port, app)
     server_thread = threading.Thread(target=server.serve_forever, daemon=True)
     server_thread.start()
-    
-    logger.info(f"Bottle server running on http://127.0.0.1:{port}")
+    logger.info("Bottle server running on http://127.0.0.1:%d", port)
+    return server, port
 
-    # 6. PyWebView Window setup
+
+def _configure_webview_window(
+    api: ZFPlayerAPI,
+    config: Config,
+    audio_engine: AudioEngine,
+    database: Database,
+    server: WSGIServer,
+    port: int,
+) -> webview.Window:
+    """Create and configure the main pywebview desktop window and event lifecycle hooks."""
     window = webview.create_window(
         'ZennyFLAC Player',
         url=f'http://127.0.0.1:{port}',
         js_api=api,
         width=1280,
         height=800,
-        min_size=(900, 600)
+        min_size=(900, 600),
     )
 
     def on_loaded():
         logger.info("Webview loaded, running startup tasks.")
-        # Load volume
         vol = config.get('volume', 1.0)
         audio_engine.set_volume(vol)
-        
-        # If music dirs configured, optionally trigger a scan or at least we know library is ready
         music_dirs = config.get('music_dirs', [])
         if music_dirs:
             logger.info("Music directories found. Library ready.")
-            # window.evaluate_js('console.log("Backend ready");')
 
     def on_closed():
         logger.info("Window closed. Cleaning up...")
@@ -202,35 +255,74 @@ def main():
 
     window.events.loaded += on_loaded
     window.events.closed += on_closed
+    return window
 
-    # Start PyWebView (Debug enabled only when --debug flag or ZFPLAYER_DEBUG=1 is set)
+
+def _start_webview() -> None:
+    """Launch PyWebView main event loop with isolated webview cache directory."""
     debug_mode = "--debug" in sys.argv or os.environ.get("ZFPLAYER_DEBUG") == "1"
     webview_storage = Path(get_cache_dir()) / "webview"
     os.makedirs(webview_storage, exist_ok=True)
     webview.start(debug=debug_mode, private_mode=False, storage_path=str(webview_storage))
 
+
+def _handle_fatal_exception(err: Exception) -> None:
+    """Record unhandled exception details to disk and present graphical error alert."""
+    import traceback
+    tb = "".join(traceback.format_exception(type(err), err, err.__traceback__))
+    logger.critical("Fatal unhandled exception in main: %s", tb)
+
+    try:
+        crash_file = get_app_data_dir() / "logs" / "crash.log"
+        crash_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(str(crash_file), "w", encoding="utf-8") as f:
+            f.write(tb)
+    except OSError as log_err:
+        logger.error("Failed to write crash log file: %s", log_err)
+
+    try:
+        import ctypes
+        msg = (
+            f"ZennyFLAC Player encountered an unexpected error:\n\n{err}\n\n"
+            "Detailed traceback written to:\n%APPDATA%\\ZFPlayer\\logs\\crash.log"
+        )
+        ctypes.windll.user32.MessageBoxW(0, msg, "ZennyFLAC Player Error", 0x10)
+    except (OSError, AttributeError, RuntimeError) as dialog_err:
+        logger.error("Failed to display fatal crash dialog: %s", dialog_err)
+
+
+def main() -> None:
+    """Application entry point: assemble core services, start HTTP server, and open GUI."""
+    logger.info("Starting ZennyFLAC Player Backend...")
+
+    services = _init_core_services()
+    app = Bottle()
+
+    frontend_dir = PROJECT_ROOT / 'frontend'
+    covers_dir = (
+        Path(services.cache_manager.cache_dir) / 'covers'
+        if hasattr(services.cache_manager, 'cache_dir')
+        else PROJECT_ROOT / 'cache' / 'covers'
+    )
+    os.makedirs(covers_dir, exist_ok=True)
+
+    _setup_routes(app, frontend_dir, covers_dir)
+    server, port = _start_server(app)
+
+    _configure_webview_window(
+        services.api,
+        services.config,
+        services.audio_engine,
+        services.database,
+        server,
+        port,
+    )
+    _start_webview()
+
+
 if __name__ == '__main__':
     try:
         main()
-    except Exception as e:
-        import traceback
-        tb = traceback.format_exc()
-        logger.critical(f"Fatal unhandled exception in main: {tb}")
-        try:
-            from backend.utils.path_utils import get_app_data_dir
-            crash_file = get_app_data_dir() / "logs" / "crash.log"
-            crash_file.parent.mkdir(parents=True, exist_ok=True)
-            with open(str(crash_file), "w", encoding="utf-8") as f:
-                f.write(tb)
-        except Exception:
-            pass
-
-        # If on Windows, pop up an error box so it never crashes silently
-        try:
-            import ctypes
-            msg = f"ZennyFLAC Player encountered an unexpected error:\n\n{e}\n\nDetailed traceback written to:\n%APPDATA%\\ZFPlayer\\logs\\crash.log"
-            ctypes.windll.user32.MessageBoxW(0, msg, "ZennyFLAC Player Error", 0x10)
-        except Exception:
-            pass
+    except Exception as err:
+        _handle_fatal_exception(err)
         sys.exit(1)
-

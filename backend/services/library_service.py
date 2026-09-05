@@ -19,32 +19,69 @@ class LibraryService:
             'total': 0,
             'current_file': ''
         }
+        self._track_info_cache: Dict[str, Dict[str, Any]] = {}
 
-    def get_tracks(self, offset: int = 0, limit: int = 50, search: str = '', sort_by: str = 'title', sort_dir: str = 'ASC', is_favorites: bool = False, playlist_id: Optional[int] = None) -> List[Dict[str, Any]]:
-        return self.db.get_tracks_paginated(offset, limit, search, sort_by, sort_dir, is_favorites, playlist_id)
+    def get_tracks(self, offset: int = 0, limit: int = 50, search: str = '', sort_by: str = 'title', sort_dir: str = 'ASC', favorites_only=False, playlist_id: Optional[int] = None, **kwargs) -> List[Dict[str, Any]]:
+        is_favorites = bool(favorites_only or kwargs.get('is_favorites', False))
+        return self.db.get_tracks_paginated(offset, limit, search, sort_by, sort_dir, favorites_only=is_favorites, playlist_id=playlist_id)
 
     def get_recently_played(self, limit: int = 20) -> List[Dict[str, Any]]:
         return self.db.get_recently_played(limit)
 
-    def get_all_track_paths(self, is_favorites: bool = False, playlist_id: Optional[int] = None) -> List[str]:
-        return self.db.get_all_track_paths(is_favorites, playlist_id)
+    def get_all_track_paths(self, favorites_only=False, playlist_id: Optional[int] = None, **kwargs) -> List[str]:
+        is_favorites = bool(favorites_only or kwargs.get('is_favorites', False))
+        return self.db.get_all_track_paths(favorites_only=is_favorites, playlist_id=playlist_id)
 
-    def get_track_count(self, search: str = '', is_favorites: bool = False, playlist_id: Optional[int] = None) -> int:
-        return self.db.get_track_count(search, is_favorites, playlist_id)
+    def get_track_count(self, search: str = '', favorites_only=False, playlist_id: Optional[int] = None, **kwargs) -> int:
+        is_favorites = bool(favorites_only or kwargs.get('is_favorites', False))
+        return self.db.get_track_count(search, favorites_only=is_favorites, playlist_id=playlist_id)
+
+    def _cache_track_info(self, path: str, track: Dict[str, Any]) -> None:
+        """Cache track metadata with bounded memory capacity (max 2000 entries)."""
+        if len(self._track_info_cache) >= 2000:
+            oldest_keys = list(self._track_info_cache.keys())[:400]
+            for k in oldest_keys:
+                self._track_info_cache.pop(k, None)
+        self._track_info_cache[path] = track
 
     def get_track_info(self, path: str) -> Optional[Dict[str, Any]]:
+        if not path:
+            return None
+        if path in self._track_info_cache:
+            return self._track_info_cache[path]
+
         track = self.db.get_track_by_path(path)
         if not track:
             return None
-            
-        # Get cached cover path URL equivalent (we'll format it as an API URL for frontend)
+
         cover_hash = track.get('cover_hash')
-        if cover_hash:
-            track['cover_url'] = f"/api/covers/{cover_hash}_thumb.jpg"
-        else:
-            track['cover_url'] = None
-            
+        track['cover_url'] = f"/api/covers/{cover_hash}_thumb.jpg" if cover_hash else None
+        self._cache_track_info(path, track)
         return track
+
+    def get_tracks_by_paths(self, paths: List[str]) -> Dict[str, Dict[str, Any]]:
+        """Batch fetch track metadata using RAM cache and a single database query for misses."""
+        if not paths:
+            return {}
+
+        result: Dict[str, Dict[str, Any]] = {}
+        missing_paths = []
+
+        for p in paths:
+            if p in self._track_info_cache:
+                result[p] = self._track_info_cache[p]
+            else:
+                missing_paths.append(p)
+
+        if missing_paths and hasattr(self.db, 'get_tracks_by_paths'):
+            fetched = self.db.get_tracks_by_paths(missing_paths)
+            for p, track in fetched.items():
+                cover_hash = track.get('cover_hash')
+                track['cover_url'] = f"/api/covers/{cover_hash}_thumb.jpg" if cover_hash else None
+                self._cache_track_info(p, track)
+                result[p] = track
+
+        return result
 
     def get_albums(self) -> List[Dict[str, Any]]:
         albums = self.db.get_albums()
@@ -84,6 +121,7 @@ class LibraryService:
             except Exception as e:
                 logger.error(f"Error during library scan: {e}")
             finally:
+                self._track_info_cache.clear()
                 self._scan_state['is_scanning'] = False
                 
         thread = threading.Thread(target=run_scan, daemon=True)
@@ -141,6 +179,7 @@ class LibraryService:
                 if updates:
                     self.db.update_tracks_in_folder(folder_path, updates)
 
+                self._track_info_cache.clear()
                 # Auto prefetch lyrics
                 self._prefetch_all_lyrics()
             except Exception as e:
@@ -168,20 +207,22 @@ class LibraryService:
             import hashlib
             with open(cover_image_path, 'rb') as f:
                 image_bytes = f.read()
-            if image_bytes:
-                cover_hash = hashlib.sha256(image_bytes).hexdigest()
-                self.cache.save_cover(image_bytes, cover_hash)
-                self.cache.save_thumbnail(image_bytes, cover_hash)
-                cover_url = f"/api/covers/{cover_hash}_thumb.jpg"
-                pid_str = str(playlist_id)
-                if pid_str in ['all', 'favorites']:
-                    from backend.storage.config import Config
-                    cfg = self.config or Config()
-                    cfg.set(f"cover_{pid_str}", cover_url)
-                    return {'status': 'success', 'cover_hash': cover_hash, 'cover_url': cover_url}
-                elif pid_str.isdigit():
-                    self.db.update_playlist_cover(int(pid_str), cover_hash)
-                    return {'status': 'success', 'cover_hash': cover_hash, 'cover_url': cover_url}
+            if not image_bytes:
+                return {'status': 'error', 'message': 'Empty image data'}
+
+            cover_hash = hashlib.sha256(image_bytes).hexdigest()
+            self.cache.save_cover(image_bytes, cover_hash)
+            self.cache.save_thumbnail(image_bytes, cover_hash)
+            cover_url = f"/api/covers/{cover_hash}_thumb.jpg"
+            pid_str = str(playlist_id)
+            if pid_str in ['all', 'favorites']:
+                from backend.storage.config import Config
+                cfg = self.config or Config()
+                cfg.set(f"cover_{pid_str}", cover_url)
+                return {'status': 'success', 'cover_hash': cover_hash, 'cover_url': cover_url}
+            if pid_str.isdigit():
+                self.db.update_playlist_cover(int(pid_str), cover_hash)
+                return {'status': 'success', 'cover_hash': cover_hash, 'cover_url': cover_url}
         except Exception as e:
             logger.error(f"Error updating playlist cover: {e}")
             return {'status': 'error', 'message': str(e)}
@@ -290,9 +331,12 @@ class LibraryService:
 
     def update_track(self, path: str, updates: Dict[str, Any]):
         self.db.update_track(path, updates)
+        if path in self._track_info_cache:
+            self._track_info_cache[path].update(updates)
 
-    def clear_database(self, clear_cache: bool = True) -> Dict[str, Any]:
+    def clear_database(self, clear_cache=True) -> Dict[str, Any]:
         try:
+            self._track_info_cache.clear()
             self.db.clear_database()
             if clear_cache and hasattr(self, 'cache'):
                 self.cache.clear_all()

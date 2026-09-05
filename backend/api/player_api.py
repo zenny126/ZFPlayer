@@ -44,3 +44,19 @@ class PlayerAPI:
     def play_next(self, path: str) -> Dict[str, Any]:
         return self.player_service.insert_play_next(path)
 
+    def set_shuffle(self, state=None) -> Dict[str, Any]:
+        return self.player_service.set_shuffle(state)
+
+    def toggle_shuffle(self) -> Dict[str, Any]:
+        return self.player_service.set_shuffle(None)
+
+    def get_queue(self, limit: int = 50) -> Dict[str, Any]:
+        return self.player_service.get_queue(limit)
+
+    def remove_from_queue(self, path: str) -> Dict[str, Any]:
+        return self.player_service.remove_from_queue(path)
+
+    def clear_queue(self) -> Dict[str, Any]:
+        return self.player_service.clear_queue()
+
+

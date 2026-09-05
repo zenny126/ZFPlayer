@@ -1,7 +1,7 @@
 # ZFPlayer Unified API Specification & Reference Manual
 
 > [!NOTE]
-> **Specification Version**: 2.0.0  
+> **Specification Version**: 3.0.0  
 > **Target Runtime**: PyWebView Native C++ Binding (`window.pywebview.api`) with HTTP REST Fallback (`http://127.0.0.1:<PORT>/api/`)  
 > **Encoding**: UTF-8 | **Format**: JSON Payload
 

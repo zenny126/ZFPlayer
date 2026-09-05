@@ -57,6 +57,9 @@
         <div class="search-container">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
           <input type="text" id="search-input" placeholder="What do you want to play?" aria-label="Search music">
+          <button id="btn-clear-search" class="btn-clear-search hidden" title="Clear search" aria-label="Clear search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon" style="width: 14px; height: 14px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
         </div>
       </div>
       
@@ -123,10 +126,10 @@
               <div class="playlist-info">
                 <span class="playlist-type">Playlist</span>
                 <h1 id="playlist-detail-name">My Playlist</h1>
-                <div class="playlist-meta" style="margin-bottom: 24px;">
+                <div class="playlist-meta">
                   <span id="playlist-detail-count">0 tracks</span>
                 </div>
-                <div class="playlist-actions" style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                <div class="playlist-actions">
                   <button id="btn-playlist-play" class="btn-play-large" title="Play Playlist">
                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 6v12l10-6z"></path></svg>
                   </button>
@@ -159,6 +162,53 @@
         </div>
 
       </main>
+
+      <!-- Right Panel: Play Queue (Docked Seamlessly like Left Panel) -->
+      <aside class="panel right-panel queue-panel collapsed" id="queue-panel" aria-label="Play Queue">
+        <div class="queue-panel-inner">
+          <div class="library-header-bar queue-header-bar">
+            <div class="library-title queue-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+              <span>Play Queue</span>
+              <span id="queue-badge" class="queue-badge">0 tracks</span>
+            </div>
+            <div class="library-actions queue-header-actions">
+              <button id="btn-queue-clear" class="btn-icon queue-clear-btn hidden" title="Clear User Queue" aria-label="Clear user queue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon" style="width: 16px; height: 16px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
+              <button id="btn-queue-close" class="btn-icon" title="Close Queue" aria-label="Close play queue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon" style="width: 16px; height: 16px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </div>
+          </div>
+
+          <div id="queue-scroll-container" class="queue-scroll-container">
+            <!-- Section: Now Playing -->
+            <div id="queue-now-playing-section" class="queue-section hidden">
+              <div class="queue-section-header">Now Playing</div>
+              <div id="queue-now-playing-list" class="queue-track-list"></div>
+            </div>
+
+            <!-- Section: Next in Queue -->
+            <div id="queue-user-section" class="queue-section hidden">
+              <div class="queue-section-header">Next in Queue</div>
+              <div id="queue-user-list" class="queue-track-list"></div>
+            </div>
+
+            <!-- Section: Next Up -->
+            <div id="queue-upcoming-section" class="queue-section">
+              <div class="queue-section-header">Next Up</div>
+              <div id="queue-upcoming-list" class="queue-track-list"></div>
+            </div>
+
+            <div id="queue-empty-state" class="queue-empty-state hidden">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="queue-empty-icon"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+              <p class="queue-empty-title">Queue is empty</p>
+              <p class="queue-empty-subtitle">Right-click any track or click "..." and select "Play Next" to add songs to your playback queue.</p>
+            </div>
+          </div>
+        </div>
+      </aside>
       
   </div>
 
@@ -200,7 +250,7 @@
         </div>
         
         <div class="lyrics-volume-container">
-          <span class="icon-volume"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg></span>
+          <button id="btn-lyrics-volume" class="icon-volume" title="Mute/Unmute" aria-label="Toggle mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg></button>
           <input type="range" id="lyrics-volume-bar" class="volume-bar" min="0" max="100" value="80" aria-label="Lyrics volume">
         </div>
       </div>
@@ -237,9 +287,10 @@
       </div>
       
       <div class="player-right">
+        <button id="btn-queue-toggle" class="btn-icon" title="Play Queue (Q)" aria-label="Playback queue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg></button>
         <button id="btn-lyrics-toggle" class="btn-icon" title="Lyrics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg></button>
         <div class="volume-control">
-          <span class="icon-volume"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon" style="width: 16px; height: 16px;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg></span>
+          <button id="btn-volume" class="icon-volume" title="Mute/Unmute" aria-label="Toggle mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon" style="width: 16px; height: 16px;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg></button>
           <input type="range" id="volume-bar" class="volume-bar" min="0" max="100" value="80" aria-label="Volume">
         </div>
       </div>
@@ -515,6 +566,7 @@
   <script src="js/api.js?v=26"></script>
   <script src="js/shortcuts.js?v=26"></script>
   <script src="js/player.js?v=26"></script>
+  <script src="js/queue.js?v=26"></script>
   <script src="js/lyrics.js?v=38"></script>
   <script src="js/library.js?v=26"></script>
   <script src="js/playlists.js?v=26"></script>

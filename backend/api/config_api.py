@@ -5,9 +5,10 @@ from typing import Dict, Any, Optional, List
 logger = logging.getLogger(__name__)
 
 class ConfigAPI:
-    def __init__(self, config, audio_engine=None):
+    def __init__(self, config, audio_engine=None, player_service=None):
         self.config = config
         self.audio_engine = audio_engine
+        self.player_service = player_service
 
     def get_config(self) -> Dict[str, Any]:
         return self.config._data
@@ -16,6 +17,8 @@ class ConfigAPI:
         self.config.set(key, value)
         if key == 'audio_mode' and self.audio_engine:
             self.audio_engine.set_audio_mode(value)
+        elif key == 'shuffle' and self.player_service:
+            self.player_service.set_shuffle(value)
         return self.get_config()
 
     def set_audio_mode(self, mode: str) -> Dict[str, Any]:

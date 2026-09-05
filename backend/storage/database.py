@@ -45,64 +45,62 @@ class Database:
         if hasattr(self, '_local') and hasattr(self._local, 'conn'):
             try:
                 self._local.conn.close()
-            except Exception:
-                pass
+            except sqlite3.Error as ex:
+                logger.debug("Error closing connection: %s", ex)
             del self._local.conn
+        import gc
+        gc.collect()
 
-
-    def _check_and_heal_database(self):
-        """Checks SQLite integrity and self-heals if corrupted."""
+    def _verify_integrity(self) -> bool:
+        """Verify database integrity via PRAGMA quick_check."""
         if not os.path.exists(self.db_path):
-            return
+            return True
         conn = None
-        cursor = None
-        is_healthy = False
         try:
             conn = sqlite3.connect(self.db_path, timeout=5.0)
-            cursor = conn.cursor()
-            res = cursor.execute('PRAGMA quick_check;').fetchone()
+            res = conn.execute('PRAGMA quick_check;').fetchone()
             if res and res[0] == 'ok':
-                is_healthy = True
-                return
-            logger.error(f"Database quick_check failed: {res}. Rebuilding database...")
+                return True
+            logger.error("Database quick_check failed: %s. Rebuilding database...", res)
+            return False
         except Exception as e:
-            logger.error(f"Database check encountered error: {e}. Rebuilding database...")
+            logger.error("Database check encountered error: %s. Rebuilding database...", e)
+            return False
         finally:
-            if cursor:
-                try:
-                    cursor.close()
-                except Exception:
-                    pass
-                del cursor
             if conn:
                 try:
                     conn.close()
-                except Exception:
-                    pass
-                del conn
+                except sqlite3.Error as ex:
+                    logger.debug("Error closing verify conn: %s", ex)
             import gc
             gc.collect()
 
-        if is_healthy:
-            return
+    def _remove_wal_shm_files(self) -> None:
+        """Remove temporary SQLite WAL and SHM files."""
+        for ext in ['-wal', '-shm']:
+            p = self.db_path + ext
+            if not os.path.exists(p):
+                continue
+            try:
+                os.remove(p)
+            except OSError as ex:
+                logger.debug("Failed removing temporary SQLite file %s: %s", p, ex)
 
-        # Give Windows OS filesystem handle 10ms to release
+    def _quarantine_and_reset(self) -> None:
+        """Back up corrupted database and reset workspace for clean reconstruction."""
         time.sleep(0.01)
-
-        # Self-heal corrupted database
         try:
             corrupt_backup = f"{self.db_path}.corrupt_{int(time.time())}"
             shutil.move(self.db_path, corrupt_backup)
-            # Remove wal/shm if present
-            for ext in ['-wal', '-shm']:
-                if os.path.exists(self.db_path + ext):
-                    try:
-                        os.remove(self.db_path + ext)
-                    except Exception:
-                        pass
-            logger.info(f"Corrupted database backed up to {corrupt_backup}. Creating fresh library.")
+            self._remove_wal_shm_files()
+            logger.info("Corrupted database backed up to %s. Creating fresh library.", corrupt_backup)
         except Exception as ex:
-            logger.critical(f"Failed to auto-heal database: {ex}")
+            logger.critical("Failed to auto-heal database: %s", ex)
+
+    def _check_and_heal_database(self):
+        """Checks SQLite integrity and self-heals if corrupted."""
+        if not self._verify_integrity():
+            self._quarantine_and_reset()
 
 
 
@@ -115,13 +113,12 @@ class Database:
             conn.execute('PRAGMA busy_timeout=30000')
             conn.execute('PRAGMA cache_size=-64000')  # 64MB memory cache
             conn.execute('PRAGMA temp_store=MEMORY')
+            conn.execute('PRAGMA mmap_size=67108864')  # 64MB memory mapped I/O
             self._local.conn = conn
         return self._local.conn
 
-    def init(self):
-        conn = self._get_conn()
-        cursor = conn.cursor()
-        
+    def _create_core_tables(self, cursor: sqlite3.Cursor):
+        """Create baseline SQLite relational tables and primary indexes."""
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS tracks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -140,7 +137,6 @@ class Database:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
-        
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS lyrics_cache (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -151,7 +147,6 @@ class Database:
                 fetched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
-        
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS playlists (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -162,7 +157,6 @@ class Database:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
-        
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS playlist_tracks (
                 playlist_id INTEGER,
@@ -173,11 +167,15 @@ class Database:
             )
         ''')
 
+    def _create_core_indexes(self, cursor: sqlite3.Cursor):
+        """Create initial performance indexes on tracks."""
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_artist ON tracks(artist)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_album ON tracks(album)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_title ON tracks(title)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_path ON tracks(path)')
-        
+
+    def _apply_schema_migrations(self, cursor: sqlite3.Cursor):
+        """Apply additive column migrations and composite performance indexes."""
         cursor.execute("PRAGMA table_info(tracks)")
         columns = [col['name'] for col in cursor.fetchall()]
         if 'is_liked' not in columns:
@@ -201,10 +199,9 @@ class Database:
             cursor.execute('ALTER TABLE playlists ADD COLUMN folder_path TEXT')
         if 'cover_hash' not in playlist_cols:
             cursor.execute('ALTER TABLE playlists ADD COLUMN cover_hash TEXT')
-            
-        conn.commit()
 
-        # Initialize SQLite FTS5 Full-Text Search Index
+    def _setup_fts_indexes(self, cursor: sqlite3.Cursor, conn: sqlite3.Connection):
+        """Initialize SQLite FTS5 Full-Text Search virtual table and triggers."""
         self._has_fts = False
         try:
             cursor.execute('''
@@ -231,15 +228,23 @@ class Database:
                   INSERT INTO tracks_fts(rowid, title, artist, album) VALUES (new.id, new.title, new.artist, new.album);
                 END;
             ''')
-            
-            # Populate index if empty
             cursor.execute('SELECT COUNT(*) FROM tracks_fts')
             if cursor.fetchone()[0] == 0:
                 cursor.execute("INSERT INTO tracks_fts(tracks_fts) VALUES('rebuild')")
                 conn.commit()
             self._has_fts = True
-        except Exception:
+        except Exception as ex:
+            logger.debug("FTS5 setup unavailable or failed: %s", ex)
             self._has_fts = False
+
+    def init(self):
+        conn = self._get_conn()
+        cursor = conn.cursor()
+        self._create_core_tables(cursor)
+        self._create_core_indexes(cursor)
+        self._apply_schema_migrations(cursor)
+        conn.commit()
+        self._setup_fts_indexes(cursor, conn)
 
     def _format_fts_query(self, search: str) -> Optional[str]:
         if not search:
@@ -247,7 +252,7 @@ class Database:
         clean = "".join(c for c in search if c.isalnum() or c.isspace()).strip()
         if not clean:
             return None
-        tokens = [t + '*' for t in clean.split() if t]
+        tokens = [f'"{t}"*' for t in clean.split() if t]
         return " ".join(tokens) if tokens else None
 
     def insert_track(self, track_dict: Dict[str, Any]):
@@ -315,7 +320,8 @@ class Database:
         cursor.execute('SELECT path, mtime, size FROM tracks')
         return {row['path']: {'mtime': row['mtime'], 'size': row['size']} for row in cursor.fetchall()}
 
-    def get_all_track_paths(self, is_favorites: bool = False, playlist_id: Optional[Any] = None) -> List[str]:
+    def get_all_track_paths(self, favorites_only=False, playlist_id: Optional[Any] = None, **kwargs) -> List[str]:
+        is_favorites = bool(favorites_only or kwargs.get('is_favorites', False))
         conn = self._get_conn()
         cursor = conn.cursor()
         if isinstance(playlist_id, str) and playlist_id.startswith('album:'):
@@ -334,13 +340,36 @@ class Database:
             cursor.execute('SELECT path FROM tracks ORDER BY title ASC')
         return [row['path'] for row in cursor.fetchall()]
 
-    def get_tracks_paginated(self, offset: int, limit: int, search: str = '', sort_by: str = 'title', sort_dir: str = 'ASC', is_favorites: bool = False, playlist_id: Optional[Any] = None) -> List[Dict[str, Any]]:
+    def _apply_search_filter(self, search: str, query: str, conditions: List[str], params: List[Any]) -> str:
+        """Apply FTS5 full-text match or fallback LIKE substring filter."""
+        if not search:
+            return query
+        fts_query = self._format_fts_query(search) if getattr(self, '_has_fts', False) else None
+        if fts_query:
+            query += ' INNER JOIN tracks_fts fts ON t.id = fts.rowid'
+            conditions.append('tracks_fts MATCH ?')
+            params.append(fts_query)
+        else:
+            conditions.append('(t.title LIKE ? OR t.artist LIKE ? OR t.album LIKE ?)')
+            search_param = f'%{search}%'
+            params.extend([search_param, search_param, search_param])
+        return query
+
+    def _determine_order_by(self, scope: str, real_playlist_id: Optional[int], sort_by: str, sort_dir: str) -> str:
+        """Construct secure, whitelisted ORDER BY clause."""
+        if scope == 'album':
+            return ' ORDER BY t.track_number ASC, t.title ASC LIMIT ? OFFSET ?'
+        if real_playlist_id is not None:
+            return ' ORDER BY pt.position ASC LIMIT ? OFFSET ?'
+        allowed_sorts = ['title', 'artist', 'album', 'duration', 'track_number', 'created_at', 'last_played']
+        clean_sort = sort_by if sort_by in allowed_sorts else 'title'
+        clean_dir = 'ASC' if sort_dir and str(sort_dir).upper() == 'ASC' else 'DESC'
+        return f' ORDER BY t.{clean_sort} {clean_dir} LIMIT ? OFFSET ?'
+
+    def get_tracks_paginated(self, offset: int, limit: int, search: str = '', sort_by: str = 'title', sort_dir: str = 'ASC', favorites_only=False, playlist_id: Optional[Any] = None, **kwargs) -> List[Dict[str, Any]]:
+        is_favorites = bool(favorites_only or kwargs.get('is_favorites', False))
         conn = self._get_conn()
         cursor = conn.cursor()
-        
-        allowed_sorts = ['title', 'artist', 'album', 'duration', 'track_number', 'created_at', 'last_played']
-        sort_by = sort_by if sort_by in allowed_sorts else 'title'
-        sort_dir = 'ASC' if sort_dir and str(sort_dir).upper() == 'ASC' else 'DESC'
         
         is_album_scope = isinstance(playlist_id, str) and playlist_id.startswith('album:')
         real_playlist_id = int(playlist_id) if playlist_id is not None and str(playlist_id).isdigit() else None
@@ -349,9 +378,8 @@ class Database:
         if real_playlist_id is not None:
             query += ' INNER JOIN playlist_tracks pt ON t.id = pt.track_id'
             
-        params = []
-        conditions = []
-        
+        params: List[Any] = []
+        conditions: List[str] = []
         if is_album_scope:
             conditions.append('t.album = ?')
             params.append(playlist_id[6:])
@@ -362,32 +390,15 @@ class Database:
         if is_favorites or str(playlist_id) in ['favorites', '-1']:
             conditions.append('t.is_liked = 1')
             
-        if search:
-            fts_query = self._format_fts_query(search) if getattr(self, '_has_fts', False) else None
-            if fts_query:
-                query += ' INNER JOIN tracks_fts fts ON t.id = fts.rowid'
-                conditions.append('tracks_fts MATCH ?')
-                params.append(fts_query)
-            else:
-                conditions.append('(t.title LIKE ? OR t.artist LIKE ? OR t.album LIKE ?)')
-                search_param = f'%{search}%'
-                params.extend([search_param, search_param, search_param])
-            
+        query = self._apply_search_filter(search, query, conditions, params)
         if conditions:
             query += ' WHERE ' + ' AND '.join(conditions)
             
-        if is_album_scope:
-            query += ' ORDER BY t.track_number ASC, t.title ASC LIMIT ? OFFSET ?'
-        elif real_playlist_id is not None:
-            query += ' ORDER BY pt.position ASC LIMIT ? OFFSET ?'
-        else:
-            query += f' ORDER BY t.{sort_by} {sort_dir} LIMIT ? OFFSET ?'
-            
+        scope_name = 'album' if is_album_scope else 'standard'
+        query += self._determine_order_by(scope_name, real_playlist_id, sort_by, sort_dir)
         params.extend([limit, offset])
-        
         cursor.execute(query, params)
         return [dict(row) for row in cursor.fetchall()]
-
 
     def get_albums(self) -> List[Dict[str, Any]]:
         conn = self._get_conn()
@@ -409,6 +420,27 @@ class Database:
         row = cursor.fetchone()
         return dict(row) if row else None
 
+    def get_tracks_by_paths(self, paths: List[str]) -> Dict[str, Dict[str, Any]]:
+        """Fetch multiple tracks by their file paths in a single batch query."""
+        if not paths:
+            return {}
+
+        unique_paths = list(dict.fromkeys(paths))
+        conn = self._get_conn()
+        cursor = conn.cursor()
+        result: Dict[str, Dict[str, Any]] = {}
+
+        chunk_size = 500
+        for i in range(0, len(unique_paths), chunk_size):
+            chunk = unique_paths[i:i + chunk_size]
+            placeholders = ','.join('?' for _ in chunk)
+            cursor.execute(f'SELECT * FROM tracks WHERE path IN ({placeholders})', chunk)
+            for row in cursor.fetchall():
+                row_dict = dict(row)
+                result[row_dict['path']] = row_dict
+
+        return result
+
     def disable_fts_triggers(self):
         try:
             conn = self._get_conn()
@@ -417,8 +449,8 @@ class Database:
             cursor.execute('DROP TRIGGER IF EXISTS tracks_ad')
             cursor.execute('DROP TRIGGER IF EXISTS tracks_au')
             conn.commit()
-        except Exception:
-            pass
+        except sqlite3.Error as ex:
+            logger.debug("Failed dropping FTS triggers: %s", ex)
 
     def enable_fts_triggers(self):
         try:
@@ -441,8 +473,8 @@ class Database:
                 END;
             ''')
             conn.commit()
-        except Exception:
-            pass
+        except sqlite3.Error as ex:
+            logger.debug("Failed creating FTS triggers: %s", ex)
 
     def rebuild_fts(self):
         try:
@@ -450,8 +482,8 @@ class Database:
             cursor = conn.cursor()
             cursor.execute("INSERT INTO tracks_fts(tracks_fts) VALUES('rebuild')")
             conn.commit()
-        except Exception:
-            pass
+        except sqlite3.Error as ex:
+            logger.debug("Failed rebuilding FTS index: %s", ex)
 
     def bulk_insert_tracks(self, tracks: List[Dict[str, Any]]):
         if not tracks:
@@ -469,6 +501,22 @@ class Database:
         cursor.executemany(query, values)
         conn.commit()
 
+    def _is_negative_cache_expired(self, fetched_at_str: Optional[str], ttl_days: int) -> bool:
+        """Check if negative lyrics cache entry ([NO_LYRICS]) has exceeded its TTL."""
+        if not fetched_at_str:
+            return False
+        try:
+            from datetime import datetime
+            if 'T' in fetched_at_str:
+                fetched_time = datetime.fromisoformat(fetched_at_str)
+            else:
+                fetched_time = datetime.strptime(fetched_at_str, '%Y-%m-%d %H:%M:%S')
+            age_seconds = (datetime.utcnow() - fetched_time).total_seconds()
+            return age_seconds > (ttl_days * 86400)
+        except (ValueError, TypeError) as ex:
+            logger.debug("Failed parsing negative cache timestamp '%s': %s", fetched_at_str, ex)
+            return False
+
     def get_lyrics(self, cache_key: str, negative_ttl_days: int = 7) -> Optional[Dict[str, Any]]:
         conn = self._get_conn()
         cursor = conn.cursor()
@@ -478,28 +526,11 @@ class Database:
             return None
         
         result = dict(row)
-        # Check TTL for negative cache entries ([NO_LYRICS])
         if result.get('synced_lyrics') == '[NO_LYRICS]':
-            fetched_at_str = result.get('fetched_at')
-            if fetched_at_str:
-                try:
-                    from datetime import datetime, timezone
-                    # SQLite CURRENT_TIMESTAMP format: YYYY-MM-DD HH:MM:SS
-                    if 'T' in fetched_at_str:
-                        fetched_time = datetime.fromisoformat(fetched_at_str)
-                    else:
-                        fetched_time = datetime.strptime(fetched_at_str, '%Y-%m-%d %H:%M:%S')
-                    
-                    # Assume UTC for CURRENT_TIMESTAMP
-                    now = datetime.utcnow()
-                    age_seconds = (now - fetched_time).total_seconds()
-                    if age_seconds > (negative_ttl_days * 86400):
-                        # Expired negative cache, invalidate it so it refetches
-                        cursor.execute('DELETE FROM lyrics_cache WHERE cache_key = ?', (cache_key,))
-                        conn.commit()
-                        return None
-                except Exception:
-                    pass
+            if self._is_negative_cache_expired(result.get('fetched_at'), negative_ttl_days):
+                cursor.execute('DELETE FROM lyrics_cache WHERE cache_key = ?', (cache_key,))
+                conn.commit()
+                return None
         return result
 
     def save_lyrics(self, cache_key: str, synced: str, plain: str, source: str):
@@ -511,7 +542,8 @@ class Database:
         ''', (cache_key, synced, plain, source))
         conn.commit()
 
-    def get_track_count(self, search: str = '', is_favorites: bool = False, playlist_id: Optional[Any] = None) -> int:
+    def get_track_count(self, search: str = '', favorites_only=False, playlist_id: Optional[Any] = None, **kwargs) -> int:
+        is_favorites = bool(favorites_only or kwargs.get('is_favorites', False))
         conn = self._get_conn()
         cursor = conn.cursor()
         
@@ -647,53 +679,52 @@ class Database:
         to_insert = []
         first_cover_hash = None
         for p in track_paths:
-            if p in track_map:
-                t_id, c_hash = track_map[p]
-                if t_id not in existing_ids:
-                    max_pos += 1
-                    to_insert.append((playlist_id, t_id, max_pos))
-                    existing_ids.add(t_id)
-                    if not first_cover_hash and c_hash:
-                        first_cover_hash = c_hash
+            if p not in track_map:
+                continue
+            t_id, c_hash = track_map[p]
+            if t_id in existing_ids:
+                continue
+            max_pos += 1
+            to_insert.append((playlist_id, t_id, max_pos))
+            existing_ids.add(t_id)
+            if not first_cover_hash and c_hash:
+                first_cover_hash = c_hash
                         
         if to_insert:
             cursor.executemany('INSERT INTO playlist_tracks (playlist_id, track_id, position) VALUES (?, ?, ?)', to_insert)
-            
-            # Update playlist cover if not set
-            if first_cover_hash:
-                cursor.execute('SELECT cover_hash FROM playlists WHERE id = ?', (playlist_id,))
-                p_row = cursor.fetchone()
-                if p_row and not p_row['cover_hash']:
-                    cursor.execute('UPDATE playlists SET cover_hash = ? WHERE id = ?', (first_cover_hash, playlist_id))
+            self._update_playlist_cover_if_empty(cursor, playlist_id, first_cover_hash)
             conn.commit()
             
         return len(to_insert)
 
+    def _update_playlist_cover_if_empty(self, cursor: sqlite3.Cursor, playlist_id: int, cover_hash: Optional[str]) -> None:
+        """Update playlist cover art if not already established."""
+        if not cover_hash:
+            return
+        cursor.execute('SELECT cover_hash FROM playlists WHERE id = ?', (playlist_id,))
+        p_row = cursor.fetchone()
+        if p_row and not p_row['cover_hash']:
+            cursor.execute('UPDATE playlists SET cover_hash = ? WHERE id = ?', (cover_hash, playlist_id))
+
     def add_track_to_playlist(self, playlist_id: int, track_path: str):
         conn = self._get_conn()
         cursor = conn.cursor()
-        cursor.execute('SELECT id FROM tracks WHERE path = ?', (track_path,))
+        cursor.execute('SELECT id, cover_hash FROM tracks WHERE path = ?', (track_path,))
         row = cursor.fetchone()
-        if not row: return
+        if not row:
+            return
         track_id = row['id']
         
         cursor.execute('SELECT COUNT(*) FROM playlist_tracks WHERE playlist_id = ? AND track_id = ?', (playlist_id, track_id))
-        if cursor.fetchone()[0] > 0: return
+        if cursor.fetchone()[0] > 0:
+            return
             
         cursor.execute('SELECT MAX(position) FROM playlist_tracks WHERE playlist_id = ?', (playlist_id,))
         max_pos = cursor.fetchone()[0]
         next_pos = (max_pos or 0) + 1
         
         cursor.execute('INSERT INTO playlist_tracks (playlist_id, track_id, position) VALUES (?, ?, ?)', (playlist_id, track_id, next_pos))
-        
-        cursor.execute('SELECT cover_hash FROM playlists WHERE id = ?', (playlist_id,))
-        p_row = cursor.fetchone()
-        if p_row and not p_row['cover_hash']:
-            cursor.execute('SELECT cover_hash FROM tracks WHERE id = ?', (track_id,))
-            t_row = cursor.fetchone()
-            if t_row and t_row['cover_hash']:
-                cursor.execute('UPDATE playlists SET cover_hash = ? WHERE id = ?', (t_row['cover_hash'], playlist_id))
-                
+        self._update_playlist_cover_if_empty(cursor, playlist_id, row['cover_hash'])
         conn.commit()
 
     def remove_track_from_playlist(self, playlist_id: int, track_path: str):
@@ -716,10 +747,10 @@ class Database:
         if getattr(self, '_has_fts', False):
             try:
                 cursor.execute("INSERT INTO tracks_fts(tracks_fts) VALUES('delete-all')")
-            except Exception:
-                pass
+            except sqlite3.Error as ex:
+                logger.debug("Failed clearing FTS table: %s", ex)
         conn.commit()
         try:
             cursor.execute('VACUUM')
-        except Exception:
-            pass
+        except sqlite3.Error as ex:
+            logger.debug("Failed VACUUM after database clear: %s", ex)

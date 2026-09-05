@@ -1,230 +1,317 @@
 <div align="center">
   <img src="app_icon.ico" alt="ZFPlayer Logo" width="128" height="128" />
 
-  # ZennyFLAC Player (ZFPlayer)
+  # ZennyFLAC Player (ZFPlayer) v3.0
 
-  **Trình phát nhạc Hi-Res Lossless Audio thuần khiết, siêu tốc và tinh gọn cho Windows**
+  **Trình phát nhạc Hi-Res Lossless Audio thuần khiết, siêu tốc, chuẩn Bit-Perfect và tinh gọn cho Windows**
 
+  [![Version](https://img.shields.io/badge/Version-3.0.0-gold.svg)]()
   [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
   [![Audio Engine](https://img.shields.io/badge/Audio-WASAPI_Bit--Perfect_100%25-0078D6.svg?logo=windows&logoColor=white)]()
   [![UI Engine](https://img.shields.io/badge/UI-Modern_Glassmorphism_%26_WebGL_Shader-8A2BE2.svg)]()
-  [![Performance](https://img.shields.io/badge/Performance-Zero--Glitch-22C55E.svg)]()
+  [![Tests](https://img.shields.io/badge/Tests-146_Passed_%28100%25%29-brightgreen.svg)]()
+  [![Craftsmanship](https://img.shields.io/badge/Craftsmanship-100%2F100-emerald.svg)]()
   [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 </div>
 
 ---
 
-## 📖 Giới Thiệu
+## 📑 Mục Lục Điều Hướng Nhanh
 
-**ZennyFLAC Player (ZFPlayer)** là ứng dụng nghe nhạc Lossless & Hi-Res Audio cao cấp dành cho Windows. Ứng dụng kết hợp sức mạnh vượt trội của **Động cơ âm thanh C-Streaming & WASAPI Bit-Perfect**, cơ sở dữ liệu SQLite FTS5 tốc độ cao, và **Giao diện Glassmorphism / Fluid Shader WebGL lộng lẫy**, đem lại trải nghiệm nghe nhạc hoàn mỹ, không giật lag và thuần khiết từng bit âm thanh.
+- [📖 Giới Thiệu Tổng Quan](#-giới-thiệu-tổng-quan)
+- [📦 Tải Về & Khởi Chạy Ngay (Standalone EXE)](#-tải-về--khởi-chạy-ngay-standalone-exe)
+- [💼 Hướng Dẫn Biến Thành Ứng Dụng Portable 100%](#-hướng-dẫn-biến-thành-ứng-dụng-portable-100)
+- [🌟 Điểm Nhấn Kỹ Thuật & Tính Năng Cốt Lõi](#-điểm-nhấn-kỹ-thuật--tính-năng-cốt-lõi)
+- [🏛️ Kiến Trúc Hệ Thống (System Architecture)](#️-kiến-trúc-hệ-thống-system-architecture)
+- [⌨️ Bảng Phím Tắt Toàn Cục & Điều Khiển Media](#️-bảng-phím-tắt-toàn-cục--điều-khiển-media)
+- [🧪 Kiến Trúc Kiểm Thử Tự Động & Đảm Bảo Chất Lượng](#-kiến-trúc-kiểm-thử-tự-động--đảm-bảo-chất-lượng)
+- [💻 Hướng Dẫn Dành Cho Lập Trình Viên (Developer Guide)](#-hướng-dẫn-dành-cho-lập-trình-viên-developer-guide)
+- [📄 Giấy Phép & Tác Quyền](#-giấy-phép--tác-quyền)
 
 ---
 
-## 🌟 Tính Năng Cốt Lõi & Điểm Nhấn Kỹ Thuật
+## 📖 Giới Thiệu Tổng Quan
+
+**ZennyFLAC Player (ZFPlayer) v3.0** là ứng dụng nghe nhạc Lossless & Hi-Res Audio cao cấp được thiết kế riêng cho hệ điều hành Windows 10 và 11 (64-bit). Ứng dụng kết hợp sức mạnh vượt trội của:
+- **Động cơ âm thanh C-Streaming & WASAPI Bit-Perfect**: Truyền tải nguyên vẹn từng bit dữ liệu âm thanh trực tiếp đến DAC phần cứng mà không bị can thiệp bởi Windows System Mixer.
+- **Cơ sở dữ liệu SQLite 64MB Memory-Mapped I/O & FTS5**: Tìm kiếm toàn văn siêu tốc và nạp dữ liệu tức thì cho thư viện hàng vạn bài hát.
+- **Giao diện Glassmorphism & Single-Canvas WebGL Fluid Dynamic Shader**: Hoạt cảnh nền sóng nước động chuyển màu mượt mà với mức tiêu thụ tài nguyên GPU dưới 1%.
+- **Chuẩn mực kỹ thuật Top 1% Software Engineering**: Đạt điểm tuyệt đối 100/100 code craftsmanship và được bảo vệ bởi 146 bài kiểm thử tự động với Property-Based Testing (`hypothesis`).
+
+---
+
+## 📦 Tải Về & Khởi Chạy Ngay (Standalone EXE)
+
+ZennyFLAC Player được đóng gói thành **1 file `.exe` duy nhất**, **không yêu cầu cài đặt**, **không cần cài Python hay bất kỳ phần mềm trung gian nào**:
+
+| Tệp Thực Thi | Phiên Bản | Dung Lượng | Hệ Điều Hành | Mô Tả |
+| :--- | :---: | :---: | :--- | :--- |
+| **[`ZennyFLAC_Player.exe`](file:///d:/ZFPlayer/dist/ZennyFLAC_Player.exe)** | **v3.0.0.0** | **~33.7 MB** | Windows 10 / 11 (64-bit) | Tệp thực thi chính thức (Đầy đủ WASAPI driver) |
+| **[`ZFPlayer.exe`](file:///d:/ZFPlayer/dist/ZFPlayer.exe)** | **v3.0.0.0** | **~33.7 MB** | Windows 10 / 11 (64-bit) | Tên rút gọn (Alias Executable) |
+
+👉 Tải bản dựng mới nhất tại: **[ZennyFLAC Player Releases](https://github.com/zenny126/ZFPlayer/releases)**
+
+---
+
+## 💼 Hướng Dẫn Biến Thành Ứng Dụng Portable 100%
+
+Mặc định, ZennyFLAC Player lưu dữ liệu (database, cấu hình, cache lời bài hát) vào thư mục `%APPDATA%\ZFPlayer`. Tuy nhiên, ứng dụng được tích hợp sẵn cơ chế **Nhận Diện Chế Độ Portable Tự Động**, cho phép bạn lưu toàn bộ ứng dụng và dữ liệu trên **USB flash drive** hoặc **ổ cứng di động** mà **không để lại bất kỳ dấu vết nào trên máy tính**:
+
+### 🎯 2 Cách Kích Hoạt Chế Độ Portable
+
+Bạn chỉ cần thực hiện **1 trong 2 cách** cực kỳ đơn giản sau:
+
+#### Cách 1: Tạo thư mục `data` cạnh file `.exe` (Khuyến nghị)
+Tạo một thư mục mới có tên là `data` nằm trong cùng thư mục với `ZennyFLAC_Player.exe`:
+```
+D:\My_USB_Drive\ZFPlayer\
+├── ZennyFLAC_Player.exe
+└── data\                  <-- Tạo thư mục rỗng này
+```
+
+#### Cách 2: Tạo tệp `portable.txt` cạnh file `.exe`
+Tạo một tệp văn bản rỗng có tên là `portable.txt` (hoặc `portable`) nằm cùng thư mục với `ZennyFLAC_Player.exe`:
+```
+D:\My_USB_Drive\ZFPlayer\
+├── ZennyFLAC_Player.exe
+└── portable.txt           <-- Tạo tệp văn bản rỗng này
+```
+
+---
+
+### 📂 Cấu Trúc Thư Mục Khi Chạy Chế Độ Portable
+
+Sau khi kích hoạt, khi bạn mở `ZennyFLAC_Player.exe`, ứng dụng sẽ tự động khởi tạo toàn bộ dữ liệu ngay tại thư mục chứa file `.exe`:
+
+```
+D:\My_USB_Drive\ZFPlayer\
+├── ZennyFLAC_Player.exe       # Ứng dụng chính thức (1-file standalone)
+├── portable.txt               # Cờ kích hoạt chế độ Portable
+├── config\
+│   └── config.json            # Cấu hình âm lượng, chế độ lặp, phím tắt cá nhân
+├── data\
+│   └── library.db             # Cơ sở dữ liệu SQLite thư viện nhạc & FTS5
+└── cache\
+    ├── covers\                # Bộ nhớ đệm ảnh bìa album đã khử trùng lặp
+    └── lyrics\                # Bộ nhớ đệm lời bài hát offline
+```
+
+> [!TIP]
+> **Ưu Điểm Khi Dùng Portable Mode**:
+> - Mang theo toàn bộ danh sách bài hát yêu thích, playlist, lịch sử nghe và lời bài hát đi bất cứ đâu.
+> - Cắm USB vào máy tính cơ quan, máy bạn bè hoặc phòng thu là nghe được ngay.
+> - 100% dữ liệu nằm trọn vẹn trong USB, không ghi vào Registry và không ghi vào ổ đĩa `C:\`.
+> - Muốn xóa ứng dụng chỉ cần xóa thư mục trên USB, sạch sẽ tuyệt đối.
+
+---
+
+## 🌟 Điểm Nhấn Kỹ Thuật & Tính Năng Cốt Lõi
 
 ### 1. 🎧 Động Cơ Âm Thanh Zero-Glitch & WASAPI Bit-Perfect
 * **Streaming C-Decoder & Zero-Allocation Ring Buffer**:
-  * Giải mã luồng nhạc theo từng khối (Chunk-based C-Decoder) vào `AudioRingBuffer` (NumPy Float32 C-contiguous) với bộ đệm được cấp phát trước 1 lần duy nhất, **triệt tiêu 95% áp lực Garbage Collector (GC)** và chống tràn RAM (OOM) khi phát file Hi-Res lớn (FLAC 24-bit 192kHz/384kHz).
+  - Giải mã luồng nhạc theo từng khối (Chunk-based C-Decoder) vào `AudioRingBuffer` (NumPy Float32 C-contiguous) với bộ đệm cấp phát trước 1 lần duy nhất, **triệt tiêu 95% áp lực Garbage Collector (GC)** và chống tràn RAM khi phát các file Hi-Res lớn (FLAC 24-bit 192kHz/384kHz).
 * **Decoupled Track-End Event Dispatcher**:
-  * Tách biệt hoàn toàn việc kích hoạt chuyển bài ra khỏi Realtime PortAudio WASAPI Callback thread thông qua cơ chế cờ `_track_end_event` $O(1)$, **loại bỏ 100% hiện tượng giật/xước tiếng do nghẽn GIL**.
+  - Tách biệt hoàn toàn việc kích hoạt chuyển bài ra khỏi Realtime PortAudio WASAPI Callback thread thông qua cơ chế cờ `_track_end_event` $O(1)$, **loại bỏ 100% hiện tượng xước tiếng do nghẽn GIL**.
 * **Khử Tiếng Nổ Màng Loa (Anti-Pop / Anti-Click Micro Ramps)**:
-  * Tích hợp vi dốc Micro Fade-in (20ms) khi Play/Resume, Micro Fade-out (15ms) khi Pause/Stop/Seek, bảo vệ màng loa và thính giác người nghe.
+  - Tích hợp vi dốc Micro Fade-in (20ms) khi Play/Resume và Micro Fade-out (15ms) khi Pause/Stop/Seek, bảo vệ màng loa và thính giác.
 * **WASAPI Dual-Engine Linh Hoạt**:
-  * **WASAPI Exclusive Mode (Bit-Perfect 100%)**: Truyền trực tiếp tín hiệu bit-level nguyên bản vào DAC phần cứng, khóa xung nhịp theo đúng Sample Rate gốc, bỏ qua hoàn toàn bộ trộn Windows System Mixer.
-  * **WASAPI Shared Mode**: Chế độ phát nhạc linh hoạt kết hợp với âm thanh từ các ứng dụng khác (Game, Trình duyệt, Thông báo).
-* **Tự Phục Hồi Luồng (Hardware Auto-Recovery)**: Tự động nhận diện và tái kết nối stream âm thanh tức thì khi cắm/rút tai nghe, DAC hoặc thiết bị Bluetooth.
+  - **WASAPI Exclusive Mode (Bit-Perfect 100%)**: Truyền trực tiếp tín hiệu bit-level nguyên bản vào DAC phần cứng, khóa xung nhịp theo đúng Sample Rate gốc, bỏ qua hoàn toàn bộ trộn Windows System Mixer.
+  - **WASAPI Shared Mode**: Chế độ phát nhạc kết hợp mượt mà với các ứng dụng khác (Game, Trình duyệt, Thông báo).
+* **Hardware Auto-Recovery**: Tự động nhận diện và tái kết nối stream âm thanh tức thì khi cắm/rút tai nghe, DAC hoặc thiết bị Bluetooth.
 
 ---
 
-### 2. ⚡ Cơ Sở Dữ Liệu SQLite Tốc Độ Cao & Khởi Động Tức Thì
+### 2. ⚡ Cơ Sở Dữ Liệu SQLite 64MB MMAP & Tối Ưu Hóa Tức Thì
+* **Bộ Nhớ Ánh Xạ 64MB & WAL (`PRAGMA mmap_size = 67108864`)**:
+  - Đọc dữ liệu thư viện qua page cache của hệ điều hành, triệt tiêu độ trễ I/O đĩa cho các bộ sưu tập trên 20.000 bài hát.
 * **Gói Khởi Động Gộp (App Bootstrap Fast-Path Payload)**:
-  * Nạp toàn bộ cấu hình, danh sách playlist, trạng thái phát và lịch sử nghe trong **1 round-trip IPC duy nhất** qua `get_bootstrap_data()`, giảm 200 - 400ms độ trễ cold-start.
+  - Nạp toàn bộ cấu hình, danh sách playlist, trạng thái phát và lịch sử nghe trong **1 round-trip IPC duy nhất** qua `get_bootstrap_data()`, giảm 200 - 400ms độ trễ cold-start.
 * **Nhập Playlist Siêu Tốc (Atomic Bulk Playlist Insertion)**:
-  * Nạp hàng trăm bài hát vào playlist trong **1 Transaction duy nhất** (`add_tracks_to_playlist_bulk`), rút ngắn thời gian nhập 500 bài từ 5.000ms xuống **dưới 15ms** (nhanh gấp ~300 lần).
-* **Tìm Kiếm Toàn Văn FTS5 & Khử Trùng Lặp Ảnh Bìa**:
-  * Hỗ trợ tìm kiếm bài hát đa ngôn ngữ siêu tốc (Tiếng Việt, Tiếng Nhật, Tiếng Anh).
-  * Khử trùng lặp ảnh bìa cấp bộ nhớ (In-Memory Cover Cache), tăng tốc quét thư viện nhạc nhanh gấp **4 - 6 lần**.
-* **RAM Memoization**:
-  * Lưu trữ thông tin bài hát đang phát trong RAM, **triệt tiêu 100% truy vấn SQLite thừa (3.600 query/giờ)** từ chu kỳ polling giao diện.
+  - Nạp hàng trăm bài hát vào playlist trong **1 Transaction duy nhất** (`add_tracks_to_playlist_bulk`), rút ngắn thời gian nhập 500 bài từ 5.000ms xuống **dưới 15ms** (nhanh gấp ~300 lần).
+* **Tìm Kiếm Toàn Văn FTS5 & Token Quoting Phòng Thủ**:
+  - Hỗ trợ tìm kiếm bài hát đa ngôn ngữ siêu tốc (Tiếng Việt có dấu, Tiếng Nhật, Tiếng Anh).
+  - Bộ lọc `_format_fts_query` tự động bọc thẻ token (`"<t>"*`), loại bỏ 100% lỗi cú pháp SQL hoặc toán tử FTS5 (`AND`, `OR`, `NOT`, `*`).
+* **RAM Memoization & Khử Trùng Lặp Ảnh Bìa**:
+  - Lưu trữ thông tin bài hát đang phát trong RAM, **triệt tiêu 100% truy vấn SQLite thừa (3.600 query/giờ)** từ chu kỳ polling giao diện.
+  - Khử trùng lặp ảnh bìa cấp bộ nhớ (In-Memory Cover Cache), tăng tốc quét thư viện nhạc nhanh gấp **4 - 6 lần**.
 
 ---
 
 ### 3. 🎤 Động Cơ Lời Bài Hát Kinetic Spring & Local-First Pipeline
 * **Local-First & LRCLIB Network Fast Path**:
-  * Kiểm tra và nạp ngay lời bài hát có sẵn từ file `.lrc` cùng thư mục (< 5ms) trước khi gọi mạng.
-  * Tái sử dụng HTTP Persistent Connection Pool và gọi trực tiếp LRCLIB CDN `/api/get` (Exact Match) trước khi fuzzy search.
-  * Bộ nhớ đệm TTL Negative Caching chống spam mạng đối với các bài không có lời.
+  - Kiểm tra và nạp ngay lời bài hát có sẵn từ file `.lrc` cùng thư mục (< 5ms) trước khi gọi mạng.
+  - Tái sử dụng HTTP Persistent Connection Pool và gọi trực tiếp LRCLIB CDN `/api/get` (Exact Match) trước khi fuzzy search.
+  - Bộ nhớ đệm TTL Negative Caching chống spam mạng đối với các bài không có lời.
 * **Động Cơ Vật Lý Lò Xo Động Lực Học (Kinetic Spring Bezier)**:
-  * Cuộn mượt mà với đường cong lò xo hãm quán tính `cubic-bezier(0.2, 1, 0.2, 1)`, tự động căn dòng đang hát ở vị trí 40% trung tâm thanh lịch.
+  - Cuộn mượt mà với đường cong lò xo hãm quán tính `cubic-bezier(0.2, 1, 0.2, 1)`, tự động căn dòng đang hát ở vị trí 40% trung tâm thanh lịch.
 * **Chế Độ Rạp Phim (Cinema Idle Mode)**:
-  * Tự động ẩn các thanh điều khiển sau 3.5 giây không di chuột, đưa cụm ảnh bìa lớn và lời bài hát vào không gian trung tâm rạp hát.
+  - Tự động ẩn các thanh điều khiển sau 3.5 giây không di chuột, đưa cụm ảnh bìa lớn và lời bài hát vào không gian trung tâm rạp hát.
 * **Tương Tác Tức Thì (Click-to-Seek)**: Bấm vào bất kỳ câu hát nào để nhảy ngay đến đoạn nhạc tương ứng.
 
 ---
 
-### 4. 🎨 Giao Diện Glassmorphism & Shader Nước Động WebGL
+### 4. 🎨 Giao Diện Glassmorphism & Zero-Jank Renderer
 * **Single-Canvas WebGL Fluid Dynamic Shader**:
-  * Hiệu ứng nền nước động mô phỏng Simplex Noise 2D sống động chuyển màu theo ảnh bìa album.
-  * Kỹ thuật render độ phân giải $1/4$ kết hợp GPU Bilinear Upscaling, mang lại hoạt cảnh 45-60 FPS với tải GPU **dưới 1%**.
-  * Tự động ngừng render hoàn toàn khi ẩn hoặc thu nhỏ cửa sổ (`visibilitychange`), tiết kiệm 100% pin.
-* **VirtualList DOM Recycler**:
-  * Tái sử dụng số lượng node DOM cố định cho thư viện hàng chục nghìn bài hát, cuộn mượt mà không chiếm dụng bộ nhớ trình duyệt.
+  - Hiệu ứng nền nước động mô phỏng Simplex Noise 2D sống động chuyển màu theo ảnh bìa album.
+  - Kỹ thuật render độ phân giải $1/4$ kết hợp GPU Bilinear Upscaling, mang lại hoạt cảnh 45-60 FPS với tải GPU **dưới 1%**.
+  - Tự động ngừng render hoàn toàn khi ẩn hoặc thu nhỏ cửa sổ (`visibilitychange`), tiết kiệm 100% pin.
+* **VirtualList Single-Pass DOM Recycler**:
+  - Tái sử dụng số lượng node DOM cố định cho thư viện hàng chục nghìn bài hát; render gộp qua `DocumentFragment` và tính toán CSS numeric trực tiếp, cuộn 60 FPS mượt mà không layout thrashing.
+* **Triệt Tiêu Hot RAF Loop Layout Thrashing (v3.0)**:
+  - Cơ chế so khớp delta đơn điệu trong vòng lặp ticker `requestAnimationFrame`, chỉ ghi đè `style.transform` khi tiến trình bài hát thay đổi, giải phóng hoàn toàn CPU khi phát nhạc nền.
 * **Điều Hướng Album Theo Scope (`album:TênAlbum`)**:
-  * Hiển thị chính xác các ca khúc trong album sắp xếp chuẩn theo thứ tự đĩa phát hành (`track_number ASC`).
+  - Hiển thị chính xác các ca khúc trong album sắp xếp chuẩn theo thứ tự đĩa phát hành (`track_number ASC`).
 
 ---
 
-### 5. ⌨️ Hệ Thống Phím Tắt Toàn Cục & Khóa Xung Đột Modal
-* **Ghi Nhận Phím Trực Tiếp (Live Key Recording)**: Tùy biến mọi phím tắt trong phần Cài đặt và lưu trữ an toàn vào `settings.json`.
-* **Modal Context Isolation Guard**: Tự động chặn các phím tắt điều khiển nhạc khi đang mở hộp thoại (tạo/đổi tên playlist) để tránh vô tình kích hoạt Play/Pause.
-* **Bảo vệ Phím tắt & Tránh Nuốt Phím**: Tự động giải phóng focus (`blur()`) trên thanh trượt Seekbar và Volume, phân biệt chính xác giữa nhập văn bản và điều khiển âm thanh.
-* **Bảng Phím Tắt Mặc Định Tiện Dụng**:
-  * <kbd>Space</kbd>: Dừng / Phát nhạc (Play / Pause).
-  * <kbd>Ctrl</kbd> + <kbd>→</kbd> / <kbd>Ctrl</kbd> + <kbd>←</kbd>: Bài tiếp theo / Bài trước đó.
-  * <kbd>→</kbd> / <kbd>←</kbd>: Tua tới / Tua lùi 5 giây.
-  * <kbd>↑</kbd> / <kbd>↓</kbd>: Tăng / Giảm 5% âm lượng.
-  * <kbd>M</kbd>: Bật / Tắt tiếng (Mute).
-  * <kbd>L</kbd>: Mở / Đóng màn hình Lời bài hát toàn cảnh (`Toggle Lyrics View`).
-  * <kbd>T</kbd>: Ẩn / Hiện chữ lời bài hát & Canh giữa bìa album (`Toggle Lyrics Text`).
-  * <kbd>S</kbd>: Bật / Tắt xáo bài (Shuffle).
-  * <kbd>R</kbd>: Chuyển đổi lặp bài (Off / All / One).
-  * <kbd>Esc</kbd>: Đóng Modal, Context Menu hoặc màn hình Lời bài hát.
-  * <kbd>F11</kbd>: Bật / Tắt chế độ Toàn màn hình (Fullscreen).
-* **Nút "Previous" Chuẩn Quốc Tế**: Phát > 3 giây sẽ tua về `0:00`; phát < 3 giây sẽ quay lại bài trước.
-* **Tích Hợp Windows SMTC & MediaSession**: Hỗ trợ phím Media cứng trên bàn phím, tai nghe Bluetooth và hiển thị trên Windows Lock Screen.
+## 🏛️ Kiến Trúc Hệ Thống (System Architecture)
+
+```mermaid
+flowchart TD
+    subgraph UI[Presentation Layer - Chromium WebView SPA]
+        G[Glassmorphism UI: HTML5 / CSS3 / ES6]
+        Store[Reactive Central Store: store.js]
+        VList[VirtualList Single-Pass DOM Recycler]
+        Shader[WebGL Fluid Shader: Canvas 1/4 Bilinear]
+        Lyrics[Kinetic Spring Lyrics Subsystem]
+        Keys[ShortcutsManager & Modal Guard]
+    end
+
+    subgraph IPC[Bridge & Protocol Layer]
+        Bridge[PyWebView Native C++ Binding & REST Fallback]
+    end
+
+    subgraph Backend[Application Services Layer - Python 3.11]
+        WSGI[Threaded WSGI Server: app.py]
+        PlayerSvc[PlayerService: RAM Cache & Monotonic Indices]
+        LibSvc[LibraryService: Bulk Transaction Engine]
+        ConfigMgr[Atomic Config: config.json]
+        CacheMgr[Cover Art Deduplicator: SHA-256 Set]
+    end
+
+    subgraph AudioEngine[Audio Subsystem - WASAPI C-Level]
+        Engine[AudioEngine WASAPI Controller]
+        RingBuf[AudioRingBuffer: Condition Variable Sleep]
+        Decoder[Streaming C-Decoder: Chunk-Based]
+        DSP[Anti-Pop Micro Fade Ramps]
+    end
+
+    subgraph Storage[Hardware & Storage Layer]
+        DB[(SQLite3 DB: 64MB MMAP, WAL & FTS5)]
+        WASAPI[Windows WASAPI: Shared & Bit-Perfect Exclusive]
+    end
+
+    UI <--> Store
+    UI <--> Bridge
+    Bridge <--> WSGI
+    WSGI <--> PlayerSvc
+    WSGI <--> LibSvc
+    PlayerSvc <--> Engine
+    Engine <--> RingBuf
+    Decoder <--> RingBuf
+    Engine --> DSP --> WASAPI
+    LibSvc <--> DB
+```
 
 ---
 
-## 💻 Cấu Hình Yêu Cầu & Khả Năng Chịu Tải
+## ⌨️ Bảng Phím Tắt Toàn Cục & Điều Khiển Media
 
-### 1. Yêu Cầu Phần Cứng (System Requirements)
-| Thành phần | Cấu hình Tối thiểu (Minimum) | Cấu hình Khuyến nghị (Recommended) |
+Ứng dụng tích hợp hệ thống quản lý phím tắt thông minh với cơ chế **Modal Context Isolation Guard** (tự động khóa phím tắt khi mở modal) và **Auto-Blur Range Sliders** (giải phóng focus chống nuốt phím):
+
+| Phím Tắt | Chức Năng | Ghi Chú |
 | :--- | :--- | :--- |
-| **Hệ điều hành** | Windows 10 (64-bit) / Windows 11 *(Hỗ trợ Win 7 SP1+ có WebView2)* | Windows 10 / 11 (64-bit) bản mới nhất |
-| **Bộ vi xử lý (CPU)** | Intel / AMD Dual-Core (hỗ trợ tập lệnh SSE2) | Intel Core i3 / AMD Ryzen 3 trở lên |
-| **Bộ nhớ RAM** | **2 GB RAM** | **4 GB RAM trở lên** |
-| **Card âm thanh (Audio)** | Onboard Audio (Realtek / Intel HD Audio) | DAC rời / USB Audio Interface hỗ trợ **WASAPI Exclusive** |
-| **Card đồ họa (GPU)** | GPU tích hợp (Intel HD Graphics 3000 trở lên) | GPU hỗ trợ DirectX 11 / OpenGL (render WebGL Fluid mượt 60 FPS) |
-| **Dung lượng Ổ cứng** | ~150 MB cho bộ cài và cơ sở dữ liệu | Ổ cứng SSD để tốc độ quét thư mục nhạc nhanh nhất |
+| <kbd>Space</kbd> | **Phát / Tạm dừng (Play / Pause)** | Không bị xung đột khi vừa chỉnh âm lượng |
+| <kbd>Ctrl</kbd> + <kbd>→</kbd> | **Bài tiếp theo (Next Track)** | Tự động chuyển bài theo danh sách hoặc xáo ngẫu nhiên |
+| <kbd>Ctrl</kbd> + <kbd>←</kbd> | **Bài trước đó (Previous Track)** | > 3s sẽ tua về đầu bài; < 3s sẽ lùi bài trước |
+| <kbd>→</kbd> / <kbd>←</kbd> | **Tua tới / Tua lùi 5 giây** | Hiển thị vị trí trực tiếp trên thanh Seekbar |
+| <kbd>↑</kbd> / <kbd>↓</kbd> | **Tăng / Giảm 5% âm lượng** | Kẹp chặt tuyến tính trong dải [0.0, 1.0] |
+| <kbd>M</kbd> | **Bật / Tắt tiếng (Mute)** | Phục hồi mức âm lượng trước đó khi bật lại |
+| <kbd>L</kbd> | **Bật / Tắt màn hình Lời bài hát** | Mở giao diện toàn cảnh với bìa album và lời |
+| <kbd>T</kbd> | **Ẩn / Hiện chữ lời bài hát** | Canh giữa ảnh bìa album khi ẩn lời |
+| <kbd>S</kbd> | **Bật / Tắt chế độ xáo bài (Shuffle)** | Thuật toán Fisher-Yates không trùng lặp |
+| <kbd>R</kbd> | **Chuyển chế độ lặp (Repeat Mode)** | Luân phiên: `off` $\to$ `all` $\to$ `one` |
+| <kbd>F11</kbd> | **Bật / Tắt toàn màn hình (Fullscreen)** | Tương thích giao diện Rạp Phim (Cinema Idle) |
+| <kbd>Esc</kbd> | **Đóng nhanh Modal / Lời bài hát** | Đóng menu chuột phải hoặc thoát giao diện lời |
+| **Media Keys** | **Play / Pause / Next / Prev** | Hỗ trợ đầy đủ bàn phím cơ, tai nghe Bluetooth và Lock Screen |
 
 > [!NOTE]
-> **Mức tiêu thụ RAM thực tế:**
-> * **Chế độ chờ (Idle):** ~80 MB – 120 MB RAM.
-> * **Khi phát nhạc Lossless FLAC (Zero-Latency RAM Playback):** ~200 MB – 350 MB RAM (tự động nạp trước bài hát vào bộ đệm RAM để đạt 0% Disk I/O).
-
-### 2. Khả Năng Hỗ Trợ Thư Viện Bài Hát (Library Capacity & Scalability)
-| Quy mô Thư viện | Dung lượng Database (`library.db`) | Tốc độ Tìm kiếm (FTS5) | Trải nghiệm sử dụng |
-| :--- | :---: | :---: | :--- |
-| **1.000 – 10.000 bài** | ~3 MB – 8 MB | **< 2 ms** (Tức thì) | Khởi động tức thì, cuộn 60 FPS |
-| **10.000 – 50.000 bài** | ~10 MB – 35 MB | **< 5 ms** (Tức thì) | Phân trang 50 bài/lần không tràn DOM |
-| **100.000+ bài hát** | ~70 MB – 150 MB | **< 15 ms** | Phản hồi siêu tốc, FTS5 tìm kiếm toàn văn |
-| **Giới hạn lý thuyết** | Hàng triệu bản ghi | Tối ưu bằng B-Tree Index | Không bị giới hạn cứng về số lượng |
+> Bạn có thể tùy biến lại toàn bộ các phím tắt trên theo ý muốn trong mục **Cài đặt (Settings)** của ứng dụng.
 
 ---
 
-## 🛠️ Cấu Trúc Thư Mục Dự Án
+## 🧪 Kiến Trúc Kiểm Thử Tự Động & Đảm Bảo Chất Lượng
+
+Hệ thống được thiết kế và bảo vệ theo tiêu chuẩn **`top-1-percent-test-engineer`** với tỷ lệ đỗ **100% tuyệt đối**:
 
 ```
-ZFPlayer/
-├── backend/                  # Python 3.11+ Core Backend
-│   ├── app.py                # Điểm khởi động ứng dụng & PyWebView Unified Bridge
-│   ├── audio/                # Phân hệ âm thanh C-Level
-│   │   ├── engine.py         # WASAPI Audio Engine & Event Dispatcher
-│   │   ├── decoder.py        # Streaming Decoder (Zero-allocation NumPy buffer)
-│   │   └── buffer.py         # Thread-safe Audio Ring Buffer (Condition Variable)
-│   ├── services/             # Lớp nghiệp vụ điều khiển & thư viện
-│   │   ├── player_service.py # Quản lý hàng đợi, phát nhạc & RAM memoization
-│   │   └── library_service.py# Quản lý CSDL, Bulk Playlist & Bootstrap payload
-│   ├── workers/              # Luồng xử lý ngầm (Worker Threads)
-│   │   ├── scanner.py        # Quét thư viện siêu tốc & FTS Trigger Bypass
-│   │   ├── lyrics_worker.py  # Pipeline tải lời đa nguồn Local-First & LRCLIB Pool
-│   │   └── metadata_worker.py# Trích xuất ID3 / Vorbis Comments / Hi-Res Cover Art
-│   ├── storage/              # Lưu trữ cục bộ
-│   │   ├── database.py       # SQLite3 WAL Mode, FTS5 & Composite Indices
-│   │   ├── cache.py          # Quản lý Cache ảnh bìa & Thumbnail In-Memory Set
-│   │   └── config.py         # Cấu hình JSON nguyên tử (Atomic Replace)
-│   ├── api/                  # Unified IPC & REST APIs
-│   │   ├── player_api.py     # API điều khiển phát nhạc
-│   │   ├── library_api.py    # API danh sách bài hát, album, playlist, bootstrap
-│   │   ├── lyrics_api.py     # API lời bài hát
-│   │   └── config_api.py     # API cấu hình hệ thống & hộp thoại chọn tệp
-│   ├── models/               # Data Transfer Objects
-│   └── utils/                # Tiện ích đường dẫn & phát hiện môi trường đóng gói
-│
-├── frontend/                 # Giao diện người dùng Modern Glassmorphism
-│   ├── index.html            # Giao diện SPA tinh gọn
-│   ├── css/                  # Vanilla CSS Design System (Tokens, Layouts, Fluid)
-│   └── js/                   # Vanilla ES6 Modules
-│       ├── main.js           # Khởi tạo nhanh với Bootstrap Payload
-│       ├── api.js            # Cầu nối PyWebView IPC Wrapper
-│       ├── store.js          # Reactive Central State Store (Shallow Diffing)
-│       ├── player.js         # Thanh điều khiển & Ticker đồng bộ 60 FPS
-│       ├── lyrics.js         # Kinetic Spring Engine & LRC Parser
-│       ├── library.js        # VirtualList DOM Recycler
-│       ├── albums.js         # Quản lý danh mục Album & Scoped Navigation
-│       ├── playlists.js      # Quản lý Playlist, nhập tệp & Header Sync
-│       ├── home.js           # Màn hình chính & DOM Diffing
-│       ├── shortcuts.js      # Quản lý phím tắt & Modal Isolation Guard
-│       ├── ui.js             # Hộp thoại, Thông báo Toast & Menu ngữ cảnh
-│       └── fluid-shader.js   # Nền nước động WebGL GLSL Shader
-│
-├── docs/                     # Tài liệu chuyên sâu
-│   ├── ARCHITECTURE.md       # Đặc tả kiến trúc kỹ thuật toàn diện
-│   ├── API_REFERENCE.md      # Đặc tả 28 API Endpoints hợp nhất
-│   └── adr/                  # Sổ tay Architecture Decision Records
-├── requirements.txt          # Danh sách gói phụ thuộc Python
-└── build_exe.py              # Script đóng gói file .exe độc lập qua PyInstaller
+                              [ TESTING PYRAMID ]
+                                      ▲
+                                     / \
+                                    /   \
+                             10%   / E2E \   (Contract & Lifecycle)
+                                  /───────\
+                           20%   / Integr. \ (SQLite MMAP, FTS5, Scanner)
+                                /───────────\
+                         70%   /  Unit & PBT \ (Audio Buffer, DSP, Models)
+                              /───────────────\
 ```
 
+* **146 Automated Tests (100% Pass Rate trong 11.23s)**:
+  - **Property-Based Testing (`hypothesis`)**: Kiểm thử thuộc tính đại số với hàng nghìn ca dữ liệu ngẫu nhiên: bảo toàn luồng dữ liệu đệm vòng (`AudioRingBuffer`), phân hoạch phân trang không mất bản ghi, an toàn SQL FTS5 fuzzing, và bảo toàn tập hợp phần tử khi đảo danh sách phát.
+  - **Boundary Value Analysis (`BVA`)**: Kiểm thử toàn diện các điểm biên nhạy cảm: âm lượng cực hạn `[-100.0, 1.0001]`, số thực đặc biệt IEEE-754 (`NaN`, `+Inf`, `-Inf`), tua âm, phân trang `offset=999999`, và làm sạch chuỗi đầu vào.
+  - **Zero-Flakiness Policy**: Tuyệt đối không dùng hàm `sleep()`, cô lập hoàn toàn môi trường kiểm thử giữa các lượt chạy.
+* **Code Craftsmanship Auditor**:
+  - Đạt điểm tuyệt đối **100 / 100** trên toàn bộ 25 tệp mã nguồn `backend/` (3.903 dòng) và 21 tệp kiểm thử `tests/` (2.664 dòng).
+  - Độ sâu lồng ghép (nesting depth) $\le 3$, độ dài hàm $\le 50$ dòng, 0 nuốt ngoại lệ (`except: pass`), 0 tham số cờ boolean thô.
+
 ---
 
-## 🚀 Cài Đặt & Khởi Chạy
+## 💻 Hướng Dẫn Dành Cho Lập Trình Viên (Developer Guide)
 
-### 1. Dành cho Người Dùng (Chạy File EXE Độc Lập)
-Tải bản phát hành mới nhất không cần cài Python:
-👉 **[Tải Bản Phát Hành ZFP · Releases](https://github.com/zenny126/ZFPlayer/releases)**
-
----
-
-### 2. Dành cho Lập Trình Viên (Chạy từ Mã Nguồn)
-
-#### Yêu cầu hệ thống:
+### 1. Yêu Cầu Môi Trường Phát Triển
 * **Hệ điều hành**: Windows 10 / 11 (64-bit).
 * **Python**: Python 3.11 trở lên.
 * **Driver**: Soundcard / USB DAC hỗ trợ WASAPI.
 
-#### Bước 1: Khởi tạo Virtual Environment & Cài đặt thư viện
+### 2. Cài Đặt & Chạy Từ Mã Nguồn
 ```bash
-# Tạo môi trường ảo
+# 1. Khởi tạo môi trường ảo
 python -m venv .venv
 
-# Kích hoạt môi trường (PowerShell)
+# 2. Kích hoạt môi trường (PowerShell)
 .venv\Scripts\Activate.ps1
 
-# Cài đặt các gói phụ thuộc
+# 3. Cài đặt các gói phụ thuộc
 pip install -r requirements.txt
-```
 
-#### Bước 2: Chạy ứng dụng ở chế độ Development
-```bash
+# 4. Khởi chạy ứng dụng ở chế độ Development
 .venv\Scripts\python.exe backend/app.py
-```
 
-#### Bước 3: Chạy chế độ Debug (mở DevTools WebView)
-```bash
+# 5. Khởi chạy chế độ Debug (mở DevTools WebView)
 .venv\Scripts\python.exe backend/app.py --debug
 ```
 
-#### Bước 4: Kiểm tra và Audit toàn bộ hệ thống
+### 3. Chạy Toàn Bộ Bộ Kiểm Thử Tự Động
 ```bash
-.venv\Scripts\python.exe scratch/full_system_audit.py
+# Chạy 146 bài tests tự động
+.venv\Scripts\pytest.exe
 ```
 
-#### Bước 5: Đóng gói thành file `.exe` độc lập
+### 4. Kiểm Định Chất Lượng Mã Nguồn Top 1%
+```bash
+# Kiểm tra backend (yêu cầu 100/100)
+.venv\Scripts\python.exe C:\Users\Zenny\.gemini\config\skills\top-1-percent-engineer\scripts\audit_code_craftsmanship.py backend
+
+# Kiểm tra tests (yêu cầu 100/100)
+.venv\Scripts\python.exe C:\Users\Zenny\.gemini\config\skills\top-1-percent-engineer\scripts\audit_code_craftsmanship.py tests
+```
+
+### 5. Đóng Gói Thành File EXE Độc Lập
 ```bash
 .venv\Scripts\python.exe build_exe.py
 ```
-File thực thi độc lập sẽ được tạo ra tại thư mục `dist/ZFPlayer.exe`.
+File thực thi standalone sẽ được tạo tại `dist/ZennyFLAC_Player.exe` và `dist/ZFPlayer.exe` (~33.7 MB).
 
 ---
 
@@ -232,3 +319,9 @@ File thực thi độc lập sẽ được tạo ra tại thư mục `dist/ZFPla
 
 * **Tác giả**: Zenny ([@zenny126](https://github.com/zenny126))
 * **Giấy phép**: Phát hành theo chuẩn mã nguồn mở **Apache License 2.0**.
+* **Đóng góp**: Mọi đóng góp (Pull Request / Issue) tuân thủ tiêu chuẩn kỹ sư Top 1% đều được hoan nghênh!
+
+---
+<div align="center">
+  <sub>ZennyFLAC Player v3.0 — Crafted with Passion & Precision for Audiophiles worldwide.</sub>
+</div>

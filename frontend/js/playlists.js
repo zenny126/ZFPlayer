@@ -114,6 +114,14 @@ class PlaylistManager {
   }
 
   bindEvents() {
+    // Double click sidebar playlist to immediately start playback
+    this.container?.addEventListener('dblclick', (e) => {
+      const li = e.target.closest('li');
+      if (li && li.dataset.id) {
+        this.playSidebarPlaylist(li.dataset.id);
+      }
+    });
+
     // Create Playlist
     this.btnCreate?.addEventListener('click', () => {
       this.inputName.value = '';
@@ -698,6 +706,29 @@ class PlaylistManager {
   async openPlaylist(id) {
     this.currentPlaylistId = id;
     window.store.setState({ view: 'playlist', playlistId: id });
+  }
+
+  async playSidebarPlaylist(id) {
+    if (!id) return;
+    this.openPlaylist(id);
+    document.querySelectorAll('.library-list li').forEach(el => el.classList.remove('active'));
+    const activeLi = document.querySelector(`.library-list li[data-id="${id}"]`);
+    if (activeLi) activeLi.classList.add('active');
+
+    try {
+      const tracks = await window.api.getTracks(0, 1, '', 'title', 'ASC', id);
+      if (!tracks || tracks.length === 0) {
+        if (window.uiController?.showToast) {
+          window.uiController.showToast('Playlist is empty');
+        }
+        return;
+      }
+      if (window.playerController) {
+        await window.playerController.playTrack(tracks[0], id);
+      }
+    } catch (err) {
+      console.error('Failed to play sidebar playlist:', err);
+    }
   }
 
   showImportProgressModal(title) {

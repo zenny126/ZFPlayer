@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
   // Wait for API bridge
   await window.api.readyPromise;
-  console.log("API Ready. Initializing app with fast bootstrap payload...");
 
   // 1. Fetch initial bootstrap payload in a single round-trip
   let bootstrap = null;
@@ -22,6 +21,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   window.uiController = new UIController();
+  window.queueManager = new QueueManager();
+  window.queueManager.init();
   window.playerController = new PlayerController();
   window.lyricsRenderer = new LyricsRenderer();
   window.libraryManager = new LibraryManager();
@@ -103,6 +104,4 @@ document.addEventListener('DOMContentLoaded', async () => {
       await window.shortcutsManager.handleGlobalKeyDown(e);
     }
   });
-
-  console.log("App initialized successfully.");
 });
