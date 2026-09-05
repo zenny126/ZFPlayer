@@ -1,5 +1,31 @@
 # DEV LOG
 
+## Timestamp: 2026-09-05T17:50:00
+### Tác vụ thực hiện / Goal & Scope
+Đẩy toàn bộ mã nguồn lên nhánh chính `main` trên GitHub, tạo thẻ phát hành `ZFPv3.0` và xuất bản bản phát hành GitHub Release chính thức kèm file thực thi standalone `ZennyFLAC_Player.exe` và `ZFPlayer.exe`.
+
+### Danh sách tệp tin thay đổi / Files Changed
+- DEV_LOG.md (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật / Technical Requirements & Specs
+1. **Đồng bộ hóa Git Remote (Push to origin/main)**:
+   - Gom và đóng gói toàn bộ các tệp mã nguồn, bộ test suite 146 bài tests và tài liệu kỹ thuật vào commit `8fd3ae4`:
+     `feat(v3.0): Master Engineering & Zero-Glitch Ultra-Performance Release`.
+   - Đẩy thành công commit lên remote `https://github.com/zenny126/ZFPlayer.git` trên nhánh `main`.
+2. **Khởi tạo và đẩy Git Annotated Tag `ZFPv3.0`**:
+   - Tạo tag có chú thích `ZFPv3.0` đánh dấu cột mốc kiến trúc phiên bản 3.0.
+   - Đẩy thành công tag lên GitHub repository.
+3. **Xuất bản GitHub Release chính thức**:
+   - Sử dụng GitHub CLI (`gh release create ZFPv3.0`) với tiêu đề:
+     `ZennyFLAC Player v3.0 — The Master Engineering & Zero-Glitch Ultra-Performance Release`.
+   - Đính kèm ghi chú phát hành chi tiết từ `RELEASE_NOTES_v3.0.md`.
+   - Tải lên 2 tệp thực thi độc lập (Standalone 1-File Executables, ~33.71 MB mỗi tệp):
+     * `dist/ZennyFLAC_Player.exe`
+     * `dist/ZFPlayer.exe`
+   - Bản phát hành chính thức công khai tại URL: `https://github.com/zenny126/ZFPlayer/releases/tag/ZFPv3.0`.
+
+---
+
 ## Timestamp: 2026-09-05T17:45:00
 ### Tác vụ thực hiện / Goal & Scope
 Tái cấu trúc và hoàn thiện toàn diện `README.md` theo chuẩn mực Top 1% Technical Documentation Architect; bổ sung hướng dẫn chi tiết chế độ Portable Mode 100% (chạy USB/ổ cứng rời không dấu vết); nâng cấp nhận diện cờ portable trong `path_utils.py` và tối ưu `normalize_string` với `casefold()` cho Unicode caseless matching (146/146 tests passed).
