@@ -561,10 +561,8 @@ input[type="range"]::-webkit-slider-runnable-track {
 }
 
 /* View Fade Transition */
-.view-container {
-  will-change: opacity, transform;
-}
 .view-container.active-view-fade {
+  will-change: opacity, transform;
   animation: viewFadeIn 180ms var(--ease-out-expo) forwards;
 }
 

@@ -1,32 +1,34 @@
 class ApiWrapper {
   constructor() {
-    this.isReady = false;
-    this.readyPromise = new Promise(resolve => {
-      window.addEventListener('pywebviewready', () => {
-        this.isReady = true;
-        resolve();
-      });
-      // Fallback
-      setTimeout(() => { if (!this.isReady) resolve(); }, 2000);
-    });
+    this.isReady = true;
+    this.readyPromise = Promise.resolve();
   }
 
   async call(method, ...args) {
     await this.readyPromise;
-    if (!window.pywebview || !window.pywebview.api) {
-      console.warn(`pywebview.api not found. Mocking ${method}`);
-      return this.mockResponse(method, args);
-    }
-    
-    try {
-      return await window.pywebview.api[method](...args);
-    } catch (e) {
-      console.error(`API Error (${method}):`, e);
+
+    if (window.pywebview && window.pywebview.api && typeof window.pywebview.api[method] === 'function') {
       try {
         return await window.pywebview.api[method](...args);
-      } catch (retryError) {
-        throw retryError;
+      } catch (e) {
+        console.error(`API Error (${method}):`, e);
+        return await window.pywebview.api[method](...args);
       }
+    }
+
+    try {
+      const resp = await fetch('/api/rpc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ method, args })
+      });
+      if (!resp.ok) {
+        throw new Error(`HTTP ${resp.status}`);
+      }
+      return await resp.json();
+    } catch (e) {
+      console.warn(`Rust RPC fallback (${method}):`, e);
+      return this.mockResponse(method, args);
     }
   }
 
@@ -87,7 +89,7 @@ class ApiWrapper {
   mockResponse(method, args) {
     if (method === 'get_track_count') return Promise.resolve(0);
     if (method === 'get_tracks') return Promise.resolve([]);
-    if (method === 'get_player_state') return Promise.resolve({ position: 0, duration: 0, is_playing: false, volume: 80, track_path: null });
+    if (method === 'get_player_state') return Promise.resolve({ position: 0, duration: 0, is_playing: false, volume: 0.8, track_path: null });
     if (method === 'get_queue') return Promise.resolve({ current: null, user_queue: [], upcoming: [] });
     return Promise.resolve(null);
   }

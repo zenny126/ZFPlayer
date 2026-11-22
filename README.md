@@ -6,11 +6,9 @@
   **Trình phát nhạc Hi-Res Lossless Audio thuần khiết, siêu tốc, chuẩn Bit-Perfect và tinh gọn cho Windows**
 
   [![Version](https://img.shields.io/badge/Version-3.0.0-gold.svg)]()
-  [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
+  [![Rust](https://img.shields.io/badge/Rust-Edition_v3.0-orange.svg?logo=rust&logoColor=white)](https://www.rust-lang.org/)
   [![Audio Engine](https://img.shields.io/badge/Audio-WASAPI_Bit--Perfect_100%25-0078D6.svg?logo=windows&logoColor=white)]()
   [![UI Engine](https://img.shields.io/badge/UI-Modern_Glassmorphism_%26_WebGL_Shader-8A2BE2.svg)]()
-  [![Tests](https://img.shields.io/badge/Tests-146_Passed_%28100%25%29-brightgreen.svg)]()
-  [![Craftsmanship](https://img.shields.io/badge/Craftsmanship-100%2F100-emerald.svg)]()
   [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 </div>
 
@@ -24,7 +22,6 @@
 - [🌟 Điểm Nhấn Kỹ Thuật & Tính Năng Cốt Lõi](#-điểm-nhấn-kỹ-thuật--tính-năng-cốt-lõi)
 - [🏛️ Kiến Trúc Hệ Thống (System Architecture)](#️-kiến-trúc-hệ-thống-system-architecture)
 - [⌨️ Bảng Phím Tắt Toàn Cục & Điều Khiển Media](#️-bảng-phím-tắt-toàn-cục--điều-khiển-media)
-- [🧪 Kiến Trúc Kiểm Thử Tự Động & Đảm Bảo Chất Lượng](#-kiến-trúc-kiểm-thử-tự-động--đảm-bảo-chất-lượng)
 - [💻 Hướng Dẫn Dành Cho Lập Trình Viên (Developer Guide)](#-hướng-dẫn-dành-cho-lập-trình-viên-developer-guide)
 - [📄 Giấy Phép & Tác Quyền](#-giấy-phép--tác-quyền)
 
@@ -36,7 +33,7 @@
 - **Động cơ âm thanh C-Streaming & WASAPI Bit-Perfect**: Truyền tải nguyên vẹn từng bit dữ liệu âm thanh trực tiếp đến DAC phần cứng mà không bị can thiệp bởi Windows System Mixer.
 - **Cơ sở dữ liệu SQLite 64MB Memory-Mapped I/O & FTS5**: Tìm kiếm toàn văn siêu tốc và nạp dữ liệu tức thì cho thư viện hàng vạn bài hát.
 - **Giao diện Glassmorphism & Single-Canvas WebGL Fluid Dynamic Shader**: Hoạt cảnh nền sóng nước động chuyển màu mượt mà với mức tiêu thụ tài nguyên GPU dưới 1%.
-- **Chuẩn mực kỹ thuật Top 1% Software Engineering**: Đạt điểm tuyệt đối 100/100 code craftsmanship và được bảo vệ bởi 146 bài kiểm thử tự động với Property-Based Testing (`hypothesis`).
+- **Hiệu năng & Độ ổn định cao**: Tối ưu hóa sâu từng dòng lệnh, kiến trúc module hóa chặt chẽ và hoạt động mượt mà không độ trễ.
 
 ---
 
@@ -240,78 +237,30 @@ flowchart TD
 
 ---
 
-## 🧪 Kiến Trúc Kiểm Thử Tự Động & Đảm Bảo Chất Lượng
-
-Hệ thống được thiết kế và bảo vệ theo tiêu chuẩn **`top-1-percent-test-engineer`** với tỷ lệ đỗ **100% tuyệt đối**:
-
-```
-                              [ TESTING PYRAMID ]
-                                      ▲
-                                     / \
-                                    /   \
-                             10%   / E2E \   (Contract & Lifecycle)
-                                  /───────\
-                           20%   / Integr. \ (SQLite MMAP, FTS5, Scanner)
-                                /───────────\
-                         70%   /  Unit & PBT \ (Audio Buffer, DSP, Models)
-                              /───────────────\
-```
-
-* **146 Automated Tests (100% Pass Rate trong 11.23s)**:
-  - **Property-Based Testing (`hypothesis`)**: Kiểm thử thuộc tính đại số với hàng nghìn ca dữ liệu ngẫu nhiên: bảo toàn luồng dữ liệu đệm vòng (`AudioRingBuffer`), phân hoạch phân trang không mất bản ghi, an toàn SQL FTS5 fuzzing, và bảo toàn tập hợp phần tử khi đảo danh sách phát.
-  - **Boundary Value Analysis (`BVA`)**: Kiểm thử toàn diện các điểm biên nhạy cảm: âm lượng cực hạn `[-100.0, 1.0001]`, số thực đặc biệt IEEE-754 (`NaN`, `+Inf`, `-Inf`), tua âm, phân trang `offset=999999`, và làm sạch chuỗi đầu vào.
-  - **Zero-Flakiness Policy**: Tuyệt đối không dùng hàm `sleep()`, cô lập hoàn toàn môi trường kiểm thử giữa các lượt chạy.
-* **Code Craftsmanship Auditor**:
-  - Đạt điểm tuyệt đối **100 / 100** trên toàn bộ 25 tệp mã nguồn `backend/` (3.903 dòng) và 21 tệp kiểm thử `tests/` (2.664 dòng).
-  - Độ sâu lồng ghép (nesting depth) $\le 3$, độ dài hàm $\le 50$ dòng, 0 nuốt ngoại lệ (`except: pass`), 0 tham số cờ boolean thô.
-
----
-
 ## 💻 Hướng Dẫn Dành Cho Lập Trình Viên (Developer Guide)
 
 ### 1. Yêu Cầu Môi Trường Phát Triển
 * **Hệ điều hành**: Windows 10 / 11 (64-bit).
-* **Python**: Python 3.11 trở lên.
+* **Rust Toolchain**: `stable-x86_64-pc-windows-gnullvm` + `llvm-mingw` (cài tự động bằng `setup_rust.bat`).
 * **Driver**: Soundcard / USB DAC hỗ trợ WASAPI.
 
-### 2. Cài Đặt & Chạy Từ Mã Nguồn
-```bash
-# 1. Khởi tạo môi trường ảo
-python -m venv .venv
+### 2. Cài Đặt, Kiểm Thử & Chạy Từ Mã Nguồn
+```powershell
+# 1. Cài đặt Rust toolchain & llvm-mingw (chỉ cần chạy 1 lần)
+setup_rust.bat
 
-# 2. Kích hoạt môi trường (PowerShell)
-.venv\Scripts\Activate.ps1
+# 2. Chạy toàn bộ Rust unit/integration tests
+cargo test
 
-# 3. Cài đặt các gói phụ thuộc
-pip install -r requirements.txt
-
-# 4. Khởi chạy ứng dụng ở chế độ Development
-.venv\Scripts\python.exe backend/app.py
-
-# 5. Khởi chạy chế độ Debug (mở DevTools WebView)
-.venv\Scripts\python.exe backend/app.py --debug
+# 3. Khởi chạy ứng dụng (Release Mode)
+run_dev.bat
 ```
 
-### 3. Chạy Toàn Bộ Bộ Kiểm Thử Tự Động
-```bash
-# Chạy 146 bài tests tự động
-.venv\Scripts\pytest.exe
+### 3. Đóng Gói Thành File EXE Độc Lập
+```powershell
+build.bat
 ```
-
-### 4. Kiểm Định Chất Lượng Mã Nguồn Top 1%
-```bash
-# Kiểm tra backend (yêu cầu 100/100)
-.venv\Scripts\python.exe C:\Users\Zenny\.gemini\config\skills\top-1-percent-engineer\scripts\audit_code_craftsmanship.py backend
-
-# Kiểm tra tests (yêu cầu 100/100)
-.venv\Scripts\python.exe C:\Users\Zenny\.gemini\config\skills\top-1-percent-engineer\scripts\audit_code_craftsmanship.py tests
-```
-
-### 5. Đóng Gói Thành File EXE Độc Lập
-```bash
-.venv\Scripts\python.exe build_exe.py
-```
-File thực thi standalone sẽ được tạo tại `dist/ZennyFLAC_Player.exe` và `dist/ZFPlayer.exe` (~33.7 MB).
+File thực thi standalone (0 DLL ngoài, nhúng sẵn icon và WebView2 shim) sẽ được tạo tại `dist/ZFPlayer.exe` (~9.6 MB).
 
 ---
 

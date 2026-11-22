@@ -1,8 +1,6 @@
-# Python bytecode & cache
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
+# Rust build artifacts & toolchain installers
+/target
+rustup-init.exe
 
 # Runtime data & user configuration
 cache/
@@ -16,18 +14,16 @@ logs/
 *.db-wal
 *.db-shm
 
-# Build artifacts & packaging
+# Packaging outputs
 build/
 dist/
-*.spec.bak
 
-# Testing & quality cache
+# Local Python/test leftovers if present
+__pycache__/
+*.pyc
 .pytest_cache/
 .hypothesis/
-
-# Virtual environment & tools
 .venv/
-python
 
 # OS metadata
 .DS_Store

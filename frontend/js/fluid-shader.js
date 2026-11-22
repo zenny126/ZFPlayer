@@ -3,7 +3,15 @@
   const canvas = document.getElementById('webgl-fluid-bg');
   if (!canvas) return;
 
-  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  const ctxOpts = {
+    alpha: false,
+    depth: false,
+    stencil: false,
+    antialias: false,
+    preserveDrawingBuffer: false,
+    powerPreference: 'default',
+  };
+  const gl = canvas.getContext('webgl', ctxOpts) || canvas.getContext('experimental-webgl', ctxOpts);
   if (!gl) return;
 
   // Vertex shader
@@ -12,20 +20,35 @@
     varying vec2 v_uv;
     void main() {
       v_uv = a_position * 0.5 + 0.5;
-      v_uv.y = 1.0 - v_uv.y; 
+      v_uv.y = 1.0 - v_uv.y;
       gl_Position = vec4(a_position, 0.0, 1.0);
     }
   `;
 
-  // Fragment shader
+  // Fragment shader: frame-constant blob centers & rotations are precomputed on CPU and passed as uniforms
   const fsSource = `
+    #ifdef GL_FRAGMENT_PRECISION_HIGH
+    precision highp float;
+    #else
     precision mediump float;
+    #endif
     varying vec2 v_uv;
     uniform float u_time;
     uniform vec3 u_color1;
     uniform vec3 u_color2;
     uniform vec3 u_color3;
     uniform vec3 u_color4;
+    uniform vec2 u_p2;
+    uniform vec2 u_p3;
+    uniform vec2 u_p4;
+    uniform mat2 u_rot2;
+    uniform mat2 u_rot3;
+    uniform mat2 u_rot4;
+
+    // Interleaved Gradient Noise for band-free 8-bit dark gradient dithering
+    float ign(vec2 p) {
+      return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715))));
+    }
 
     // Simplex noise function
     vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -58,52 +81,46 @@
 
     void main() {
       vec2 st = v_uv;
-      
+
       float n1 = snoise(st * 1.5 + u_time * 0.15);
       float n2 = snoise(st * 1.5 - u_time * 0.12);
-      
+
       // Background weight (u_color1 is static and uniform)
-      float bgWeight = 7.0; // Increased from 5.0 so the background is more dominant
-      
-      // Blobs (u_color2, u_color3, u_color4) moving around
-      vec2 p2 = vec2(0.5 + 0.4*cos(u_time*0.3), 0.5 + 0.4*sin(u_time*0.4));
-      vec2 p3 = vec2(0.5 + 0.4*sin(u_time*0.5), 0.5 + 0.4*cos(u_time*0.2));
-      vec2 p4 = vec2(0.5 + 0.4*cos(u_time*0.4), 0.5 + 0.4*sin(u_time*0.6));
-      
-      p2 += vec2(n1, n2) * 0.2;
-      p3 -= vec2(n2, n1) * 0.2;
-      p4 += vec2(-n1, n2) * 0.2;
+      float bgWeight = 7.0;
 
-      // Rotation matrices for the bubbles
-      float t2 = u_time * 0.5;
-      float t3 = -u_time * 0.3;
-      float t4 = u_time * 0.7;
-      mat2 rot2 = mat2(cos(t2), -sin(t2), sin(t2), cos(t2));
-      mat2 rot3 = mat2(cos(t3), -sin(t3), sin(t3), cos(t3));
-      mat2 rot4 = mat2(cos(t4), -sin(t4), sin(t4), cos(t4));
+      vec2 p2 = u_p2 + vec2(n1, n2) * 0.2;
+      vec2 p3 = u_p3 - vec2(n2, n1) * 0.2;
+      vec2 p4 = u_p4 + vec2(-n1, n2) * 0.2;
 
-      // Calculate distance for each bubble (with scaling to make them ellipses/ovals)
-      vec2 st2 = rot2 * (st - p2) * vec2(1.0, 1.6);
-      vec2 st3 = rot3 * (st - p3) * vec2(1.5, 1.0);
-      vec2 st4 = rot4 * (st - p4) * vec2(1.2, 1.5);
+      // Calculate distance for each bubble (with pre-rotated ellipse projection)
+      vec2 st2 = u_rot2 * (st - p2) * vec2(1.0, 1.6);
+      vec2 st3 = u_rot3 * (st - p3) * vec2(1.5, 1.0);
+      vec2 st4 = u_rot4 * (st - p4) * vec2(1.2, 1.5);
 
       // +0.08 creates a distinct glowing core instead of a fuzzy blob
       float d2 = 1.0 / (length(st2) + 0.08);
       float d3 = 1.0 / (length(st3) + 0.08);
       float d4 = 1.0 / (length(st4) + 0.08);
-      
+
       // Enhance bubble contrast to make them pop out from the background
       d2 = pow(d2, 2.4);
       d3 = pow(d3, 2.4);
       d4 = pow(d4, 2.4);
-      
+
       float sum = bgWeight + d2 + d3 + d4;
       vec3 color = (u_color1 * bgWeight + u_color2 * d2 + u_color3 * d3 + u_color4 * d4) / sum;
-      
+
       // Stronger vignette to make edges very deep
-      float vignette = length(st - 0.5) * 1.2;
+      float vignette = clamp(length(st - 0.5) * 1.2, 0.0, 1.0);
       color = mix(color, color * 0.2, vignette);
-      
+
+      // Triangular IGN screen-space dithering preserves true black while removing dark gradient banding
+      float d1 = ign(gl_FragCoord.xy);
+      float d2n = ign(gl_FragCoord.xy + vec2(5.588238, 17.13191));
+      float dither = (d1 + d2n - 1.0) / 255.0;
+      float nonBlack = step(0.001, max(color.r, max(color.g, color.b)));
+      color = clamp(color + vec3(dither * nonBlack), 0.0, 1.0);
+
       gl_FragColor = vec4(color, 1.0);
     }
   `;
@@ -122,6 +139,7 @@
 
   const vertexShader = compileShader(gl, gl.VERTEX_SHADER, vsSource);
   const fragmentShader = compileShader(gl, gl.FRAGMENT_SHADER, fsSource);
+  if (!vertexShader || !fragmentShader) return;
 
   const program = gl.createProgram();
   gl.attachShader(program, vertexShader);
@@ -152,13 +170,38 @@
   const c2Loc = gl.getUniformLocation(program, "u_color2");
   const c3Loc = gl.getUniformLocation(program, "u_color3");
   const c4Loc = gl.getUniformLocation(program, "u_color4");
+  const p2Loc = gl.getUniformLocation(program, "u_p2");
+  const p3Loc = gl.getUniformLocation(program, "u_p3");
+  const p4Loc = gl.getUniformLocation(program, "u_p4");
+  const rot2Loc = gl.getUniformLocation(program, "u_rot2");
+  const rot3Loc = gl.getUniformLocation(program, "u_rot3");
+  const rot4Loc = gl.getUniformLocation(program, "u_rot4");
 
   let currentColors = [
     [42/255, 8/255, 69/255], [100/255, 65/255, 165/255],
     [10/255, 17/255, 40/255], [18/255, 14/255, 43/255]
   ];
-  let targetColors = [...currentColors];
+  let displayedColors = currentColors.map(c => [c[0], c[1], c[2]]);
+  let targetColors = currentColors.map(c => [c[0], c[1], c[2]]);
   let transitionProgress = 1.0;
+
+  // Pre-allocated uniform typed arrays to eliminate per-frame heap allocations
+  const c1Buf = new Float32Array(currentColors[0]);
+  const c2Buf = new Float32Array(currentColors[1]);
+  const c3Buf = new Float32Array(currentColors[2]);
+  const c4Buf = new Float32Array(currentColors[3]);
+  const rot2Buf = new Float32Array(4);
+  const rot3Buf = new Float32Array(4);
+  const rot4Buf = new Float32Array(4);
+
+  function fillRotMat2(buf, angle) {
+    const c = Math.cos(angle);
+    const s = Math.sin(angle);
+    buf[0] = c;
+    buf[1] = -s;
+    buf[2] = s;
+    buf[3] = c;
+  }
 
   function hexToVec3(hex) {
     if (!hex) return [0,0,0];
@@ -171,90 +214,66 @@
     ];
   }
 
-  window.updateFluidColors = function(hexColors) {
-    if (!hexColors || hexColors.length === 0) return;
-    targetColors = [
-      hexToVec3(hexColors[0]),
-      hexToVec3(hexColors[1] || hexColors[0]),
-      hexToVec3(hexColors[2] || hexColors[0]),
-      hexToVec3(hexColors[3] || hexColors[1] || hexColors[0])
-    ];
-    transitionProgress = 0.0;
-  };
-
-  function lerpVec3(a, b, t) {
-    return [
-      a[0] + (b[0] - a[0]) * t,
-      a[1] + (b[1] - a[1]) * t,
-      a[2] + (b[2] - a[2]) * t
-    ];
+  function srgbToLinear(c) {
+    return Math.pow(Math.max(0, Math.min(1, c)), 2.2);
   }
 
-  function resize() {
-    const pixelRatio = 0.25; 
-    canvas.width = window.innerWidth * pixelRatio;
-    canvas.height = window.innerHeight * pixelRatio;
-    gl.viewport(0, 0, canvas.width, canvas.height);
+  function linearToSrgb(c) {
+    return Math.pow(Math.max(0, Math.min(1, c)), 1 / 2.2);
   }
-  window.addEventListener('resize', resize);
-  resize();
 
-  let startTime = Date.now();
-  let lastFrameTime = Date.now();
+  function writeLerpedLinear(outBuf, a, b, t) {
+    outBuf[0] = linearToSrgb(srgbToLinear(a[0]) + (srgbToLinear(b[0]) - srgbToLinear(a[0])) * t);
+    outBuf[1] = linearToSrgb(srgbToLinear(a[1]) + (srgbToLinear(b[1]) - srgbToLinear(a[1])) * t);
+    outBuf[2] = linearToSrgb(srgbToLinear(a[2]) + (srgbToLinear(b[2]) - srgbToLinear(a[2])) * t);
+  }
+
+  let animTime = 0.0;
+  let lastFrameTime = performance.now();
+  let lastRenderTime = 0;
   let isRunning = false;
   let rafId = null;
-  const targetFps = 45;
-  const frameInterval = 1000 / targetFps;
-  let lastRenderTime = 0;
+  let isPlaying = false;
+  let isFocused = typeof document.hasFocus === 'function' ? document.hasFocus() : true;
+  let needsOneFrame = true;
+  const transitionSpeed = 0.55;
 
-  function render() {
-    if (!isRunning) return;
+  function drawFrame(timeSec) {
+    gl.uniform1f(timeLoc, timeSec);
+    gl.uniform3fv(c1Loc, c1Buf);
+    gl.uniform3fv(c2Loc, c2Buf);
+    gl.uniform3fv(c3Loc, c3Buf);
+    gl.uniform3fv(c4Loc, c4Buf);
 
-    rafId = requestAnimationFrame(render);
+    gl.uniform2f(p2Loc, 0.5 + 0.4 * Math.cos(timeSec * 0.3), 0.5 + 0.4 * Math.sin(timeSec * 0.4));
+    gl.uniform2f(p3Loc, 0.5 + 0.4 * Math.sin(timeSec * 0.5), 0.5 + 0.4 * Math.cos(timeSec * 0.2));
+    gl.uniform2f(p4Loc, 0.5 + 0.4 * Math.cos(timeSec * 0.4), 0.5 + 0.4 * Math.sin(timeSec * 0.6));
 
-    const now = Date.now();
-    const elapsed = now - lastRenderTime;
-
-    if (elapsed < frameInterval) {
-      return; // Throttle to target FPS
-    }
-
-    lastRenderTime = now - (elapsed % frameInterval);
-    const dt = now - lastFrameTime;
-    lastFrameTime = now;
-    
-    const time = (now - startTime) / 1000;
-    
-    if (transitionProgress < 1.0) {
-      transitionProgress += (dt / 1000.0) * 0.6; 
-      if (transitionProgress >= 1.0) transitionProgress = 1.0;
-    }
-    
-    const easeT = transitionProgress < 0.5 ? 2 * transitionProgress * transitionProgress : -1 + (4 - 2 * transitionProgress) * transitionProgress;
-
-    const c1 = lerpVec3(currentColors[0], targetColors[0], easeT);
-    const c2 = lerpVec3(currentColors[1], targetColors[1], easeT);
-    const c3 = lerpVec3(currentColors[2], targetColors[2], easeT);
-    const c4 = lerpVec3(currentColors[3], targetColors[3], easeT);
-
-    if (transitionProgress >= 1.0) {
-      currentColors = [...targetColors];
-    }
-
-    gl.uniform1f(timeLoc, time);
-    gl.uniform3fv(c1Loc, c1);
-    gl.uniform3fv(c2Loc, c2);
-    gl.uniform3fv(c3Loc, c3);
-    gl.uniform3fv(c4Loc, c4);
+    fillRotMat2(rot2Buf, timeSec * 0.5);
+    fillRotMat2(rot3Buf, -timeSec * 0.3);
+    fillRotMat2(rot4Buf, timeSec * 0.7);
+    gl.uniformMatrix2fv(rot2Loc, false, rot2Buf);
+    gl.uniformMatrix2fv(rot3Loc, false, rot3Buf);
+    gl.uniformMatrix2fv(rot4Loc, false, rot4Buf);
 
     gl.drawArrays(gl.TRIANGLES, 0, 6);
   }
 
-  function startLoop() {
+  function renderSingleFrame() {
+    c1Buf.set(displayedColors[0]);
+    c2Buf.set(displayedColors[1]);
+    c3Buf.set(displayedColors[2]);
+    c4Buf.set(displayedColors[3]);
+    drawFrame(animTime);
+    needsOneFrame = false;
+  }
+
+  function wakeLoop() {
+    if (document.hidden) return;
     if (!isRunning) {
       isRunning = true;
-      lastFrameTime = Date.now();
-      lastRenderTime = Date.now();
+      lastFrameTime = performance.now();
+      lastRenderTime = 0;
       rafId = requestAnimationFrame(render);
     }
   }
@@ -267,13 +286,133 @@
     }
   }
 
+  window.updateFluidColors = function(hexColors) {
+    if (!hexColors || hexColors.length === 0) return;
+    // Snapshot mid-transition colors so rapid track changes blend seamlessly without snapping
+    currentColors = displayedColors.map(c => [c[0], c[1], c[2]]);
+    targetColors = [
+      hexToVec3(hexColors[0]),
+      hexToVec3(hexColors[1] || hexColors[0]),
+      hexToVec3(hexColors[2] || hexColors[0]),
+      hexToVec3(hexColors[3] || hexColors[1] || hexColors[0])
+    ];
+    transitionProgress = 0.0;
+    needsOneFrame = true;
+    wakeLoop();
+  };
+
+  window.setFluidPlaybackState = function(playing) {
+    isPlaying = !!playing;
+    if (isPlaying && !document.hidden) {
+      wakeLoop();
+    }
+  };
+
+  function resize() {
+    const targetW = Math.max(1, Math.round(window.innerWidth * 0.4));
+    const targetH = Math.max(1, Math.round(window.innerHeight * 0.4));
+    const scaleCap = targetW > 512 ? (512 / targetW) : 1.0;
+    canvas.width = Math.max(1, Math.round(targetW * scaleCap));
+    canvas.height = Math.max(1, Math.round(targetH * scaleCap));
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    if (!isRunning && !document.hidden) {
+      renderSingleFrame();
+    } else {
+      needsOneFrame = true;
+    }
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function render(now) {
+    if (!isRunning) return;
+    if (document.hidden) {
+      stopLoop();
+      return;
+    }
+
+    if (typeof now !== 'number') now = performance.now();
+    const isTransitioning = transitionProgress < 1.0;
+
+    // Adaptive FPS: 60fps during track color transitions, 24fps playing+focused,
+    // 12fps playing+unfocused, and 0fps sleeping once settled while paused/idle.
+    let targetInterval = 41.0;
+    if (isTransitioning) {
+      targetInterval = 15.5;
+    } else if (isPlaying) {
+      targetInterval = isFocused ? 41.0 : 83.0;
+    } else if (!needsOneFrame) {
+      stopLoop();
+      return;
+    }
+
+    const elapsed = now - lastRenderTime;
+    if (!needsOneFrame && lastRenderTime !== 0 && elapsed < targetInterval) {
+      rafId = requestAnimationFrame(render);
+      return;
+    }
+
+    lastRenderTime = lastRenderTime === 0 ? now : now - (elapsed % targetInterval);
+    const dt = Math.min(Math.max(now - lastFrameTime, 0), 50);
+    lastFrameTime = now;
+
+    if (isPlaying || isTransitioning) {
+      animTime += dt / 1000.0;
+    }
+
+    if (isTransitioning) {
+      transitionProgress += (dt / 1000.0) * transitionSpeed;
+      if (transitionProgress >= 1.0) transitionProgress = 1.0;
+    }
+
+    const t = transitionProgress;
+    const easeT = t * t * t * (t * (t * 6 - 15) + 10);
+
+    writeLerpedLinear(c1Buf, currentColors[0], targetColors[0], easeT);
+    writeLerpedLinear(c2Buf, currentColors[1], targetColors[1], easeT);
+    writeLerpedLinear(c3Buf, currentColors[2], targetColors[2], easeT);
+    writeLerpedLinear(c4Buf, currentColors[3], targetColors[3], easeT);
+
+    displayedColors = [
+      [c1Buf[0], c1Buf[1], c1Buf[2]],
+      [c2Buf[0], c2Buf[1], c2Buf[2]],
+      [c3Buf[0], c3Buf[1], c3Buf[2]],
+      [c4Buf[0], c4Buf[1], c4Buf[2]],
+    ];
+
+    if (transitionProgress >= 1.0) {
+      currentColors = targetColors.map(c => [c[0], c[1], c[2]]);
+    }
+
+    drawFrame(animTime);
+    needsOneFrame = false;
+
+    if (isPlaying || transitionProgress < 1.0) {
+      rafId = requestAnimationFrame(render);
+    } else {
+      stopLoop();
+    }
+  }
+
+  window.addEventListener('focus', () => { isFocused = true; });
+  window.addEventListener('blur', () => { isFocused = false; });
+
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       stopLoop();
-    } else {
-      startLoop();
+    } else if (isPlaying || transitionProgress < 1.0 || needsOneFrame) {
+      wakeLoop();
     }
   });
 
-  startLoop();
+  window.addEventListener('DOMContentLoaded', () => {
+    if (window.store && typeof window.store.subscribe === 'function') {
+      window.setFluidPlaybackState(!!window.store.getState().isPlaying);
+      window.store.subscribe('isPlaying', (state) => {
+        window.setFluidPlaybackState(!!state.isPlaying);
+      });
+    }
+  });
+
+  wakeLoop();
 })();

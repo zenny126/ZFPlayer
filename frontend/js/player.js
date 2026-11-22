@@ -7,13 +7,34 @@ class PlaybackTicker {
     this.lastSyncTime = 0;
     this.lastSyncPosition = 0;
     this.rafId = null;
+    this._lastTickEmitMs = 0;
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        if (this.rafId) {
+          cancelAnimationFrame(this.rafId);
+          this.rafId = null;
+        }
+      } else if (this.isPlaying) {
+        const elapsed = (performance.now() - this.lastSyncTime) / 1000;
+        this.position = this.lastSyncPosition + elapsed;
+        if (this.position > this.duration) {
+          this.position = this.duration;
+        }
+        this._lastTickEmitMs = 0;
+        if (!this.rafId) {
+          this.tick();
+        }
+      }
+    });
   }
   
   start() {
     this.isPlaying = true;
     this.lastSyncTime = performance.now();
     this.lastSyncPosition = this.position;
-    if (!this.rafId) {
+    this._lastTickEmitMs = 0;
+    if (!document.hidden && !this.rafId) {
       this.tick();
     }
   }
@@ -27,7 +48,7 @@ class PlaybackTicker {
   }
   
   tick() {
-    if (!this.isPlaying) {
+    if (!this.isPlaying || document.hidden) {
       this.rafId = null;
       return;
     }
@@ -40,7 +61,12 @@ class PlaybackTicker {
       this.position = this.duration;
     }
     
-    this.onTick(this.position, this.duration);
+    const isLyricsOpen = !!(window.lyricsRenderer && window.lyricsRenderer.isVisible);
+    const minInterval = isLyricsOpen ? 50 : 100;
+    if (this._lastTickEmitMs === 0 || (now - this._lastTickEmitMs) >= minInterval) {
+      this._lastTickEmitMs = now;
+      this.onTick(this.position, this.duration);
+    }
     
     this.rafId = requestAnimationFrame(() => this.tick());
   }
@@ -51,6 +77,7 @@ class PlaybackTicker {
     this.isPlaying = isPlaying;
     this.lastSyncTime = performance.now();
     this.lastSyncPosition = position;
+    this._lastTickEmitMs = 0;
     
     if (isPlaying) {
       this.start();
@@ -200,10 +227,10 @@ class SilentMediaSessionBridge {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: track.title || 'Unknown Title',
         artist: track.artist || 'Unknown Artist',
-        album: track.album || 'ZennyFLAC Player',
+        album: track.album || 'ZFPlayer',
         artwork: artworkList
       });
-      document.title = track.title ? `${track.title} • ${track.artist || 'ZennyFLAC Player'}` : 'ZennyFLAC Player';
+      document.title = track.title ? `${track.title} • ${track.artist || 'ZFPlayer'}` : 'ZFPlayer';
     } catch (e) {
       console.warn('Failed to set MediaMetadata:', e);
     }
@@ -403,6 +430,9 @@ class PlayerController {
     if (lyricsLikeBtn) lyricsLikeBtn.addEventListener('click', () => handleLikeClick(lyricsLikeBtn));
 
     const syncUI = (state) => {
+      if (window.setFluidPlaybackState) {
+        window.setFluidPlaybackState(!!state.isPlaying);
+      }
       const btn = document.getElementById('btn-play-pause');
       const btnLyrics = document.getElementById('btn-play-pause-lyrics');
       const playIcon = `<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
@@ -559,6 +589,7 @@ class PlayerController {
     this.lastSeekTime = Date.now();
     
     // Optimistic UI Update: Sync ticker and UI elements instantly without waiting for IPC response
+    this._lastSeekPct = undefined;
     this.ticker.sync(targetPos, duration, storeState.isPlaying);
     this.updateSeekUI(targetPos, duration);
     if (this.mediaSessionBridge) {
@@ -665,14 +696,10 @@ class PlayerController {
 
   updateSeekUI(pos, dur) {
     if (this.isDraggingSeek) return;
-    if (this.seekBar) this.seekBar.value = pos;
 
     const isLyricsVisible = window.lyricsRenderer?.isVisible ?? false;
-    if (isLyricsVisible && this.lyricsSeekBar) {
-      this.lyricsSeekBar.value = pos;
-    }
 
-    // Cache current second integer to avoid redundant DOM textContent writes on every 60/144Hz frame
+    // Cache current second integer to avoid redundant DOM textContent writes on every frame
     const currentSec = Math.floor(pos || 0);
     if (currentSec !== this._lastDisplaySec) {
       this._lastDisplaySec = currentSec;
@@ -686,6 +713,10 @@ class PlayerController {
     const pct = dur > 0 ? (pos / dur) * 100 : 0;
     if (this._lastSeekPct === undefined || Math.abs(pct - this._lastSeekPct) >= 0.05) {
       this._lastSeekPct = pct;
+      if (this.seekBar) this.seekBar.value = pos;
+      if (isLyricsVisible && this.lyricsSeekBar) {
+        this.lyricsSeekBar.value = pos;
+      }
       const pctStr = `${pct.toFixed(2)}%`;
       if (this.seekBar) this.seekBar.style.setProperty('--progress', pctStr);
       if (isLyricsVisible && this.lyricsSeekBar) {
@@ -718,7 +749,7 @@ class PlayerController {
     const poll = async () => {
       if (this._isPolling) return;
       this._isPolling = true;
-      let nextInterval = 1000;
+      let nextInterval = 1500;
 
       try {
         // Skip background polling override if user seeked recently (within last 1500ms)
@@ -728,9 +759,16 @@ class PlayerController {
             const storeState = window.store.getState();
             const pos = state.position_seconds !== undefined ? state.position_seconds : state.position;
             
-            // Adjust polling interval dynamically: 1s when playing, 2s when paused/stopped
-            nextInterval = state.is_playing ? 1000 : 2000;
-            if (document.hidden) nextInterval = 3000;
+            // Adaptive polling interval: 5s when occluded/hidden, 4s paused,
+            // 1.5s playing (speeding up to 750ms in the final 4s for crisp track-end detection).
+            if (document.hidden) {
+              nextInterval = 5000;
+            } else if (!state.is_playing) {
+              nextInterval = 4000;
+            } else {
+              const rem = (state.duration || 0) - (pos || 0);
+              nextInterval = (state.duration > 0 && rem >= 0 && rem <= 4) ? 750 : 1500;
+            }
 
             // Auto-next or external track change
             if (state.track && (!storeState.currentTrack || state.track.path !== storeState.currentTrack.path)) {

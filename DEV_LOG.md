@@ -1,5 +1,22 @@
 # DEV LOG
 
+## Timestamp: 2026-09-05T19:40:00
+### Tác vụ thực hiện / Goal & Scope
+Tinh gọn tài liệu `README.md` theo định hướng trải nghiệm người dùng thực tế: lược bỏ toàn bộ phần kiến trúc kiểm thử tự động rườm rà (Testing Pyramid, PBT Hypothesis, BVA matrices, huy hiệu kiểm thử và các câu lệnh kiểm định mã nguồn nội bộ mang đường dẫn cá nhân), giữ cho tài liệu tập trung tối đa vào tính năng sản phẩm, trải nghiệm người dùng, kiến trúc phát nhạc và hướng dẫn lập trình viên cốt lõi.
+
+### Danh sách tệp tin thay đổi / Files Changed
+- README.md (MODIFIED)
+- DEV_LOG.md (MODIFIED)
+
+### Mô tả chi tiết kỹ thuật / Technical Requirements & Specs
+1. **Lược bỏ mục Kiến trúc Kiểm thử trong `README.md`**:
+   - Loại bỏ hoàn toàn khối nội dung `## 🧪 Kiến Trúc Kiểm Thử Tự Động & Đảm Bảo Chất Lượng` (bao gồm mô hình ASCII Testing Pyramid, chi tiết kiểm thử đại số PBT, phân tích biên BVA và các thông số nội bộ).
+   - Cập nhật lại Mục lục (`📑 Mục Lục Điều Hướng Nhanh`) tương ứng, loại bỏ liên kết neo đến phần kiểm thử.
+   - Gỡ bỏ các huy hiệu kiểm thử (`badge/Tests-...` và `badge/Craftsmanship-...`) ở phần đầu tài liệu để giao diện README tinh gọn, chuyên nghiệp và thân thiện với người dùng.
+   - Chuẩn hóa phần Hướng dẫn lập trình viên (`Developer Guide`): loại bỏ các mục kiểm thử và kiểm định chất lượng mang đường dẫn cục bộ máy tính (`C:\Users\Zenny\...`), giữ lại đầy đủ 3 bước thiết yếu: Môi trường, Chạy mã nguồn và Đóng gói file `.exe`.
+
+---
+
 ## Timestamp: 2026-09-05T19:20:00
 ### Tác vụ thực hiện / Goal & Scope
 Rà soát, đánh giá chuyên sâu và tối ưu hóa toàn diện cấu trúc thư mục dự án theo chuẩn mực Top 1% Software Engineering: bổ sung package marker `backend/utils/__init__.py`, loại bỏ tệp dummy SQLite rỗng `backend/storage/library.db` khỏi git tracking, chuẩn hóa cấu hình `.gitignore` chặn rò rỉ cache kiểm thử/nhật ký runtime, và cập nhật `requirements.txt` với `hypothesis>=6.100.0`.

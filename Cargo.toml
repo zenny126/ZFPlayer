@@ -1,0 +1,61 @@
+[package]
+name = "zfplayer-rust"
+version = "3.0.0"
+edition = "2021"
+authors = ["Zenny <https://github.com/zenny126/ZFPlayer>"]
+description = "ZennyFLAC Player (Rust Edition) - Hi-Res Lossless Audio Player for Windows"
+license = "Apache-2.0"
+
+[[bin]]
+name = "ZFPlayer"
+path = "src/main.rs"
+
+[dependencies]
+# Serialization & JSON
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# SQLite Database (with bundled SQLite3 + FTS5 enabled)
+rusqlite = { version = "0.31", features = ["bundled"] }
+
+# Audio Output (Native Windows WASAPI Shared & Bit-Perfect Exclusive) & Pure-Rust Multi-Format Decoder
+wasapi = "0.27"
+symphonia = { version = "0.5.4", features = ["all"] }
+
+# Audio Metadata, Vorbis Comments, ID3v2 & Embedded Artwork
+lofty = "0.21"
+
+# Image Processing (Cover Art & Thumbnail Generation)
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
+
+# Hashing & Utilities
+sha2 = "0.10"
+hex = "0.4"
+rand = "0.8"
+walkdir = "2.5"
+rayon = "1.10"
+log = "0.4"
+env_logger = "0.11"
+chrono = "0.4"
+icu_normalizer = "2.4"
+percent-encoding = "2.3"
+
+# HTTP Client (Persistent Pool for LRCLIB Lyrics) & Local Embedded Server
+ureq = { version = "2.10", features = ["json"] }
+tiny_http = "0.12"
+
+# Native Desktop Window (WebView2) & Native File Dialogs
+tao = "0.28"
+wry = "0.40"
+rfd = "0.14"
+
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1"
+cc = "1.11"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+strip = true
