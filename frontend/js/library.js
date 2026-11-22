@@ -22,16 +22,21 @@ class VirtualList {
         });
       }
     }, { passive: true });
+
+    if (typeof ResizeObserver !== 'undefined') {
+      this._resizeObserver = new ResizeObserver(() => {
+        if (this.totalItems > 0) {
+          this.ensurePoolCapacity();
+          this.update();
+        }
+      });
+      this._resizeObserver.observe(this.container);
+    }
   }
 
-  setTotalItems(total) {
-    this.totalItems = total;
-    this.scroller.style.height = `${total * this.itemHeight}px`;
-    
-    // Initialize pool
+  ensurePoolCapacity() {
     const visibleCount = Math.ceil(this.container.clientHeight / this.itemHeight) || 15;
     this.poolSize = Math.max(this.poolSize, visibleCount + 10);
-    
     while (this.pool.length < this.poolSize) {
       const node = this.renderFn(-1);
       node.style.position = 'absolute';
@@ -43,7 +48,12 @@ class VirtualList {
       this.pool.push(item);
       this.freePool.push(item);
     }
-    
+  }
+
+  setTotalItems(total) {
+    this.totalItems = total;
+    this.scroller.style.height = `${total * this.itemHeight}px`;
+    this.ensurePoolCapacity();
     this.refresh();
   }
 

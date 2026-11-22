@@ -283,6 +283,11 @@ class PlayerController {
     document.getElementById('btn-prev-lyrics')?.addEventListener('click', () => this.prev());
     document.getElementById('btn-next').addEventListener('click', () => this.next());
     document.getElementById('btn-next-lyrics')?.addEventListener('click', () => this.next());
+    document.getElementById('player-cover')?.addEventListener('click', () => {
+      if (window.store?.getState()?.currentTrack && window.lyricsRenderer) {
+        window.lyricsRenderer.toggle();
+      }
+    });
     
     const volBar = document.getElementById('volume-bar');
     const volBarLyrics = document.getElementById('lyrics-volume-bar');
@@ -463,6 +468,7 @@ class PlayerController {
       if (state.currentTrack) {
         document.getElementById('player-track-name').textContent = state.currentTrack.title || 'Unknown';
         document.getElementById('player-track-artist').textContent = state.currentTrack.artist || 'Unknown';
+        this.updateQualityBadges(state.currentTrack);
         if (this.timeTotal) this.timeTotal.textContent = this.formatTime(state.currentTrack.duration);
         const lTimeTotal = document.getElementById('lyrics-seek-time-total');
         if (lTimeTotal) lTimeTotal.textContent = this.formatTime(state.currentTrack.duration);
@@ -734,6 +740,38 @@ class PlayerController {
     if (isLyricsVisible && window.lyricsRenderer) {
       window.lyricsRenderer.update(pos);
     }
+  }
+
+  updateQualityBadges(track) {
+    const badges = [
+      document.getElementById('player-quality-badge'),
+      document.getElementById('lyrics-quality-badge')
+    ].filter(Boolean);
+    if (!badges.length) return;
+
+    if (!track || !track.path) {
+      badges.forEach(b => {
+        b.textContent = '';
+        b.classList.add('hidden');
+        b.classList.remove('hires');
+      });
+      return;
+    }
+
+    const extMatch = String(track.path).match(/\.([a-zA-Z0-9]+)$/);
+    const ext = extMatch ? extMatch[1].toUpperCase() : 'AUDIO';
+    const sr = Number(track.sample_rate) || 0;
+    const bd = Number(track.bit_depth) || 0;
+    const srKhz = sr > 0 ? `${(sr / 1000).toFixed(sr % 1000 === 0 ? 0 : 1)}kHz` : '';
+    const spec = bd > 0 && srKhz ? `${bd}-bit/${srKhz}` : (srKhz || (bd > 0 ? `${bd}-bit` : ''));
+    const label = spec ? `${ext} · ${spec}` : ext;
+    const isHiRes = (ext === 'FLAC' || ext === 'WAV' || ext === 'AIFF' || ext === 'ALAC') && (bd >= 24 || sr > 48000);
+
+    badges.forEach(b => {
+      b.textContent = label;
+      b.classList.remove('hidden');
+      b.classList.toggle('hires', isHiRes);
+    });
   }
 
   formatTime(sec) {

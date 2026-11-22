@@ -335,6 +335,20 @@ class ShortcutsManager {
       return;
     }
 
+    // 1.5 Quick search focus shortcut: Ctrl+K (anywhere) or '/' (outside text inputs/modals)
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.code === 'KeyK') {
+      e.preventDefault();
+      const searchInput = document.getElementById('search-input');
+      if (searchInput) {
+        if (window.lyricsRenderer?.isVisible) {
+          window.lyricsRenderer.hide();
+        }
+        searchInput.focus();
+        searchInput.select();
+      }
+      return;
+    }
+
     // 2. Ignore keystrokes when typing inside text inputs, textareas or contenteditable elements
     const targetTag = e.target.tagName ? e.target.tagName.toLowerCase() : '';
     const isTextInput = (targetTag === 'textarea' || e.target.isContentEditable || (targetTag === 'input' && !['range', 'button', 'checkbox', 'radio'].includes(e.target.type)));
@@ -356,6 +370,16 @@ class ShortcutsManager {
         document.querySelectorAll('.modal:not(.hidden)').forEach(m => m.classList.add('hidden'));
       }
       return;
+    }
+
+    if (!e.ctrlKey && !e.altKey && !e.metaKey && e.key === '/') {
+      const searchInput = document.getElementById('search-input');
+      if (searchInput && !window.lyricsRenderer?.isVisible) {
+        e.preventDefault();
+        searchInput.focus();
+        searchInput.select();
+        return;
+      }
     }
 
     if (e.key === 'Escape') {

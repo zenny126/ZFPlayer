@@ -377,7 +377,7 @@
 }
 
 .lyrics-line {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Outfit', 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
   font-size: 32px; /* Identical font-size for all states to prevent layout shifts and text re-wrapping */
   font-weight: 700;
   color: rgba(255, 255, 255, 0.35); /* Chữ trong trẻo, tinh tế hơn */

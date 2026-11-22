@@ -11,28 +11,14 @@
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="css/main.css?v=33">
+  <link rel="stylesheet" href="css/main.css?v=34">
   <link rel="stylesheet" href="css/library.css?v=20">
-  <link rel="stylesheet" href="css/player.css?v=20">
+  <link rel="stylesheet" href="css/player.css?v=21">
   <link rel="stylesheet" href="css/lyrics.css?v=56">
   <link rel="stylesheet" href="css/albums.css?v=20">
   <script>
-    window.onerror = function(message, source, lineno, colno, error) {
-      const errorDiv = document.createElement('div');
-      errorDiv.style.position = 'fixed';
-      errorDiv.style.bottom = '20px';
-      errorDiv.style.left = '20px';
-      errorDiv.style.background = 'rgba(255,0,0,0.9)';
-      errorDiv.style.color = 'white';
-      errorDiv.style.padding = '16px';
-      errorDiv.style.borderRadius = '8px';
-      errorDiv.style.zIndex = '99999';
-      errorDiv.style.fontSize = '14px';
-      errorDiv.style.maxWidth = '80%';
-      errorDiv.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
-      errorDiv.innerHTML = `<strong>JS Error:</strong> ${message}<br><small>at ${source}:${lineno}:${colno}</small>`;
-      document.body.appendChild(errorDiv);
-      setTimeout(() => errorDiv.remove(), 10000);
+    window.onerror = function(message, source, lineno, colno) {
+      console.error(`[ZFPlayer UI] ${message} (${source}:${lineno}:${colno})`);
       return false;
     };
   </script>
@@ -57,7 +43,8 @@
         <div class="search-container">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
           <input type="text" id="search-input" placeholder="What do you want to play?" aria-label="Search music">
-          <button id="btn-clear-search" class="btn-clear-search hidden" title="Clear search" aria-label="Clear search">
+          <kbd class="search-shortcut-hint" aria-hidden="true">Ctrl+K</kbd>
+          <button id="btn-clear-search" class="btn-clear-search hidden" title="Clear search (Esc)" aria-label="Clear search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon" style="width: 14px; height: 14px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
@@ -214,7 +201,7 @@
 
   <!-- Full-screen Kinetic Spring Lyrics Overlay -->
   <div id="lyrics-overlay" class="hidden">
-    <button id="btn-close-lyrics" class="lyrics-close-btn" title="Close">
+    <button id="btn-close-lyrics" class="lyrics-close-btn" title="Close (Esc)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
     </button>
     <button id="btn-toggle-lyrics-view" class="lyrics-toggle-btn active" title="Toggle Lyrics Text (T)">
@@ -227,9 +214,10 @@
           <div class="track-details">
             <div id="lyrics-track-name" class="player-track-name">No Track</div>
             <div id="lyrics-track-artist" class="player-track-artist">Unknown Artist</div>
+            <span id="lyrics-quality-badge" class="audio-quality-badge hidden"></span>
           </div>
           <div class="lyrics-meta-actions">
-            <button id="lyrics-like-btn" class="btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></button>
+            <button id="lyrics-like-btn" class="btn-icon" title="Favorite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></button>
           </div>
         </div>
         
@@ -242,15 +230,15 @@
         </div>
         
         <div class="lyrics-controls">
-          <button id="btn-shuffle-lyrics" class="btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg></button>
-          <button id="btn-prev-lyrics" class="btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="4" x2="5" y2="20"></line></svg></button>
-          <button id="btn-play-pause-lyrics" class="btn-play-pause"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" class="icon"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></button>
-          <button id="btn-next-lyrics" class="btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="4" x2="19" y2="20"></line></svg></button>
-          <button id="btn-repeat-lyrics" class="btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg></button>
+          <button id="btn-shuffle-lyrics" class="btn-icon" title="Shuffle (S)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg></button>
+          <button id="btn-prev-lyrics" class="btn-icon" title="Previous (Ctrl+←)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="4" x2="5" y2="20"></line></svg></button>
+          <button id="btn-play-pause-lyrics" class="btn-play-pause" title="Play / Pause (Space)"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" class="icon"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></button>
+          <button id="btn-next-lyrics" class="btn-icon" title="Next (Ctrl+→)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="4" x2="19" y2="20"></line></svg></button>
+          <button id="btn-repeat-lyrics" class="btn-icon" title="Repeat (R)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg></button>
         </div>
         
         <div class="lyrics-volume-container">
-          <button id="btn-lyrics-volume" class="icon-volume" title="Mute/Unmute" aria-label="Toggle mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg></button>
+          <button id="btn-lyrics-volume" class="icon-volume" title="Mute / Unmute (M)" aria-label="Toggle mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg></button>
           <input type="range" id="lyrics-volume-bar" class="volume-bar" min="0" max="100" value="80" aria-label="Lyrics volume">
         </div>
       </div>
@@ -263,21 +251,21 @@
     <!-- Bottom Player Bar -->
     <footer id="player-bar" class="player-bar">
       <div class="player-left">
-        <img id="player-cover" class="player-cover-small" src="" alt="">
+        <img id="player-cover" class="player-cover-small" src="" alt="" title="Open Now Playing / Lyrics (L)">
         <div class="player-track-text">
           <div id="player-track-name" class="player-track-name">No Track</div>
           <div id="player-track-artist" class="player-track-artist">Unknown Artist</div>
         </div>
-        <button id="player-like-btn" class="btn-icon player-like-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></button>
+        <button id="player-like-btn" class="btn-icon player-like-btn" title="Favorite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></button>
       </div>
       
       <div class="player-center">
         <div class="control-buttons">
-          <button id="btn-shuffle" class="btn-icon btn-shuffle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg></button>
-          <button id="btn-prev" class="btn-icon btn-prev"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0" class="icon"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"></path></svg></button>
-          <button id="btn-play-pause" class="btn-play-pause-circle"><svg viewBox="0 0 24 24" fill="currentColor" class="icon-play"><path d="M8 5v14l11-7z"></path></svg></button>
-          <button id="btn-next" class="btn-icon btn-next"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0" class="icon"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"></path></svg></button>
-          <button id="btn-repeat" class="btn-icon btn-repeat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg></button>
+          <button id="btn-shuffle" class="btn-icon btn-shuffle" title="Shuffle (S)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg></button>
+          <button id="btn-prev" class="btn-icon btn-prev" title="Previous (Ctrl+←)"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0" class="icon"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"></path></svg></button>
+          <button id="btn-play-pause" class="btn-play-pause-circle" title="Play / Pause (Space)"><svg viewBox="0 0 24 24" fill="currentColor" class="icon-play"><path d="M8 5v14l11-7z"></path></svg></button>
+          <button id="btn-next" class="btn-icon btn-next" title="Next (Ctrl+→)"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0" class="icon"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"></path></svg></button>
+          <button id="btn-repeat" class="btn-icon btn-repeat" title="Repeat (R)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg></button>
         </div>
         <div class="seek-container">
           <span id="seek-time-current" class="seek-time">0:00</span>
@@ -287,10 +275,11 @@
       </div>
       
       <div class="player-right">
+        <span id="player-quality-badge" class="audio-quality-badge hidden" title="Native audio stream quality"></span>
         <button id="btn-queue-toggle" class="btn-icon" title="Play Queue (Q)" aria-label="Playback queue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg></button>
-        <button id="btn-lyrics-toggle" class="btn-icon" title="Lyrics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg></button>
+        <button id="btn-lyrics-toggle" class="btn-icon" title="Lyrics (L)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg></button>
         <div class="volume-control">
-          <button id="btn-volume" class="icon-volume" title="Mute/Unmute" aria-label="Toggle mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon" style="width: 16px; height: 16px;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg></button>
+          <button id="btn-volume" class="icon-volume" title="Mute / Unmute (M)" aria-label="Toggle mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon" style="width: 16px; height: 16px;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg></button>
           <input type="range" id="volume-bar" class="volume-bar" min="0" max="100" value="80" aria-label="Volume">
         </div>
       </div>
@@ -564,11 +553,11 @@
 
   <script src="js/store.js?v=26"></script>
   <script src="js/api.js?v=26"></script>
-  <script src="js/shortcuts.js?v=26"></script>
-  <script src="js/player.js?v=27"></script>
+  <script src="js/shortcuts.js?v=27"></script>
+  <script src="js/player.js?v=28"></script>
   <script src="js/queue.js?v=26"></script>
   <script src="js/lyrics.js?v=38"></script>
-  <script src="js/library.js?v=26"></script>
+  <script src="js/library.js?v=27"></script>
   <script src="js/playlists.js?v=26"></script>
   <script src="js/albums.js?v=26"></script>
   <script src="js/home.js?v=26"></script>
