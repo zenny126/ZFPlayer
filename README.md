@@ -13,7 +13,7 @@
 
 ---
 
-## 📦 Tải Về & Cài Đặt
+## 📦 1. Tải Về & Chạy Ngay (Standalone EXE)
 
 **ZFPlayer** được đóng gói thành **1 file `ZFPlayer.exe` duy nhất (~9.6 MB)**, không cần bộ cài đặt và không phụ thuộc DLL ngoài:
 
@@ -26,7 +26,32 @@
 
 ---
 
-## 💼 Hướng Dẫn Chế Độ Portable 100%
+## 💻 2. Hướng Dẫn Cài Đặt & Chạy Dự Án Từ Mã Nguồn
+
+### Yêu Cầu Môi Trường
+* **Hệ điều hành**: Windows 10 / 11 (64-bit).
+* **Rust Toolchain**: `stable-x86_64-pc-windows-gnullvm` + `llvm-mingw` (tự động cài đặt qua `setup_rust.bat`).
+
+### Các Bước Cài Đặt, Chạy & Đóng Gói
+```powershell
+# Bước 1: Cài đặt tự động Rust toolchain (chỉ cần chạy 1 lần đầu)
+setup_rust.bat
+
+# Bước 2: Chạy trực tiếp dự án từ mã nguồn (Release Mode)
+run_dev.bat
+
+# Bước 3: Chạy bộ kiểm thử tự động (Unit & Integration Tests)
+cargo test
+
+# Bước 4: Đóng gói thành 1 file thực thi độc lập (dist\ZFPlayer.exe)
+build.bat
+```
+
+Sau khi chạy `build.bat`, file thực thi độc lập sẽ được xuất ra tại **`dist\ZFPlayer.exe`** (~9.6 MB, đã nhúng tĩnh `libunwind`, `WebView2Loader` và icon ứng dụng).
+
+---
+
+## 💼 3. Hướng Dẫn Chế Độ Portable 100%
 
 Mặc định, ứng dụng lưu dữ liệu (thư viện nhạc, cấu hình, bộ nhớ đệm ảnh bìa và lời bài hát) tại `%APPDATA%\ZFPlayer`. Để chuyển sang **chế độ Portable 100%** (lưu toàn bộ dữ liệu trên USB hoặc ổ cứng di động, không ghi vào ổ `C:\`), chỉ cần làm **1 trong 2 cách** sau:
 
