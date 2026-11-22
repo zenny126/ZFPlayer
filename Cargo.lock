@@ -4569,8 +4569,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "zfplayer-rust"
-version = "3.0.0"
+name = "zfplayer"
+version = "4.0.0"
 dependencies = [
  "cc",
  "chrono",

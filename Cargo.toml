@@ -1,9 +1,9 @@
 [package]
-name = "zfplayer-rust"
-version = "3.0.0"
+name = "zfplayer"
+version = "4.0.0"
 edition = "2021"
 authors = ["Zenny <https://github.com/zenny126/ZFPlayer>"]
-description = "ZennyFLAC Player (Rust Edition) - Hi-Res Lossless Audio Player for Windows"
+description = "ZFPlayer - Hi-Res Lossless Audio Player for Windows"
 license = "Apache-2.0"
 
 [[bin]]

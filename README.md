@@ -1,12 +1,12 @@
 <div align="center">
   <img src="app_icon.ico" alt="ZFPlayer Logo" width="128" height="128" />
 
-  # ZennyFLAC Player (ZFPlayer) v3.0
+  # ZFPlayer v4.0
 
   **Trình phát nhạc Hi-Res Lossless Audio thuần khiết, siêu tốc, chuẩn Bit-Perfect và tinh gọn cho Windows**
 
-  [![Version](https://img.shields.io/badge/Version-3.0.0-gold.svg)]()
-  [![Rust](https://img.shields.io/badge/Rust-Edition_v3.0-orange.svg?logo=rust&logoColor=white)](https://www.rust-lang.org/)
+  [![Version](https://img.shields.io/badge/Version-4.0.0-gold.svg)]()
+  [![Rust](https://img.shields.io/badge/Rust-Edition_v4.0-orange.svg?logo=rust&logoColor=white)](https://www.rust-lang.org/)
   [![Audio Engine](https://img.shields.io/badge/Audio-WASAPI_Bit--Perfect_100%25-0078D6.svg?logo=windows&logoColor=white)]()
   [![UI Engine](https://img.shields.io/badge/UI-Modern_Glassmorphism_%26_WebGL_Shader-8A2BE2.svg)]()
   [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
