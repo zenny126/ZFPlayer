@@ -2,34 +2,6 @@ use std::env;
 use std::fs;
 use std::path::PathBuf;
 
-/// Returns the base directory for frontend assets (`frontend/`).
-pub fn get_frontend_dir() -> PathBuf {
-    if let Ok(exe_path) = env::current_exe() {
-        if let Some(exe_dir) = exe_path.parent() {
-            let beside_exe = exe_dir.join("frontend");
-            if beside_exe.exists() {
-                return beside_exe;
-            }
-            // If running inside target/debug or target/release
-            if let Some(parent) = exe_dir.parent().and_then(|p| p.parent()) {
-                let in_project = parent.join("frontend");
-                if in_project.exists() {
-                    return in_project;
-                }
-            }
-        }
-    }
-
-    let cwd_frontend = env::current_dir()
-        .unwrap_or_else(|_| PathBuf::from("."))
-        .join("frontend");
-    if cwd_frontend.exists() {
-        return cwd_frontend;
-    }
-
-    PathBuf::from("frontend")
-}
-
 /// Returns the writable directory for app data (config, db, cache).
 /// Prefers portable data next to the executable if present, then project root in dev mode,
 /// then `%APPDATA%/ZFPlayer`.

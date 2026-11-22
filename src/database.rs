@@ -605,6 +605,7 @@ impl Database {
         });
     }
 
+    #[allow(dead_code)]
     pub fn get_albums(&self) -> Vec<Value> {
         self.with_conn(|conn| {
             let mut stmt = conn.prepare(
@@ -790,6 +791,7 @@ impl Database {
         .unwrap_or_default()
     }
 
+    #[allow(dead_code)]
     pub fn update_tracks_in_folder(
         &self,
         folder_path: &str,
@@ -836,6 +838,7 @@ impl Database {
         .unwrap_or(0)
     }
 
+    #[allow(dead_code)]
     pub fn delete_playlist(&self, playlist_id: i64) {
         let _ = self.with_conn(|conn| {
             conn.execute(
@@ -847,6 +850,7 @@ impl Database {
         });
     }
 
+    #[allow(dead_code)]
     pub fn rename_playlist(&self, playlist_id: i64, new_name: &str) {
         let _ = self.with_conn(|conn| {
             conn.execute(
@@ -857,6 +861,7 @@ impl Database {
         });
     }
 
+    #[allow(dead_code)]
     pub fn update_playlist_cover(&self, playlist_id: i64, cover_hash: &str) {
         let _ = self.with_conn(|conn| {
             conn.execute(
@@ -1025,6 +1030,7 @@ impl Database {
         .unwrap_or(0)
     }
 
+    #[allow(dead_code)]
     pub fn remove_track_from_playlist(&self, playlist_id: i64, track_path: &str) {
         let _ = self.with_conn(|conn| {
             let Some(track_id) = conn

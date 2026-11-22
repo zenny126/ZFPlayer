@@ -3,7 +3,7 @@ name = "zfplayer"
 version = "4.0.0"
 edition = "2021"
 authors = ["Zenny <https://github.com/zenny126/ZFPlayer>"]
-description = "ZFPlayer - Hi-Res Lossless Audio Player for Windows"
+description = "ZFPlayer - Native Rust Hi-Res Lossless Audio Player for Windows"
 license = "Apache-2.0"
 
 [[bin]]
@@ -25,7 +25,7 @@ symphonia = { version = "0.5.4", features = ["all"] }
 # Audio Metadata, Vorbis Comments, ID3v2 & Embedded Artwork
 lofty = "0.21"
 
-# Image Processing (Cover Art & Thumbnail Generation)
+# Image Processing (Cover Art, Window Icon & Thumbnail Generation)
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
 
 # Hashing & Utilities
@@ -38,20 +38,16 @@ log = "0.4"
 env_logger = "0.11"
 chrono = "0.4"
 icu_normalizer = "2.4"
-percent-encoding = "2.3"
 
-# HTTP Client (Persistent Pool for LRCLIB Lyrics) & Local Embedded Server
+# HTTP Client (Persistent Pool for LRCLIB Lyrics)
 ureq = { version = "2.10", features = ["json"] }
-tiny_http = "0.12"
 
-# Native Desktop Window (WebView2) & Native File Dialogs
-tao = "0.28"
-wry = "0.40"
+# Pure Native Rust UI (tiny-skia Software Renderer) & Native File Dialogs
+iced = { version = "0.13.1", default-features = false, features = ["tiny-skia", "image", "svg", "smol", "advanced"] }
 rfd = "0.14"
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1"
-cc = "1.11"
 
 [profile.release]
 opt-level = 3

@@ -159,6 +159,7 @@ impl LibraryService {
         result
     }
 
+    #[allow(dead_code)]
     pub fn get_albums(&self) -> Vec<Value> {
         self.db.get_albums()
     }
@@ -246,6 +247,7 @@ impl LibraryService {
         }
     }
 
+    #[allow(dead_code)]
     pub fn add_album(&self, folder_path: &str, album_name: &str, cover_image_path: &str) -> Value {
         if folder_path.trim().is_empty() {
             return json!({
@@ -307,10 +309,12 @@ impl LibraryService {
         self.db.create_playlist(name, folder_path)
     }
 
+    #[allow(dead_code)]
     pub fn delete_playlist(&self, playlist_id: i64) {
         self.db.delete_playlist(playlist_id);
     }
 
+    #[allow(dead_code)]
     pub fn rename_playlist(&self, playlist_id: i64, new_name: &str) {
         self.db.rename_playlist(playlist_id, new_name);
     }
@@ -319,10 +323,12 @@ impl LibraryService {
         self.db.get_playlists()
     }
 
+    #[allow(dead_code)]
     pub fn add_track_to_playlist(&self, playlist_id: i64, track_path: &str) {
         self.db.add_track_to_playlist(playlist_id, track_path);
     }
 
+    #[allow(dead_code)]
     pub fn remove_track_from_playlist(&self, playlist_id: i64, track_path: &str) {
         self.db.remove_track_from_playlist(playlist_id, track_path);
     }
@@ -418,6 +424,7 @@ impl LibraryService {
         })
     }
 
+    #[allow(dead_code)]
     pub fn update_playlist_cover(&self, playlist_id: &str, cover_image_path: &str) -> Value {
         if cover_image_path.is_empty() || !Path::new(cover_image_path).exists() {
             return json!({
@@ -469,6 +476,7 @@ impl LibraryService {
         })
     }
 
+    #[allow(dead_code)]
     pub fn get_system_playlist_covers(&self) -> Value {
         json!({
             "all": self.config.get("cover_all").unwrap_or(Value::Null),
@@ -476,6 +484,7 @@ impl LibraryService {
         })
     }
 
+    #[allow(dead_code)]
     pub fn get_bootstrap_data(&self, player_state: Value) -> Value {
         json!({
             "config": self.config.get_all(),
